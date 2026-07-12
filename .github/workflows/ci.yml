@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: Install, Lint, Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.1"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Prepare pnpm
+        run: corepack prepare pnpm@11.5.3 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # `format:check` fica fora da CI por ora: a documentação pré-existente
+      # (docs/, README, CONTRIBUTING) ainda não está formatada com Prettier.
+      # É uma pendência registrada separadamente, não corrigida nesta tarefa.
+      #
+      # `test` e `build` ainda não possuem tarefas reais (apps/mobile e
+      # apps/web permanecem vazios por decisão de escopo). Serão adicionados
+      # à CI quando os apps forem inicializados e os scripts passarem a
+      # existir de fato em algum workspace.

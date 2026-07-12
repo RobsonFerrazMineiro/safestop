@@ -1,0 +1,17 @@
+node_modules
+dist
+build
+.next
+.expo
+.turbo
+.vercel
+coverage
+pnpm-lock.yaml
+reference
+supabase/.temp
+
+# Arquivos especiais do Cursor (rules/agents/prompts) podem usar formatação
+# própria não compatível com Prettier. Documentação oficial (docs/, README,
+# CONTRIBUTING) permanece no escopo do format:check.
+.cursor
+

@@ -1,0 +1,23 @@
+{
+  "name": "@safestop/validation",
+  "version": "0.1.0",
+  "description": "Shared validation schemas used by the SafeStop apps.",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"const fs=require('fs');['dist','tsconfig.tsbuildinfo'].forEach((p)=>fs.rmSync(p,{recursive:true,force:true}))\""
+  },
+  "dependencies": {
+    "@safestop/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@safestop/config": "workspace:*"
+  }
+}

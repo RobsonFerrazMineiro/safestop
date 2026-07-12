@@ -1,20 +1,45 @@
 {
   "name": "safestop",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "Enterprise HSE Platform for Preventive Work Stoppages and Official Work Interdictions",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "packageManager": "pnpm@11.5.3+sha512.7ac1c919341c213a34dc0d02afb7143c5c26ac26ee8c4782deea821b8ac64d2134a081fd8941dae6e29bbb48f58dfc2b7fbceeccc07cb2f09d219d342a4969ed",
+  "engines": {
+    "node": ">=22.22.1"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "turbo run clean",
+    "prepare": "husky"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "^11.5.3",
-      "onFail": "download"
-    }
+  "devDependencies": {
+    "@commitlint/cli": "21.2.1",
+    "@commitlint/config-conventional": "21.2.0",
+    "@safestop/config": "workspace:*",
+    "@types/node": "22.20.1",
+    "eslint": "10.7.0",
+    "husky": "9.1.7",
+    "lint-staged": "17.0.8",
+    "prettier": "3.9.5",
+    "turbo": "2.10.4",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.63.0"
   },
-  "type": "module"
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,mdx,yml,yaml,css}": [
+      "prettier --write"
+    ]
+  }
 }
