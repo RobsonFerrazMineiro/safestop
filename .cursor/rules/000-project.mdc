@@ -1,0 +1,204 @@
+---
+alwaysApply: true
+---
+
+---
+
+description: Regras fundamentais do projeto SafeStop. Este arquivo deve ser considerado a principal instrução para qualquer tarefa realizada pelo Cursor.
+alwaysApply: true
+
+---
+
+# SafeStop — Project Rules
+
+## Objetivo
+
+Você está trabalhando no projeto **SafeStop**.
+
+O SafeStop é uma plataforma Mobile First para comunicação rápida de Paralisações Preventivas e Interdições de atividades em ambientes industriais.
+
+O principal objetivo do sistema é reduzir o tempo entre a identificação de uma condição insegura e a comunicação efetiva às pessoas responsáveis.
+
+O projeto não existe para gerar burocracia.
+
+O projeto existe para acelerar a resposta operacional.
+
+---
+
+# Fonte da Verdade
+
+Antes de implementar qualquer funcionalidade consulte, nesta ordem:
+
+1. docs/product.md
+2. docs/workflow.md
+3. docs/database.md
+4. docs/architecture.md
+5. docs/notifications.md
+6. docs/engineering.md
+7. docs/roadmap.md
+8. docs/decisions/
+
+Nunca invente regras de negócio que contrariem esses documentos.
+
+---
+
+# Filosofia do Projeto
+
+Toda implementação deve respeitar obrigatoriamente:
+
+- Mobile First.
+- Simplicidade Operacional.
+- Comunicação antes da burocracia.
+- Segurança em primeiro lugar.
+- Rastreabilidade total.
+
+Quando existir dúvida entre criar algo mais sofisticado ou algo mais simples, escolha a solução mais simples que resolva corretamente o problema.
+
+---
+
+# Escopo
+
+O Cursor deve trabalhar apenas dentro do escopo solicitado.
+
+Não adicionar funcionalidades não solicitadas.
+
+Não alterar arquitetura sem autorização.
+
+Não criar novos fluxos.
+
+Não modificar regras de negócio existentes.
+
+Não instalar dependências sem necessidade.
+
+---
+
+# Antes de Implementar
+
+Antes de alterar código:
+
+1. Entenda completamente a solicitação.
+2. Localize os arquivos envolvidos.
+3. Consulte a documentação relacionada.
+4. Verifique implementações semelhantes.
+5. Avalie impacto da alteração.
+6. Proponha um plano curto quando a tarefa for média ou grande.
+
+---
+
+# Durante a Implementação
+
+Sempre:
+
+- reutilizar código existente;
+- reutilizar componentes;
+- reutilizar hooks;
+- reutilizar tipos;
+- reutilizar schemas;
+- reutilizar utilitários;
+
+Evite duplicação.
+
+Faça alterações pequenas e focadas.
+
+---
+
+# Após Implementar
+
+Sempre informar:
+
+- arquivos alterados;
+- resumo da alteração;
+- possíveis impactos;
+- validações executadas;
+- próximos passos sugeridos.
+
+---
+
+# Mobile First
+
+Sempre priorize a experiência do aplicativo móvel.
+
+O painel Web complementa o Mobile.
+
+Nunca desenvolva uma funcionalidade pensando primeiro no Desktop.
+
+---
+
+# Segurança
+
+Nunca:
+
+- exponha secrets;
+- utilize Service Role no cliente;
+- desabilite RLS;
+- ignore permissões;
+- ignore autenticação;
+- remova validações.
+
+---
+
+# Banco de Dados
+
+Toda alteração estrutural deve utilizar migrations.
+
+Nunca alterar tabelas manualmente em produção.
+
+Sempre preservar compatibilidade entre versões quando possível.
+
+---
+
+# Notificações
+
+A comunicação é o núcleo do SafeStop.
+
+Sempre lembrar:
+
+- Push não é a fonte oficial.
+- A notificação armazenada no banco é a fonte oficial.
+- Ciência é diferente de leitura.
+- Toda comunicação deve ser auditável.
+
+---
+
+# Offline
+
+Nunca assumir que o usuário possui conexão estável.
+
+Toda funcionalidade deve considerar:
+
+- perda de conexão;
+- sincronização futura;
+- preservação dos dados;
+- recuperação após falhas.
+
+---
+
+# Qualidade
+
+Todo código produzido deve ser:
+
+- simples;
+- legível;
+- tipado;
+- reutilizável;
+- consistente;
+- testável;
+- seguro.
+
+Evite complexidade desnecessária.
+
+---
+
+# Regra Final
+
+Sempre pergunte a si mesmo antes de implementar qualquer alteração:
+
+Esta solução torna o trabalho do usuário de campo mais rápido?
+
+Ela reduz burocracia?
+
+Ela melhora a comunicação?
+
+Ela mantém a simplicidade do produto?
+
+Se alguma dessas respostas for negativa, reavalie a implementação antes de continuar.

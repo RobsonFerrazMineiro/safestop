@@ -1,0 +1,1123 @@
+---
+description: 002-react-native.mdc Regras para tarefas relacionadas ao aplicativo mobile, Expo, React Native, navegação, recursos nativos, offline e experiência de campo.
+alwaysApply: false
+---
+
+---
+
+## description: Regras de desenvolvimento React Native e Expo para o SafeStop. Aplicar em tarefas relacionadas ao aplicativo mobile, navegação, componentes nativos, câmera, localização, notificações, conectividade, armazenamento local e experiência de campo.
+
+# React Native e Expo — Regras do SafeStop
+
+## Objetivo
+
+Todo desenvolvimento mobile do SafeStop deve priorizar:
+
+- Mobile First;
+- velocidade operacional;
+- poucos toques;
+- uso com uma mão;
+- legibilidade em campo;
+- conexão instável;
+- preservação dos dados;
+- segurança;
+- acessibilidade;
+- simplicidade.
+
+O aplicativo mobile é a principal interface operacional do SafeStop.
+
+O painel web é complementar.
+
+---
+
+# Fonte da Verdade
+
+Antes de implementar funcionalidades mobile, consulte:
+
+1. `docs/product.md`
+2. `docs/workflow.md`
+3. `docs/architecture.md`
+4. `docs/engineering.md`
+5. `docs/notifications.md`
+6. `docs/decisions/ADR-004-mobile-first.md`
+7. `docs/decisions/ADR-005-operational-simplicity.md`
+
+Não crie fluxos mobile que contrariem esses documentos.
+
+---
+
+# Stack Mobile Oficial
+
+Utilizar:
+
+- Expo;
+- React Native;
+- TypeScript;
+- Expo Router;
+- NativeWind;
+- TanStack Query;
+- React Hook Form;
+- Zod;
+- Expo Notifications;
+- Expo Location;
+- Expo Image Picker;
+- Expo SecureStore;
+- Expo FileSystem, quando necessário;
+- React Native Reanimated, quando necessário;
+- React Native Gesture Handler, quando necessário.
+
+Não adicionar bibliotecas alternativas sem necessidade comprovada.
+
+---
+
+# Expo
+
+O projeto deve permanecer compatível com o fluxo oficial do Expo.
+
+Priorizar:
+
+- APIs oficiais do Expo;
+- configuração via plugins;
+- EAS Build;
+- Development Builds quando necessários;
+- EAS Update somente quando compatível com a camada nativa.
+
+Evitar alterações manuais em projetos nativos gerados, salvo quando inevitáveis e documentadas.
+
+---
+
+# Expo Go e Development Build
+
+Expo Go poderá ser utilizado apenas enquanto suportar os recursos necessários.
+
+Utilizar Development Build quando a funcionalidade exigir:
+
+- configuração nativa;
+- push notification completo;
+- plugins;
+- módulos não disponíveis no Expo Go;
+- comportamento real de produção.
+
+Não assumir que algo funciona em produção apenas porque funcionou no Expo Go.
+
+---
+
+# Expo Router
+
+Expo Router será o padrão de navegação.
+
+Estrutura sugerida:
+
+    app/
+    ├── (auth)/
+    ├── (tabs)/
+    ├── occurrences/
+    ├── notifications/
+    ├── profile/
+    └── _layout.tsx
+
+Arquivos de rota devem conter principalmente:
+
+- leitura de parâmetros;
+- composição;
+- configuração de navegação;
+- ligação com a feature.
+
+Não colocar toda a lógica da tela diretamente no arquivo de rota.
+
+---
+
+# Rotas
+
+Utilizar nomes de rota claros e previsíveis.
+
+Exemplos:
+
+    /login
+    /occurrences
+    /occurrences/new
+    /occurrences/[id]
+    /notifications
+    /profile
+
+Deep links relacionados a ocorrências devem abrir:
+
+    /occurrences/{id}
+
+Antes de exibir uma rota protegida, validar:
+
+- autenticação;
+- organização ativa;
+- permissão;
+- escopo;
+- existência do recurso.
+
+---
+
+# Navegação Principal
+
+A navegação inicial poderá utilizar:
+
+- Início;
+- Ocorrências;
+- Nova Paralisação;
+- Notificações;
+- Perfil.
+
+A ação de criar uma nova Paralisação Preventiva deve ser fácil de localizar.
+
+Evitar navegação profunda e menus excessivos.
+
+---
+
+# Telas
+
+Toda tela mobile deve considerar:
+
+- Safe Area;
+- teclado;
+- scroll;
+- orientação vertical;
+- toque com polegar;
+- estados de loading;
+- estados de erro;
+- estado vazio;
+- ausência de conexão;
+- sincronização pendente;
+- tamanhos de toque adequados;
+- contraste;
+- leitor de tela.
+
+---
+
+# Safe Area
+
+Utilizar componentes e APIs adequadas para respeitar:
+
+- notch;
+- barra de status;
+- área inferior;
+- navegação do sistema.
+
+Não posicionar controles importantes em áreas inseguras.
+
+---
+
+# Componentes Mobile
+
+Componentes específicos do mobile devem permanecer em:
+
+    apps/mobile/
+
+Não mover componentes para `packages/ui` apenas por semelhança visual.
+
+Compartilhar somente quando houver compatibilidade real entre plataformas.
+
+Componentes devem:
+
+- possuir responsabilidade única;
+- receber propriedades tipadas;
+- evitar regras críticas;
+- apresentar feedback;
+- respeitar acessibilidade;
+- ser reutilizáveis quando fizer sentido.
+
+---
+
+# Componentes Nativos
+
+Priorizar componentes oficiais do React Native e Expo.
+
+Exemplos:
+
+- `View`;
+- `Text`;
+- `Pressable`;
+- `ScrollView`;
+- `FlatList`;
+- `TextInput`;
+- `Image`;
+- `ActivityIndicator`.
+
+Não utilizar elementos HTML em código React Native.
+
+---
+
+# Pressable
+
+Preferir `Pressable` para ações interativas.
+
+Todo elemento pressionável deve possuir:
+
+- área de toque adequada;
+- estado pressionado;
+- estado desabilitado;
+- label acessível;
+- feedback visual;
+- tratamento contra clique repetido quando necessário.
+
+Evitar utilizar texto ou ícone isolado como botão sem área de toque apropriada.
+
+---
+
+# Listas
+
+Para listas operacionais, preferir:
+
+- `FlatList`;
+- `SectionList`;
+- solução virtualizada adequada.
+
+Evitar renderizar listas grandes com `ScrollView` e `map`.
+
+Configurar corretamente:
+
+- `keyExtractor`;
+- estado vazio;
+- loading;
+- paginação;
+- atualização;
+- separadores;
+- memoização quando necessária.
+
+---
+
+# Performance de Listas
+
+Em listas grandes:
+
+- utilizar paginação;
+- evitar componentes pesados;
+- evitar funções complexas durante renderização;
+- utilizar callbacks estáveis quando necessário;
+- evitar imagens sem dimensionamento;
+- não carregar todos os relacionamentos de uma vez.
+
+Não aplicar memoização indiscriminadamente.
+
+Meça antes de otimizar.
+
+---
+
+# NativeWind
+
+NativeWind será utilizado para estilização mobile.
+
+Regras:
+
+- utilizar tokens e classes consistentes;
+- evitar valores arbitrários repetidos;
+- não espalhar cores diretas;
+- respeitar o design system;
+- manter legibilidade;
+- evitar classes excessivamente longas.
+
+Quando uma composição de classes for reutilizada, criar componente ou helper apropriado.
+
+---
+
+# Design Mobile
+
+A interface deve transmitir:
+
+- segurança;
+- clareza;
+- rapidez;
+- confiança;
+- organização.
+
+Priorizar:
+
+- botões grandes;
+- textos objetivos;
+- poucos campos;
+- hierarquia visual clara;
+- contraste;
+- badges com texto e ícone;
+- feedback imediato.
+
+Evitar:
+
+- excesso de animações;
+- telas densas;
+- tabelas;
+- menus ocultos demais;
+- múltiplas colunas;
+- textos longos durante ações operacionais.
+
+---
+
+# Uso com Uma Mão
+
+As ações mais importantes devem ficar em regiões acessíveis ao polegar.
+
+Priorizar:
+
+- botões na parte inferior;
+- controles grandes;
+- ações principais visíveis;
+- navegação curta.
+
+Evitar ações críticas pequenas no topo da tela.
+
+---
+
+# Formulários Mobile
+
+Formulários devem utilizar:
+
+- React Hook Form;
+- Zod;
+- componentes tipados;
+- mensagens de erro claras;
+- valores padrão;
+- seletores;
+- preenchimento automático.
+
+A abertura de uma Paralisação Preventiva deve levar menos de 60 segundos.
+
+---
+
+# Redução de Digitação
+
+Sempre que possível, utilizar:
+
+- selects;
+- opções rápidas;
+- dados cadastrados;
+- chips;
+- botões de seleção;
+- localização automática;
+- data e hora automáticas;
+- usuário autenticado;
+- câmera.
+
+Texto livre deve ser utilizado apenas quando necessário.
+
+---
+
+# Campos de Texto
+
+Configurar corretamente:
+
+- `keyboardType`;
+- `textContentType`;
+- `autoCapitalize`;
+- `autoCorrect`;
+- `multiline`;
+- `returnKeyType`;
+- `maxLength`, quando aplicável.
+
+Campos multiline devem permitir leitura e edição confortáveis.
+
+---
+
+# Teclado
+
+As telas com formulário devem lidar corretamente com o teclado.
+
+Considerar:
+
+- campos ocultos;
+- scroll automático;
+- fechamento;
+- botão de submissão;
+- comportamento Android e iOS;
+- áreas inferiores.
+
+Não permitir que o teclado cubra a ação principal.
+
+---
+
+# Submissão de Formulários
+
+Ao submeter:
+
+1. validar;
+2. bloquear nova submissão;
+3. preservar os dados;
+4. mostrar progresso;
+5. executar a mutation;
+6. aguardar confirmação do backend;
+7. mostrar sucesso ou falha;
+8. navegar apenas após confirmação.
+
+Não limpar o formulário antes da resposta do servidor.
+
+---
+
+# Rascunhos
+
+Formulários operacionais devem ser preparados para preservar rascunhos.
+
+Casos importantes:
+
+- nova Paralisação Preventiva;
+- correção;
+- MDHO;
+- comentários longos;
+- anexos pendentes.
+
+O rascunho deve ser separado por:
+
+- usuário;
+- organização;
+- funcionalidade;
+- ocorrência.
+
+---
+
+# Estado Remoto
+
+Utilizar TanStack Query para:
+
+- ocorrências;
+- notificações;
+- áreas;
+- organizações;
+- MDHO;
+- planos de ação;
+- timeline.
+
+Não duplicar Server State em Zustand.
+
+---
+
+# Estado Local
+
+Utilizar estado local para:
+
+- modal;
+- etapa atual;
+- preview;
+- câmera;
+- filtro temporário;
+- campo expandido;
+- seleção visual.
+
+---
+
+# Zustand
+
+Utilizar somente quando houver necessidade real, como:
+
+- conectividade;
+- fila offline;
+- organização ativa;
+- rascunhos persistentes;
+- preferências locais.
+
+Não utilizar Zustand para armazenar todas as ocorrências.
+
+---
+
+# Conectividade
+
+Toda funcionalidade mobile deve considerar:
+
+- ausência de internet;
+- conexão instável;
+- timeout;
+- reconexão;
+- retorno do segundo plano;
+- falha de sincronização.
+
+A interface deve diferenciar:
+
+    Salvo no dispositivo
+    Aguardando conexão
+    Enviando
+    Registrado no servidor
+    Responsáveis notificados
+    Falha no envio
+
+Não afirmar que a ocorrência foi comunicada antes da confirmação do servidor.
+
+---
+
+# Offline
+
+O suporte offline será gradual.
+
+No MVP, priorizar:
+
+- preservação do formulário;
+- cache de leitura;
+- retry;
+- feedback claro;
+- prevenção contra duplicidade.
+
+No futuro, a fila offline poderá incluir:
+
+- criação de ocorrência;
+- comentários;
+- evidências;
+- confirmação de ciência;
+- correções.
+
+A regra oficial continua no servidor.
+
+---
+
+# Sincronização
+
+Operações sincronizáveis devem possuir:
+
+- identificador local;
+- estado;
+- tentativa;
+- último erro;
+- idempotency key;
+- usuário;
+- organização;
+- data.
+
+Não utilizar sincronização baseada apenas em `last-write-wins` para ações críticas.
+
+---
+
+# Câmera
+
+Para captura de evidências:
+
+- solicitar permissão apenas quando necessária;
+- explicar o motivo;
+- permitir nova tentativa;
+- mostrar preview;
+- permitir remover;
+- permitir legenda;
+- compactar antes do envio;
+- preservar arquivo local enquanto pendente.
+
+A câmera não deve bloquear o fluxo se a permissão for negada, salvo quando a evidência for realmente obrigatória pela regra.
+
+---
+
+# Galeria
+
+Permitir seleção de arquivos existentes quando apropriado.
+
+Validar:
+
+- tipo;
+- tamanho;
+- quantidade;
+- extensão;
+- MIME;
+- permissão;
+- ocorrência relacionada.
+
+---
+
+# Imagens
+
+Antes do upload:
+
+- verificar tamanho;
+- reduzir resolução quando necessário;
+- comprimir;
+- preservar legibilidade;
+- definir dimensões;
+- evitar arquivos gigantes.
+
+Não degradar a evidência a ponto de impedir análise.
+
+---
+
+# Upload
+
+Uploads devem mostrar estado individual:
+
+    Aguardando
+    Preparando
+    Enviando
+    Concluído
+    Falhou
+
+Quando um upload falhar, permitir tentar novamente somente o item afetado.
+
+Não repetir uploads concluídos.
+
+---
+
+# Expo FileSystem
+
+Utilizar apenas quando necessário para:
+
+- arquivos temporários;
+- fila offline;
+- manipulação local;
+- download;
+- cache controlado.
+
+Arquivos temporários devem ser removidos quando não forem mais necessários.
+
+---
+
+# Geolocalização
+
+Utilizar Expo Location.
+
+A localização deve:
+
+- ser solicitada com contexto;
+- não bloquear a paralisação se negada;
+- registrar latitude;
+- registrar longitude;
+- registrar precisão;
+- permitir local manual;
+- não rastrear continuamente.
+
+O SafeStop não deve monitorar deslocamento do usuário.
+
+---
+
+# Timeout de Localização
+
+Não aguardar localização indefinidamente.
+
+Se houver falha:
+
+- informar o usuário;
+- permitir nova tentativa;
+- permitir preenchimento manual;
+- continuar o fluxo.
+
+---
+
+# Notificações Push
+
+Utilizar Expo Notifications.
+
+Push é apenas um canal.
+
+A fonte oficial é a notificação armazenada no banco.
+
+O aplicativo deve lidar com:
+
+- app aberto;
+- segundo plano;
+- app encerrado;
+- token inválido;
+- usuário sem permissão de push;
+- múltiplos dispositivos;
+- deep link;
+- leitura;
+- confirmação de ciência.
+
+---
+
+# Tokens de Push
+
+Registrar:
+
+- usuário;
+- organização;
+- dispositivo;
+- plataforma;
+- token;
+- versão;
+- último acesso;
+- estado ativo.
+
+Desativar tokens inválidos.
+
+Não expor tokens a outros usuários.
+
+---
+
+# Permissão de Notificação
+
+Solicitar permissão no momento adequado.
+
+Explicar o valor:
+
+- receber alertas;
+- acompanhar ocorrências;
+- responder rapidamente.
+
+Se o usuário negar:
+
+- manter notificações internas;
+- permitir uso do aplicativo;
+- informar como habilitar depois.
+
+---
+
+# Deep Links
+
+Ao abrir por notificação:
+
+1. validar sessão;
+2. validar organização;
+3. validar permissão;
+4. validar existência;
+5. abrir a ocorrência.
+
+Não exibir dados antes da autorização.
+
+---
+
+# SecureStore
+
+Utilizar Expo SecureStore para dados sensíveis compatíveis com esse tipo de armazenamento.
+
+Exemplos:
+
+- informações de sessão, conforme integração adotada;
+- identificadores sensíveis;
+- preferências protegidas.
+
+Não utilizar SecureStore como banco local completo.
+
+---
+
+# Sessão
+
+A aplicação deve:
+
+- restaurar sessão;
+- renovar token;
+- reagir à expiração;
+- reagir à inativação;
+- limpar dados no logout;
+- remover cache sensível;
+- cancelar subscriptions;
+- impedir exibição de dados do usuário anterior.
+
+---
+
+# Retorno do Segundo Plano
+
+Ao retornar ao primeiro plano:
+
+- validar sessão;
+- verificar conexão;
+- sincronizar quando necessário;
+- atualizar notificações;
+- revisar dados críticos;
+- evitar consultas duplicadas.
+
+---
+
+# Permissões do Dispositivo
+
+Toda permissão deve ser:
+
+- solicitada apenas quando necessária;
+- explicada;
+- tratada quando negada;
+- revisável pelo usuário;
+- independente quando possível.
+
+Exemplos:
+
+- câmera;
+- galeria;
+- localização;
+- notificações.
+
+---
+
+# Erros Mobile
+
+Mensagens devem ser claras.
+
+Exemplo inadequado:
+
+    Network request failed
+
+Exemplo adequado:
+
+    Não foi possível enviar a ocorrência.
+    Seus dados foram preservados.
+
+Sempre que possível, oferecer:
+
+- tentar novamente;
+- continuar depois;
+- salvar localmente;
+- voltar.
+
+---
+
+# Feedback
+
+Toda ação importante deve produzir feedback.
+
+Exemplos:
+
+    Ocorrência registrada
+    Responsáveis notificados
+    Ciência confirmada
+    Correção enviada
+    Atividade liberada
+    Aguardando conexão
+
+Não utilizar ações silenciosas.
+
+---
+
+# Toasts e Alertas
+
+Utilizar toasts para:
+
+- sucesso;
+- informação breve;
+- confirmação não crítica.
+
+Utilizar dialog ou tela de confirmação para:
+
+- cancelamento;
+- liberação;
+- ação destrutiva;
+- mudança crítica.
+
+Não exigir confirmação para ações simples e reversíveis.
+
+---
+
+# Loading
+
+Utilizar:
+
+- skeleton;
+- indicador;
+- texto de progresso;
+- estado local.
+
+Evitar tela completamente vazia durante carregamento.
+
+---
+
+# Estado Vazio
+
+Estados vazios devem orientar o usuário.
+
+Exemplo:
+
+    Nenhuma ocorrência encontrada.
+
+    As novas Paralisações Preventivas aparecerão aqui.
+
+Quando apropriado, mostrar ação principal.
+
+---
+
+# Acessibilidade
+
+Todo componente deve considerar:
+
+- `accessibilityLabel`;
+- `accessibilityHint`;
+- `accessibilityRole`;
+- estado selecionado;
+- estado desabilitado;
+- tamanho de toque;
+- contraste;
+- leitor de tela.
+
+Não depender apenas de cor.
+
+---
+
+# Áreas de Toque
+
+Elementos interativos devem possuir área mínima confortável.
+
+Quando o ícone for pequeno, aumentar a área de toque sem alterar necessariamente o tamanho visual.
+
+---
+
+# Animações
+
+Animações devem:
+
+- ser curtas;
+- reforçar contexto;
+- não atrasar;
+- não distrair;
+- respeitar redução de movimento quando possível.
+
+Não adicionar animação apenas por estética.
+
+---
+
+# Reanimated
+
+Utilizar somente quando houver benefício real.
+
+Exemplos:
+
+- transições;
+- gestos;
+- feedback;
+- elementos expansíveis;
+- animações de alto desempenho.
+
+Não usar para animações simples que o React Native já resolve.
+
+---
+
+# Gesture Handler
+
+Utilizar para gestos claros e previsíveis.
+
+Evitar esconder ações importantes apenas em swipe.
+
+Toda ação por gesto deve possuir alternativa visível quando necessário.
+
+---
+
+# Android e iOS
+
+Mesmo com prioridade inicial no Android, o código deve permanecer compatível com iOS.
+
+Evitar:
+
+- APIs exclusivas sem fallback;
+- estilos quebrados;
+- suposições sobre botões físicos;
+- caminhos específicos;
+- permissões sem tratamento por plataforma.
+
+---
+
+# Platform
+
+Utilizar verificações de plataforma somente quando necessário.
+
+Evitar espalhar:
+
+    Platform.OS === "android"
+
+por toda a aplicação.
+
+Centralizar comportamento específico quando possível.
+
+---
+
+# Status Bar
+
+A Status Bar deve possuir contraste adequado ao tema e à tela.
+
+Não deixar conteúdo ilegível ou coberto.
+
+---
+
+# Tema
+
+A aplicação deve respeitar o design definido.
+
+Se houver tema claro e escuro:
+
+- utilizar tokens;
+- não duplicar estilos;
+- garantir contraste;
+- testar telas críticas.
+
+Não implementar tema escuro antes de existir necessidade definida.
+
+---
+
+# Segurança Mobile
+
+Nunca:
+
+- armazenar `service_role`;
+- expor secrets;
+- confiar apenas na interface;
+- tornar arquivos públicos;
+- registrar tokens em logs;
+- manter dados de outro usuário;
+- permitir ação crítica sem backend.
+
+---
+
+# Logs Mobile
+
+Logs não devem conter:
+
+- access token;
+- refresh token;
+- senha;
+- fotos;
+- dados sensíveis;
+- URLs assinadas completas;
+- conteúdo confidencial.
+
+Logs temporários devem ser removidos antes do commit.
+
+---
+
+# Testes Mobile
+
+Priorizar testes para:
+
+- formulários;
+- validação;
+- navegação;
+- conectividade;
+- rascunhos;
+- câmera;
+- geolocalização;
+- push;
+- deep links;
+- permissões;
+- upload;
+- sincronização;
+- fluxos críticos.
+
+Utilizar React Native Testing Library para componentes e fluxos compatíveis.
+
+Avaliar Maestro ou Detox para E2E quando o aplicativo estiver estabilizado.
+
+---
+
+# Fluxos Críticos
+
+Sempre validar em dispositivo real:
+
+- login;
+- nova Paralisação Preventiva;
+- captura de foto;
+- geolocalização;
+- envio;
+- push;
+- confirmação de ciência;
+- correção;
+- MDHO;
+- liberação;
+- perda e retorno de conexão.
+
+---
+
+# Dependências Mobile
+
+Antes de instalar uma dependência:
+
+- verificar suporte ao Expo;
+- verificar compatibilidade com o SDK;
+- verificar Android;
+- verificar iOS;
+- verificar manutenção;
+- verificar impacto no build;
+- verificar se exige configuração nativa.
+
+Não instalar bibliotecas apenas para resolver detalhes simples.
+
+---
+
+# Regra Final
+
+Toda decisão mobile deve responder:
+
+- Isso ajuda o profissional em campo?
+- Reduz o tempo de operação?
+- Funciona com conexão instável?
+- Preserva os dados?
+- É utilizável com uma mão?
+- Mantém a segurança?
+- Evita burocracia?
+
+Quando a resposta for negativa, a implementação deve ser reavaliada.

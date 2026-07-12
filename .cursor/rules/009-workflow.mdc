@@ -1,0 +1,1419 @@
+---
+description: 009-workflow.mdc Regras para status, transições, decisões, MDHO, referência IMS, correções, validação, liberação e encerramento.
+alwaysApply: false
+---
+
+---
+
+## description: Regras de workflow do SafeStop. Aplicar em tarefas relacionadas a status, transições, decisões, Ver e Agir, Interdição Oficial, MDHO, referência IMS, plano de ação, validação, liberação, encerramento, cancelamento, timeline e auditoria.
+
+# Workflow — Regras do SafeStop
+
+## Objetivo
+
+Toda implementação relacionada ao fluxo operacional do SafeStop deve respeitar rigorosamente os estados, decisões, permissões e transições definidos neste projeto.
+
+O workflow existe para garantir:
+
+- segurança operacional;
+- previsibilidade;
+- rastreabilidade;
+- autorização;
+- consistência entre mobile e web;
+- comunicação correta;
+- prevenção contra saltos indevidos;
+- histórico completo.
+
+O frontend nunca deve alterar livremente o status de uma ocorrência.
+
+---
+
+# Fonte da Verdade
+
+Antes de implementar ou alterar qualquer parte do fluxo, consulte:
+
+1. `docs/workflow.md`
+2. `docs/product.md`
+3. `docs/database.md`
+4. `docs/notifications.md`
+5. `docs/architecture.md`
+6. `docs/engineering.md`
+7. `docs/roadmap.md`
+8. `docs/decisions/ADR-003-communication.md`
+9. `docs/decisions/ADR-004-mobile-first.md`
+10. `docs/decisions/ADR-005-operational-simplicity.md`
+
+Não inventar status, decisões, etapas ou transições que contrariem esses documentos.
+
+---
+
+# Princípio Central
+
+O fluxo do SafeStop deve seguir esta ordem conceitual:
+
+    parar
+    comunicar
+    avaliar
+    decidir
+    corrigir
+    validar
+    liberar
+    encerrar
+
+A documentação completa vem depois da comunicação inicial.
+
+Não bloquear o alerta inicial por ausência de informações complementares.
+
+---
+
+# Status Oficiais
+
+Os status oficiais do SafeStop são:
+
+    PARALISACAO_PREVENTIVA
+    EM_AVALIACAO
+    VER_E_AGIR
+    INTERDICAO_CONFIRMADA
+    MDHO_EM_PREENCHIMENTO
+    AGUARDANDO_APROVACAO_HSE
+    AGUARDANDO_REGISTRO_IMS
+    EM_TRATATIVA
+    AGUARDANDO_VALIDACAO
+    LIBERADA
+    ENCERRADA
+    CANCELADA
+
+Não criar novos status sem atualização oficial da documentação e decisão explícita.
+
+---
+
+# Status Inicial
+
+Toda nova ocorrência deve iniciar em:
+
+    PARALISACAO_PREVENTIVA
+
+Esse status representa que:
+
+- a atividade foi interrompida;
+- a ocorrência foi registrada;
+- a comunicação inicial foi iniciada;
+- a liderança ainda não tomou a decisão final;
+- ainda não existe classificação como Ver e Agir ou Interdição Oficial.
+
+---
+
+# Código Interno
+
+Toda ocorrência deve possuir um código interno gerado pelo SafeStop.
+
+Exemplo:
+
+    SS-26-000001
+
+Esse código deve existir desde a criação da ocorrência.
+
+Ele é independente da referência IMS.
+
+---
+
+# Paralisação Preventiva
+
+Ao registrar uma Paralisação Preventiva, o sistema deve:
+
+1. validar os dados mínimos;
+2. criar a ocorrência;
+3. gerar o código interno;
+4. registrar autor;
+5. registrar data e hora;
+6. registrar localização quando disponível;
+7. registrar evidências quando enviadas;
+8. identificar destinatários;
+9. criar eventos de notificação;
+10. criar notificações individuais;
+11. criar histórico;
+12. criar auditoria;
+13. retornar confirmação ao usuário.
+
+A ocorrência só pode ser considerada registrada quando o servidor confirmar a criação.
+
+---
+
+# Dados Mínimos
+
+O registro inicial deve exigir apenas o necessário para comunicar.
+
+Campos iniciais possíveis:
+
+- organização;
+- unidade;
+- área;
+- empresa envolvida;
+- atividade;
+- local;
+- descrição da condição insegura;
+- criticidade;
+- autor;
+- data e hora.
+
+Não exigir na abertura:
+
+- MDHO;
+- plano de ação;
+- referência IMS;
+- descrição extensa;
+- aprovação;
+- documentação completa.
+
+---
+
+# Comunicação Inicial
+
+A comunicação deve ser disparada após a criação confirmada no servidor.
+
+Não mostrar:
+
+    Responsáveis notificados
+
+enquanto a ocorrência existir apenas localmente.
+
+Mostrar estados reais:
+
+    Salvo no dispositivo
+    Aguardando conexão
+    Enviando
+    Registrado no servidor
+    Responsáveis notificados
+    Falha no envio
+
+---
+
+# Transição para Avaliação
+
+Transição permitida:
+
+    PARALISACAO_PREVENTIVA
+    →
+    EM_AVALIACAO
+
+A avaliação deve registrar:
+
+- usuário;
+- data;
+- hora;
+- ocorrência;
+- status anterior;
+- novo status;
+- histórico;
+- auditoria.
+
+---
+
+# Avaliação da Liderança
+
+Em `EM_AVALIACAO`, a liderança deve analisar:
+
+- condição insegura;
+- atividade;
+- local;
+- empresa;
+- criticidade;
+- evidências;
+- histórico;
+- pessoas notificadas;
+- confirmações de ciência;
+- comentários;
+- contexto operacional.
+
+A liderança deve registrar uma decisão explícita.
+
+---
+
+# Decisões Oficiais
+
+As decisões oficiais são:
+
+    VER_E_AGIR
+
+ou:
+
+    INTERDICAO_OFICIAL
+
+Não criar outros tipos de decisão sem revisão oficial do produto.
+
+---
+
+# Decisão Ver e Agir
+
+Transição permitida:
+
+    EM_AVALIACAO
+    →
+    VER_E_AGIR
+
+A decisão deve registrar:
+
+- tipo da decisão;
+- justificativa;
+- usuário;
+- data;
+- hora;
+- histórico;
+- auditoria;
+- notificações aplicáveis.
+
+---
+
+# Fluxo Ver e Agir
+
+O fluxo Ver e Agir deve seguir:
+
+    VER_E_AGIR
+    ↓
+    correção
+    ↓
+    evidência quando necessária
+    ↓
+    AGUARDANDO_VALIDACAO
+    ↓
+    aprovação ou rejeição
+    ↓
+    LIBERADA
+    ↓
+    ENCERRADA
+
+Esse fluxo deve permanecer simples.
+
+---
+
+# Regras do Ver e Agir
+
+No Ver e Agir:
+
+- não existe MDHO;
+- não existe referência IMS;
+- não existe Interdição Oficial;
+- não deve existir plano de ação complexo por padrão;
+- a correção deve ser objetiva;
+- a evidência pode ser obrigatória conforme a situação;
+- a validação deve ser realizada por usuário autorizado;
+- a liberação deve ser auditável.
+
+Nunca solicitar referência IMS em Ver e Agir.
+
+---
+
+# Correção no Ver e Agir
+
+A correção pode incluir:
+
+- descrição da correção;
+- comentário;
+- responsável;
+- data;
+- evidência;
+- foto antes;
+- foto depois;
+- observação.
+
+A correção enviada deve gerar:
+
+- atualização da timeline;
+- auditoria;
+- notificação ao validador;
+- mudança para `AGUARDANDO_VALIDACAO`.
+
+---
+
+# Decisão Interdição Oficial
+
+Transição permitida:
+
+    EM_AVALIACAO
+    →
+    INTERDICAO_CONFIRMADA
+
+A decisão deve registrar:
+
+- justificativa;
+- usuário;
+- data;
+- hora;
+- criticidade;
+- histórico;
+- auditoria;
+- notificação reforçada.
+
+A atividade deve permanecer interrompida.
+
+---
+
+# Interdição Oficial
+
+Após a confirmação da Interdição Oficial, o sistema deve:
+
+1. registrar a decisão;
+2. atualizar o status;
+3. criar histórico;
+4. criar auditoria;
+5. notificar os envolvidos;
+6. iniciar o fluxo MDHO;
+7. bloquear liberação imediata;
+8. manter a atividade como não liberada.
+
+---
+
+# Transição para MDHO
+
+Transição permitida:
+
+    INTERDICAO_CONFIRMADA
+    →
+    MDHO_EM_PREENCHIMENTO
+
+O MDHO só pode existir após a Interdição Oficial.
+
+Nunca iniciar MDHO em:
+
+- Paralisação Preventiva;
+- Em Avaliação;
+- Ver e Agir;
+- ocorrência cancelada;
+- ocorrência encerrada.
+
+---
+
+# MDHO
+
+O MDHO deve conter as categorias oficiais:
+
+- Comportamento;
+- Tipo de Desvio;
+- Pré-condições;
+- Questões Organizacionais;
+- Supervisão/Fiscalização.
+
+A implementação deve seguir:
+
+    docs/workflow.md
+    docs/database.md
+
+---
+
+# Regras do MDHO
+
+O MDHO deve:
+
+- permitir rascunho;
+- permitir múltiplas seleções onde definido;
+- permitir seleção única em Tipo de Desvio;
+- exigir detalhe na opção “Outro”;
+- preservar opções históricas;
+- registrar autor;
+- registrar data;
+- permitir envio;
+- permitir devolução;
+- permitir aprovação;
+- gerar auditoria.
+
+---
+
+# Tipo de Desvio
+
+Tipo de Desvio aceita apenas uma opção:
+
+    ERRO
+
+ou:
+
+    VIOLACAO
+
+Não permitir múltipla seleção nessa categoria.
+
+---
+
+# Envio do MDHO
+
+Transição permitida:
+
+    MDHO_EM_PREENCHIMENTO
+    →
+    AGUARDANDO_APROVACAO_HSE
+
+Antes de enviar:
+
+1. validar categorias obrigatórias;
+2. validar seleção única;
+3. validar detalhes;
+4. validar opção “Outro”;
+5. validar usuário;
+6. registrar envio;
+7. criar histórico;
+8. criar auditoria;
+9. notificar aprovador.
+
+---
+
+# Aprovação do MDHO
+
+A liderança HSE pode:
+
+- aprovar;
+- devolver.
+
+A aprovação deve exigir permissão específica.
+
+---
+
+# MDHO Aprovado
+
+Transição permitida:
+
+    AGUARDANDO_APROVACAO_HSE
+    →
+    AGUARDANDO_REGISTRO_IMS
+
+Ao aprovar:
+
+- registrar usuário;
+- registrar data;
+- registrar hora;
+- criar histórico;
+- criar auditoria;
+- criar notificação;
+- bloquear edição comum do MDHO aprovado.
+
+---
+
+# MDHO Devolvido
+
+Transição permitida:
+
+    AGUARDANDO_APROVACAO_HSE
+    →
+    MDHO_EM_PREENCHIMENTO
+
+A devolução deve exigir:
+
+- justificativa;
+- usuário;
+- data;
+- hora;
+- histórico;
+- auditoria;
+- notificação ao responsável.
+
+O conteúdo anterior deve ser preservado para correção.
+
+---
+
+# Referência IMS
+
+O SafeStop não gera IMS.
+
+O SafeStop não consulta o IMS.
+
+O SafeStop não sincroniza com o IMS.
+
+O SafeStop não valida a existência do código na plataforma externa.
+
+O código é digitado manualmente.
+
+Exemplo:
+
+    BAA-26-0001
+
+---
+
+# Registro da Referência IMS
+
+A referência IMS só pode ser registrada após:
+
+- Interdição Oficial;
+- MDHO aprovado;
+- usuário autorizado;
+- status compatível.
+
+Status esperado:
+
+    AGUARDANDO_REGISTRO_IMS
+
+---
+
+# Dados da Referência IMS
+
+Registrar:
+
+- código;
+- ocorrência;
+- usuário;
+- data;
+- hora;
+- forma de entrada manual;
+- histórico;
+- auditoria.
+
+Não criar campo separado para “BAA”.
+
+BAA faz parte do próprio código.
+
+---
+
+# Alteração da Referência IMS
+
+A alteração deve exigir:
+
+- permissão específica;
+- valor anterior;
+- novo valor;
+- justificativa;
+- usuário;
+- data;
+- hora;
+- auditoria.
+
+Não sobrescrever silenciosamente.
+
+---
+
+# Avanço após IMS
+
+Transição padrão:
+
+    AGUARDANDO_REGISTRO_IMS
+    →
+    EM_TRATATIVA
+
+A referência IMS é apenas um dado de acompanhamento.
+
+Ela não cria integração técnica.
+
+---
+
+# Plano de Ação
+
+O plano de ação deve ser utilizado principalmente em Interdição Oficial.
+
+Pode conter:
+
+- resumo;
+- ações;
+- responsáveis;
+- empresas responsáveis;
+- prazos;
+- prioridades;
+- evidências;
+- validações;
+- status.
+
+---
+
+# Status de Ação
+
+Os status de uma ação podem incluir:
+
+    PENDING
+    IN_PROGRESS
+    AWAITING_VALIDATION
+    COMPLETED
+    REJECTED
+    CANCELLED
+
+Não confundir status da ação com status da ocorrência.
+
+---
+
+# Criação de Ação
+
+Toda ação deve possuir:
+
+- título;
+- descrição;
+- responsável;
+- organização responsável;
+- prazo;
+- prioridade;
+- status inicial;
+- autor;
+- data.
+
+Não criar ação sem responsável.
+
+---
+
+# Conclusão de Ação
+
+A conclusão pode exigir:
+
+- descrição;
+- evidência;
+- usuário;
+- data;
+- hora.
+
+Concluir não significa validar.
+
+---
+
+# Validação de Ação
+
+A validação deve ser executada por usuário autorizado.
+
+O validador pode:
+
+- aprovar;
+- rejeitar;
+- solicitar complemento.
+
+A rejeição deve exigir justificativa.
+
+---
+
+# Transição para Validação
+
+No fluxo Ver e Agir:
+
+    VER_E_AGIR
+    →
+    AGUARDANDO_VALIDACAO
+
+No fluxo de Interdição:
+
+    EM_TRATATIVA
+    →
+    AGUARDANDO_VALIDACAO
+
+A origem deve ser preservada para permitir retorno correto em caso de rejeição.
+
+---
+
+# Aguardando Validação
+
+Em `AGUARDANDO_VALIDACAO`, o sistema deve apresentar:
+
+- correções realizadas;
+- evidências;
+- ações;
+- responsáveis;
+- datas;
+- histórico;
+- MDHO quando aplicável;
+- referência IMS quando aplicável;
+- status de cada ação.
+
+---
+
+# Validação Aprovada
+
+Transição permitida:
+
+    AGUARDANDO_VALIDACAO
+    →
+    LIBERADA
+
+Antes de aprovar, validar:
+
+- permissão;
+- status;
+- correções;
+- evidências;
+- ações concluídas;
+- requisitos do fluxo;
+- nota de liberação;
+- usuário;
+- data e hora.
+
+---
+
+# Validação Rejeitada
+
+Se o fluxo original for Ver e Agir:
+
+    AGUARDANDO_VALIDACAO
+    →
+    VER_E_AGIR
+
+Se o fluxo original for Interdição:
+
+    AGUARDANDO_VALIDACAO
+    →
+    EM_TRATATIVA
+
+A rejeição deve registrar:
+
+- motivo;
+- usuário;
+- data;
+- hora;
+- histórico;
+- auditoria;
+- notificação.
+
+---
+
+# Liberação
+
+A liberação é uma ação crítica.
+
+Nunca alterar diretamente:
+
+    status = LIBERADA
+
+Utilizar operação explícita:
+
+    releaseOccurrence()
+
+O backend deve validar toda a transição.
+
+---
+
+# Requisitos de Liberação
+
+A liberação deve exigir:
+
+- usuário autorizado;
+- vínculo ativo;
+- organização correta;
+- permissão;
+- status compatível;
+- correções concluídas;
+- evidências suficientes;
+- ações obrigatórias concluídas;
+- MDHO aprovado quando aplicável;
+- referência IMS quando exigida;
+- nota de liberação;
+- data e hora.
+
+---
+
+# Ao Liberar
+
+O sistema deve:
+
+1. atualizar status;
+2. registrar usuário;
+3. registrar data e hora;
+4. registrar nota;
+5. criar histórico;
+6. criar auditoria;
+7. criar evento de notificação;
+8. notificar envolvidos;
+9. manter evidências;
+10. impedir liberação duplicada.
+
+---
+
+# Atividade Liberada
+
+O status:
+
+    LIBERADA
+
+indica que a atividade pode ser retomada por decisão autorizada.
+
+Ele não apaga:
+
+- ocorrência;
+- decisão;
+- MDHO;
+- plano de ação;
+- evidências;
+- histórico;
+- auditoria;
+- notificações.
+
+---
+
+# Encerramento
+
+Transição permitida:
+
+    LIBERADA
+    →
+    ENCERRADA
+
+O encerramento representa a conclusão administrativa da ocorrência.
+
+---
+
+# Ocorrência Encerrada
+
+Em `ENCERRADA`:
+
+- permitir leitura;
+- permitir consulta;
+- permitir relatório;
+- permitir auditoria;
+- bloquear alterações comuns;
+- preservar dados;
+- preservar evidências;
+- preservar autoria.
+
+Alterações posteriores devem ser excepcionais, autorizadas e auditadas.
+
+---
+
+# Cancelamento
+
+Transições de cancelamento devem ser restritas.
+
+Exemplos permitidos conforme workflow:
+
+    PARALISACAO_PREVENTIVA
+    →
+    CANCELADA
+
+    EM_AVALIACAO
+    →
+    CANCELADA
+
+    VER_E_AGIR
+    →
+    CANCELADA
+
+Não permitir cancelamento irrestrito em qualquer status.
+
+---
+
+# Motivos de Cancelamento
+
+Exemplos:
+
+- ocorrência duplicada;
+- registro aberto por engano;
+- teste autorizado;
+- informação incorreta impossível de corrigir com segurança.
+
+Não usar cancelamento para esconder ocorrência válida.
+
+---
+
+# Requisitos do Cancelamento
+
+O cancelamento deve exigir:
+
+- permissão;
+- status compatível;
+- motivo;
+- usuário;
+- data;
+- hora;
+- histórico;
+- auditoria.
+
+---
+
+# Transições Permitidas
+
+As transições oficiais são:
+
+    PARALISACAO_PREVENTIVA
+      → EM_AVALIACAO
+      → CANCELADA
+
+    EM_AVALIACAO
+      → VER_E_AGIR
+      → INTERDICAO_CONFIRMADA
+      → CANCELADA
+
+    VER_E_AGIR
+      → AGUARDANDO_VALIDACAO
+      → CANCELADA
+
+    INTERDICAO_CONFIRMADA
+      → MDHO_EM_PREENCHIMENTO
+
+    MDHO_EM_PREENCHIMENTO
+      → AGUARDANDO_APROVACAO_HSE
+
+    AGUARDANDO_APROVACAO_HSE
+      → MDHO_EM_PREENCHIMENTO
+      → AGUARDANDO_REGISTRO_IMS
+
+    AGUARDANDO_REGISTRO_IMS
+      → EM_TRATATIVA
+
+    EM_TRATATIVA
+      → AGUARDANDO_VALIDACAO
+
+    AGUARDANDO_VALIDACAO
+      → VER_E_AGIR
+      → EM_TRATATIVA
+      → LIBERADA
+
+    LIBERADA
+      → ENCERRADA
+
+Nenhuma outra transição deve ser permitida sem regra oficial.
+
+---
+
+# Máquina de Estados
+
+A máquina de estados deve existir de forma centralizada.
+
+Não duplicar a lista de transições em:
+
+- mobile;
+- web;
+- hook;
+- componente;
+- banco;
+- service;
+
+com regras diferentes.
+
+O backend deve ser a autoridade final.
+
+---
+
+# Funções de Transição
+
+Utilizar operações explícitas.
+
+Exemplos:
+
+    create_occurrence()
+    start_occurrence_evaluation()
+    record_occurrence_decision()
+    submit_mdho_assessment()
+    approve_mdho_assessment()
+    return_mdho_assessment()
+    register_ims_reference()
+    submit_correction()
+    validate_correction()
+    release_occurrence()
+    close_occurrence()
+    cancel_occurrence()
+
+Evitar operação genérica:
+
+    updateStatus()
+
+---
+
+# Permissões por Transição
+
+Exemplos:
+
+    Criar paralisação
+    occurrence.create
+
+    Iniciar avaliação
+    occurrence.evaluate
+
+    Confirmar Interdição
+    occurrence.confirm_interdiction
+
+    Preencher MDHO
+    mdho.fill
+
+    Enviar MDHO
+    mdho.submit
+
+    Aprovar MDHO
+    mdho.approve
+
+    Devolver MDHO
+    mdho.return
+
+    Registrar IMS
+    ims_reference.register
+
+    Alterar IMS
+    ims_reference.update
+
+    Validar correção
+    occurrence.validate_correction
+
+    Liberar
+    occurrence.release
+
+    Cancelar
+    occurrence.cancel
+
+A permissão deve ser validada no backend.
+
+---
+
+# Histórico de Status
+
+Toda mudança deve gerar registro em:
+
+    occurrence_status_history
+
+Registrar:
+
+- status anterior;
+- novo status;
+- motivo;
+- metadata;
+- usuário;
+- data;
+- hora.
+
+O histórico deve ser criado na mesma transação da alteração.
+
+---
+
+# Timeline
+
+A timeline deve representar a história operacional.
+
+Eventos mínimos:
+
+- ocorrência criada;
+- notificações criadas;
+- notificações entregues;
+- leitura;
+- ciência;
+- avaliação iniciada;
+- decisão;
+- Interdição confirmada;
+- MDHO iniciado;
+- MDHO enviado;
+- MDHO aprovado;
+- MDHO devolvido;
+- referência IMS registrada;
+- plano de ação criado;
+- ação atualizada;
+- correção enviada;
+- correção validada;
+- liberação;
+- encerramento;
+- cancelamento.
+
+---
+
+# Auditoria
+
+Toda ação crítica deve gerar auditoria no backend.
+
+Registrar:
+
+- ator;
+- organização;
+- entidade;
+- ação;
+- valor anterior;
+- novo valor;
+- metadata;
+- data;
+- hora;
+- contexto técnico quando necessário.
+
+O usuário comum não pode editar ou apagar auditoria.
+
+---
+
+# Notificações por Transição
+
+Mudanças relevantes devem criar eventos de notificação.
+
+Exemplos:
+
+    PARALISACAO_PREVENTIVA
+    → OCCURRENCE_CREATED
+
+    EM_AVALIACAO
+    → DECISION_REQUIRED
+
+    VER_E_AGIR
+    → VER_AND_ACT_REQUIRED
+
+    INTERDICAO_CONFIRMADA
+    → INTERDICTION_CONFIRMED
+
+    AGUARDANDO_APROVACAO_HSE
+    → MDHO_APPROVAL_REQUIRED
+
+    AGUARDANDO_REGISTRO_IMS
+    → IMS_REGISTRATION_REQUIRED
+
+    AGUARDANDO_VALIDACAO
+    → RELEASE_REQUIRED
+
+    LIBERADA
+    → OCCURRENCE_RELEASED
+
+A regra detalhada deve seguir `docs/notifications.md`.
+
+---
+
+# Confirmação de Ciência
+
+A ciência faz parte do fluxo de comunicação, mas não altera automaticamente o status da ocorrência.
+
+Não utilizar ciência como substituto de:
+
+- avaliação;
+- decisão;
+- aprovação;
+- validação;
+- liberação.
+
+---
+
+# Idempotência
+
+Toda transição crítica deve ser idempotente.
+
+Cliques repetidos não podem gerar:
+
+- decisões duplicadas;
+- histórico duplicado;
+- notificações duplicadas;
+- liberações duplicadas;
+- aprovações repetidas;
+- referência IMS duplicada.
+
+---
+
+# Concorrência
+
+O backend deve tratar casos em que dois usuários tentam agir ao mesmo tempo.
+
+Exemplos:
+
+- dois avaliadores registram decisão;
+- dois usuários liberam;
+- MDHO é aprovado e devolvido simultaneamente;
+- referência IMS é alterada em múltiplas telas.
+
+Utilizar:
+
+- transação;
+- validação do status atual;
+- constraints;
+- lock quando necessário;
+- resposta de conflito.
+
+---
+
+# Erros de Status
+
+Quando o status mudar antes da ação do usuário, retornar erro claro.
+
+Exemplo:
+
+    Esta ocorrência já foi avaliada por outro usuário.
+
+Evitar erro técnico genérico.
+
+---
+
+# Offline
+
+Ações offline não devem ser consideradas concluídas sem confirmação do backend.
+
+O dispositivo pode preparar:
+
+- rascunho;
+- comentário;
+- evidência;
+- correção;
+- MDHO em rascunho.
+
+Ações críticas devem aguardar sincronização.
+
+---
+
+# Conflitos Offline
+
+Se o servidor estiver em status diferente:
+
+- não sobrescrever automaticamente;
+- preservar dados locais;
+- informar o usuário;
+- permitir revisão;
+- aplicar a regra oficial do servidor.
+
+---
+
+# Feedback ao Usuário
+
+Toda transição deve apresentar feedback real.
+
+Exemplos:
+
+    Avaliação iniciada.
+
+    Decisão registrada.
+
+    MDHO enviado para aprovação.
+
+    Referência IMS registrada.
+
+    Correção enviada para validação.
+
+    Atividade liberada.
+
+Não apresentar sucesso antes da confirmação.
+
+---
+
+# Botões por Status
+
+A interface deve mostrar apenas ações compatíveis com:
+
+- status;
+- permissão;
+- escopo;
+- plataforma;
+- contexto.
+
+Exemplo:
+
+Em `EM_AVALIACAO`, mostrar para usuário autorizado:
+
+- Definir Ver e Agir;
+- Confirmar Interdição Oficial.
+
+Não mostrar:
+
+- Liberar atividade;
+- Registrar IMS;
+- Aprovar MDHO.
+
+---
+
+# Ações Desabilitadas
+
+Quando uma ação estiver indisponível, preferir ocultar ou explicar claramente.
+
+Exemplo:
+
+    A liberação ficará disponível após a conclusão das ações corretivas.
+
+Não deixar botão ativo que falha sem contexto.
+
+---
+
+# Separação entre Executor e Validador
+
+Quando exigido pela regra da organização, a mesma pessoa não deve:
+
+- executar correção;
+- validar a própria correção.
+
+Essa regra deve ser configurável e validada no backend.
+
+---
+
+# Reabertura
+
+Não implementar reabertura sem decisão oficial.
+
+Se futuramente necessária, deve definir:
+
+- status permitidos;
+- motivo;
+- permissão;
+- auditoria;
+- notificações;
+- impacto no histórico;
+- impacto na liberação.
+
+---
+
+# Exceções
+
+Exceções devem ser raras.
+
+Toda exceção deve exigir:
+
+- permissão especial;
+- justificativa;
+- usuário;
+- data;
+- valor anterior;
+- novo valor;
+- auditoria.
+
+Não criar atalhos administrativos silenciosos.
+
+---
+
+# Testes Obrigatórios
+
+Testar:
+
+- todas as transições permitidas;
+- todas as transições proibidas;
+- permissões;
+- escopo;
+- status concorrente;
+- clique duplo;
+- idempotência;
+- histórico;
+- auditoria;
+- notificações;
+- offline;
+- rejeição;
+- aprovação;
+- liberação;
+- cancelamento.
+
+---
+
+# Checklist de Workflow
+
+Antes de concluir uma implementação, verificar:
+
+- [ ] Usa status oficial.
+- [ ] Usa transição oficial.
+- [ ] Valida status atual.
+- [ ] Valida permissão.
+- [ ] Valida escopo.
+- [ ] Executa no backend.
+- [ ] Gera histórico.
+- [ ] Gera auditoria.
+- [ ] Gera notificação quando aplicável.
+- [ ] É idempotente.
+- [ ] Trata concorrência.
+- [ ] Possui feedback.
+- [ ] Possui teste.
+- [ ] Não cria nova etapa sem autorização.
+
+---
+
+# Ações Proibidas
+
+Nunca:
+
+- alterar status diretamente no frontend;
+- criar novo status sem decisão;
+- pular etapas;
+- iniciar MDHO no Ver e Agir;
+- registrar IMS no Ver e Agir;
+- gerar IMS no SafeStop;
+- liberar sem validação;
+- liberar sem permissão;
+- apagar histórico;
+- apagar auditoria;
+- marcar ciência como decisão;
+- cancelar para ocultar ocorrência;
+- considerar ação offline como concluída;
+- permitir transição inválida;
+- duplicar regras entre plataformas.
+
+---
+
+# Regra Final
+
+Toda implementação de workflow deve responder:
+
+- O status atual permite esta ação?
+- O usuário possui permissão?
+- O usuário está dentro do escopo?
+- A transição está documentada?
+- O backend valida novamente?
+- A alteração gera histórico?
+- A alteração gera auditoria?
+- A comunicação necessária foi criada?
+- A operação é idempotente?
+- A interface mostra apenas ações válidas?
+
+Quando qualquer resposta for negativa, a implementação não está pronta.
+
+O workflow do SafeStop deve permanecer simples para o usuário e rigoroso para o sistema.

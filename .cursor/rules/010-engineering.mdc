@@ -1,0 +1,1252 @@
+---
+description: 010-engineering.mdc Regras de engenharia para arquitetura de código, organização por domínio, queries, mutations, cache, Git e manutenção.
+alwaysApply: false
+---
+
+---
+
+## description: Regras de engenharia do SafeStop. Aplicar em tarefas relacionadas a arquitetura de código, organização do monorepo, padrões de implementação, componentes, hooks, services, queries, mutations, cache, offline, sincronização, Git, qualidade e manutenção.
+
+# Engenharia — Regras do SafeStop
+
+## Objetivo
+
+Toda implementação do SafeStop deve seguir padrões de engenharia que favoreçam:
+
+- simplicidade;
+- legibilidade;
+- previsibilidade;
+- segurança;
+- manutenção;
+- baixo acoplamento;
+- tipagem forte;
+- testabilidade;
+- evolução gradual;
+- consistência entre mobile e web.
+
+O SafeStop não deve utilizar arquiteturas complexas sem benefício real.
+
+A melhor solução é a mais simples que resolve corretamente o problema e preserva a segurança operacional.
+
+---
+
+# Fonte da Verdade
+
+Antes de implementar qualquer alteração técnica, consulte:
+
+1. `docs/engineering.md`
+2. `docs/architecture.md`
+3. `docs/product.md`
+4. `docs/workflow.md`
+5. `docs/database.md`
+6. `docs/notifications.md`
+7. `docs/roadmap.md`
+8. `docs/decisions/`
+
+Esta Rule resume diretrizes importantes.
+
+Quando houver necessidade de detalhes, `docs/engineering.md` deve ser consultado integralmente.
+
+---
+
+# Princípios Fundamentais
+
+Toda implementação deve respeitar:
+
+- Mobile First;
+- simplicidade acima de abstração;
+- responsabilidade única;
+- regras críticas no backend;
+- organização por domínio;
+- reutilização real;
+- mudanças pequenas e focadas;
+- segurança por padrão;
+- documentação atualizada;
+- evolução sem antecipar necessidades inexistentes.
+
+---
+
+# Filosofia de Implementação
+
+Antes de criar qualquer código, avaliar:
+
+- isso realmente precisa existir;
+- já existe solução equivalente;
+- pode ser resolvido de forma mais simples;
+- pertence ao escopo atual;
+- está alinhado ao roadmap;
+- reduz ou aumenta manutenção;
+- cria duplicação;
+- enfraquece segurança;
+- adiciona uma camada sem benefício.
+
+Não criar abstração apenas porque ela pode ser útil no futuro.
+
+---
+
+# Monorepo
+
+O SafeStop utilizará monorepo com pnpm Workspaces.
+
+Estrutura principal:
+
+    apps/
+      mobile/
+      web/
+
+    packages/
+      types/
+      validation/
+      utils/
+      config/
+      ui/
+
+    docs/
+    research/
+    supabase/
+    scripts/
+    .github/
+    .cursor/
+
+A organização deve permanecer clara e previsível.
+
+---
+
+# Responsabilidade das Aplicações
+
+`apps/mobile` deve conter:
+
+- aplicação Expo;
+- rotas mobile;
+- componentes específicos do mobile;
+- integrações com câmera;
+- localização;
+- push;
+- armazenamento local;
+- experiência de campo.
+
+`apps/web` deve conter:
+
+- aplicação Next.js;
+- painel de gestão;
+- dashboards;
+- administração;
+- relatórios;
+- avaliação em desktop;
+- componentes específicos do navegador.
+
+As aplicações não devem duplicar regras críticas de negócio.
+
+---
+
+# Pacotes Compartilhados
+
+`packages/types` deve conter:
+
+- tipos de domínio;
+- DTOs;
+- filtros;
+- contratos;
+- tipos compartilhados.
+
+`packages/validation` deve conter:
+
+- schemas Zod;
+- validações compartilhadas;
+- contratos de entrada.
+
+`packages/utils` deve conter:
+
+- funções puras;
+- formatadores;
+- normalizadores;
+- helpers independentes de plataforma.
+
+`packages/config` deve conter:
+
+- configurações TypeScript;
+- ESLint;
+- Prettier;
+- Tailwind quando aplicável;
+- configurações compartilhadas.
+
+`packages/ui` deve conter somente componentes ou contratos visuais realmente compartilháveis.
+
+Não transformar pacotes compartilhados em depósitos genéricos.
+
+---
+
+# Organização por Domínio
+
+As features devem ser organizadas por domínio.
+
+Exemplos:
+
+    auth/
+    occurrences/
+    notifications/
+    mdho/
+    action-plans/
+    organizations/
+    users/
+    dashboard/
+    audit/
+
+Uma feature pode conter:
+
+    components/
+    hooks/
+    queries/
+    mutations/
+    services/
+    schemas/
+    types/
+    utils/
+    constants/
+
+Criar apenas as pastas necessárias.
+
+Não criar estruturas vazias apenas para seguir um modelo.
+
+---
+
+# Direção das Dependências
+
+A direção recomendada é:
+
+    rota ou página
+    ↓
+    feature
+    ↓
+    hooks, queries ou mutations
+    ↓
+    services
+    ↓
+    Supabase ou backend
+
+Componentes visuais não devem acessar diretamente:
+
+- banco;
+- Storage;
+- Edge Functions;
+- service role;
+- infraestrutura;
+- auditoria.
+
+---
+
+# Regra de Fronteira
+
+No banco:
+
+    snake_case
+
+No TypeScript:
+
+    camelCase
+
+A conversão deve ocorrer na fronteira da camada de dados.
+
+Não espalhar nomes de coluna do banco por toda a interface.
+
+---
+
+# Imports
+
+Utilizar aliases oficiais do projeto.
+
+Preferir:
+
+    import { OccurrenceCard } from "@/features/occurrences/components/occurrence-card";
+
+Evitar caminhos relativos extensos.
+
+Exemplo inadequado:
+
+    ../../../../../features/occurrences/components/occurrence-card
+
+---
+
+# Dependências entre Pacotes
+
+Evitar dependências circulares.
+
+Direção conceitual:
+
+    types
+      ↑
+    validation e utils
+      ↑
+    aplicações
+
+Regras:
+
+- `types` não deve depender de aplicações;
+- `utils` não deve depender de React;
+- `validation` não deve depender de interface;
+- aplicações podem consumir pacotes compartilhados;
+- pacotes compartilhados não devem importar código específico de Expo ou Next.js sem justificativa.
+
+---
+
+# Barrel Files
+
+Utilizar `index.ts` com moderação.
+
+Pode ser adequado para:
+
+- API pública de um pacote;
+- conjunto pequeno e estável de exports.
+
+Evitar barrel files grandes dentro de features.
+
+Eles podem causar:
+
+- dependências circulares;
+- imports ocultos;
+- bundles maiores;
+- dificuldade para localizar origem.
+
+---
+
+# Componentes
+
+Componentes devem:
+
+- possuir responsabilidade única;
+- receber propriedades tipadas;
+- ser pequenos o suficiente para compreensão;
+- evitar regras críticas;
+- tratar loading;
+- tratar erro;
+- tratar estado vazio;
+- respeitar acessibilidade;
+- reutilizar o design system.
+
+Não dividir componentes apenas por quantidade de linhas.
+
+Dividir quando existirem responsabilidades distintas.
+
+---
+
+# Componentes de UI
+
+Componentes genéricos incluem:
+
+    Button
+    Card
+    Input
+    Badge
+    Dialog
+    Skeleton
+    EmptyState
+
+Eles não devem conhecer regras específicas do SafeStop.
+
+---
+
+# Componentes de Domínio
+
+Componentes de domínio incluem:
+
+    OccurrenceCard
+    OccurrenceTimeline
+    MdhoAssessmentForm
+    ActionPlanCard
+    NotificationAwarenessButton
+
+Eles podem conhecer tipos do domínio, mas não devem executar infraestrutura diretamente.
+
+---
+
+# Componentes de Apresentação
+
+Devem:
+
+- receber dados;
+- emitir callbacks;
+- não consultar banco;
+- não alterar estado remoto;
+- não validar autorização crítica;
+- ser simples de testar.
+
+---
+
+# Componentes de Orquestração
+
+Podem:
+
+- utilizar hooks;
+- buscar dados;
+- coordenar mutations;
+- controlar loading;
+- tratar erro;
+- montar componentes de apresentação.
+
+Não devem concentrar toda a lógica da feature.
+
+---
+
+# Hooks
+
+Hooks devem encapsular comportamento React reutilizável.
+
+Exemplos:
+
+    useOccurrences
+    useOccurrenceDetails
+    useCreateOccurrence
+    usePermissions
+    useNetworkStatus
+    useConfirmAwareness
+
+Todo hook deve:
+
+- começar com `use`;
+- possuir responsabilidade clara;
+- evitar efeitos inesperados;
+- retornar estrutura previsível;
+- não duplicar Server State;
+- não esconder regra crítica.
+
+---
+
+# useEffect
+
+Não utilizar `useEffect` como solução padrão.
+
+Antes de criar um efeito, verificar se o comportamento pode ser resolvido por:
+
+- valor derivado;
+- evento;
+- query;
+- mutation;
+- formulário;
+- callback;
+- estado de rota.
+
+Não desabilitar regras de dependência do lint sem justificativa.
+
+---
+
+# Services
+
+Services devem integrar infraestrutura.
+
+Exemplos:
+
+    occurrence.service.ts
+    storage.service.ts
+    notification.service.ts
+    location.service.ts
+    auth.service.ts
+
+Services podem:
+
+- chamar Supabase;
+- chamar Edge Functions;
+- fazer upload;
+- mapear resposta;
+- converter erro técnico;
+- acessar APIs de plataforma.
+
+Services não devem:
+
+- renderizar interface;
+- decidir layout;
+- armazenar estado visual;
+- esconder regras críticas sem documentação.
+
+---
+
+# Repositories
+
+Repositories são opcionais.
+
+Criar somente quando houver benefício real.
+
+Pode ser útil quando:
+
+- há múltiplas fontes de dados;
+- o domínio precisa ser isolado do Supabase;
+- várias consultas relacionadas estão espalhadas;
+- testes precisam substituir persistência;
+- existe complexidade real de acesso a dados.
+
+Não criar a cadeia:
+
+    componente
+    → hook
+    → service
+    → repository
+    → Supabase
+
+quando o repository apenas repassa argumentos.
+
+---
+
+# Queries
+
+Queries representam leitura.
+
+Devem:
+
+- possuir nome claro;
+- receber parâmetros explícitos;
+- retornar tipos definidos;
+- selecionar somente campos necessários;
+- respeitar paginação;
+- respeitar filtros;
+- respeitar RLS;
+- tratar erros;
+- utilizar query keys centralizadas.
+
+Evitar:
+
+    select("*")
+
+sem necessidade.
+
+---
+
+# Query Keys
+
+Cada domínio deve centralizar suas query keys.
+
+Exemplo conceitual:
+
+    occurrenceQueryKeys.all
+    occurrenceQueryKeys.lists()
+    occurrenceQueryKeys.list(filters)
+    occurrenceQueryKeys.details()
+    occurrenceQueryKeys.detail(occurrenceId)
+
+Não espalhar arrays de keys manualmente pelo projeto.
+
+---
+
+# Mutations
+
+Mutations devem representar intenção de negócio.
+
+Preferir:
+
+    createOccurrence
+    submitMdhoAssessment
+    registerImsReference
+    validateCorrection
+    releaseOccurrence
+
+Evitar:
+
+    saveData
+    updateItem
+    changeStatus
+    process
+
+O nome deve revelar a ação.
+
+---
+
+# Mudança de Status
+
+Nunca criar mutation genérica para alterar status livremente.
+
+Exemplo inadequado:
+
+    updateOccurrenceStatus("LIBERADA")
+
+Exemplo adequado:
+
+    releaseOccurrence({
+      occurrenceId,
+      releaseNote,
+    })
+
+O backend deve validar a transição.
+
+---
+
+# TanStack Query
+
+TanStack Query será utilizado para Server State.
+
+Utilizar para:
+
+- consultas;
+- cache;
+- invalidação;
+- retries;
+- paginação;
+- mutations;
+- sincronização com Realtime.
+
+Não duplicar dados remotos em Zustand.
+
+---
+
+# Estado Local
+
+Utilizar estado local para:
+
+- modal;
+- aba;
+- filtro temporário;
+- preview;
+- etapa do formulário;
+- seleção visual;
+- expansão de conteúdo.
+
+Manter estado próximo do componente que o utiliza.
+
+---
+
+# Estado Global
+
+Utilizar somente quando realmente compartilhado.
+
+Possíveis casos:
+
+- organização ativa;
+- conectividade;
+- fila offline;
+- preferências locais;
+- rascunhos persistentes.
+
+Não criar estado global para tudo.
+
+---
+
+# Context API
+
+Pode ser utilizada para contextos estáveis.
+
+Exemplos:
+
+- autenticação;
+- tema;
+- organização ativa;
+- permissões;
+- configuração.
+
+Evitar Context para dados com atualização frequente.
+
+---
+
+# Formulários
+
+Utilizar:
+
+- React Hook Form;
+- Zod;
+- schemas compartilhados;
+- mensagens claras;
+- tipos inferidos.
+
+Todo formulário deve:
+
+- validar no cliente;
+- validar novamente no backend;
+- preservar dados em falha;
+- bloquear clique duplo;
+- mostrar loading;
+- mostrar sucesso;
+- mostrar erro;
+- focar no primeiro campo inválido.
+
+---
+
+# Validação
+
+A validação deve existir em camadas:
+
+    interface
+    schema
+    backend
+    banco
+
+Não confiar apenas no frontend.
+
+Utilizar `z.infer` quando o schema já definir a estrutura.
+
+Evitar duplicar tipos manualmente.
+
+---
+
+# Erros
+
+Erros devem utilizar formato padronizado.
+
+Não lançar strings.
+
+Preferir erro tipado com:
+
+- código;
+- mensagem;
+- detalhes seguros;
+- causa técnica interna.
+
+A interface não deve receber stack trace ou mensagem do banco diretamente.
+
+---
+
+# Cache
+
+O cache deve melhorar a experiência sem esconder inconsistência.
+
+Dados estáveis podem possuir cache maior:
+
+- áreas;
+- unidades;
+- categorias MDHO;
+- configurações.
+
+Dados operacionais devem atualizar mais frequentemente:
+
+- status;
+- timeline;
+- notificações;
+- ciência;
+- ações;
+- validações.
+
+---
+
+# Invalidação de Cache
+
+Invalidar apenas o necessário.
+
+Não limpar todo o cache após qualquer mutation.
+
+Após mutation, avaliar:
+
+- detalhe da ocorrência;
+- lista de ocorrências;
+- notificações;
+- timeline;
+- dashboard;
+- plano de ação.
+
+---
+
+# Atualização Otimista
+
+Utilizar apenas quando:
+
+- a ação for simples;
+- for reversível;
+- possuir baixo risco;
+- houver rollback seguro.
+
+Não utilizar em:
+
+- Interdição Oficial;
+- aprovação MDHO;
+- referência IMS;
+- liberação;
+- cancelamento;
+- encerramento;
+- mudanças críticas de status.
+
+---
+
+# Realtime
+
+Realtime deve atualizar ou invalidar cache.
+
+Não criar uma segunda fonte de verdade.
+
+Toda subscription deve:
+
+- possuir filtro;
+- respeitar organização;
+- ser removida;
+- evitar duplicidade;
+- lidar com reconexão.
+
+---
+
+# Offline
+
+Toda feature mobile deve considerar conexão instável.
+
+No MVP, priorizar:
+
+- preservação de formulário;
+- cache de leitura;
+- feedback;
+- retry;
+- prevenção de duplicidade.
+
+Não afirmar sucesso antes da confirmação do servidor.
+
+---
+
+# Sincronização
+
+Operações sincronizáveis devem possuir:
+
+- identificador local;
+- tipo;
+- payload;
+- usuário;
+- organização;
+- estado;
+- tentativas;
+- último erro;
+- idempotency key.
+
+O servidor sempre permanece como fonte oficial.
+
+---
+
+# Conflitos
+
+Quando o servidor possuir estado diferente:
+
+- não sobrescrever automaticamente;
+- preservar dados locais;
+- informar o usuário;
+- permitir revisão;
+- respeitar o workflow oficial.
+
+Não utilizar `last-write-wins` automaticamente em ações críticas.
+
+---
+
+# Uploads
+
+Uploads devem:
+
+- validar arquivo;
+- mostrar progresso;
+- tratar falha parcial;
+- evitar duplicidade;
+- registrar metadados;
+- evitar arquivos órfãos;
+- permanecer privados;
+- permitir retry individual.
+
+---
+
+# Performance
+
+Não otimizar prematuramente.
+
+Antes de aplicar:
+
+- `memo`;
+- `useMemo`;
+- `useCallback`;
+- virtualização avançada;
+- cache adicional;
+
+verificar se existe problema real.
+
+Evitar:
+
+- consultas duplicadas;
+- listas sem paginação;
+- componentes gigantes;
+- imagens sem dimensionamento;
+- dependências pesadas;
+- subscriptions desnecessárias.
+
+---
+
+# Acessibilidade
+
+Toda implementação deve considerar:
+
+- leitor de tela;
+- labels;
+- foco;
+- teclado no web;
+- área de toque;
+- contraste;
+- estado desabilitado;
+- mensagens de erro;
+- não dependência exclusiva de cor.
+
+---
+
+# Segurança
+
+Nunca:
+
+- expor secrets;
+- utilizar service role no cliente;
+- desabilitar RLS;
+- confiar apenas na interface;
+- alterar status diretamente;
+- tornar evidências públicas;
+- registrar tokens;
+- ignorar escopo;
+- apagar auditoria.
+
+---
+
+# Logs
+
+Logs devem ser úteis para diagnóstico.
+
+Não registrar:
+
+- senhas;
+- tokens;
+- service role;
+- arquivos;
+- fotos;
+- dados sensíveis;
+- URLs assinadas completas;
+- payloads confidenciais.
+
+Remover logs temporários antes do commit.
+
+---
+
+# Testes
+
+Toda alteração relevante deve avaliar necessidade de testes.
+
+Priorizar:
+
+- regra de negócio;
+- workflow;
+- schemas;
+- permissões;
+- RLS;
+- mutations;
+- formulários;
+- notificações;
+- offline;
+- sincronização;
+- regressão.
+
+Não alterar regra apenas para fazer teste passar.
+
+---
+
+# Git
+
+Cada branch deve possuir objetivo único.
+
+Padrões:
+
+    feature/
+    fix/
+    refactor/
+    docs/
+    test/
+    chore/
+    hotfix/
+
+Evitar alterações não relacionadas na mesma branch.
+
+---
+
+# Commits
+
+Utilizar Conventional Commits.
+
+Tipos:
+
+    feat:
+    fix:
+    docs:
+    refactor:
+    style:
+    test:
+    chore:
+    perf:
+
+Commits devem ser pequenos e logicamente completos.
+
+---
+
+# Dependências
+
+Antes de instalar uma dependência, verificar:
+
+- necessidade;
+- solução nativa;
+- manutenção;
+- vulnerabilidades;
+- compatibilidade;
+- impacto no bundle;
+- suporte ao Expo;
+- uso imediato.
+
+Não instalar dependência para uso hipotético futuro.
+
+---
+
+# pnpm
+
+Utilizar exclusivamente pnpm.
+
+O lockfile deve permanecer versionado:
+
+    pnpm-lock.yaml
+
+No CI utilizar:
+
+    pnpm install --frozen-lockfile
+
+Não criar `package-lock.json` ou `yarn.lock`.
+
+---
+
+# Scripts
+
+Scripts do projeto devem possuir nomes claros.
+
+Exemplos:
+
+    dev
+    build
+    lint
+    typecheck
+    test
+    test:e2e
+    format
+    qa
+
+Evitar scripts duplicados ou obscuros.
+
+---
+
+# Ambientes
+
+Respeitar separação entre:
+
+    local
+    development
+    staging
+    production
+
+Não compartilhar:
+
+- banco;
+- Storage;
+- secrets;
+- tokens;
+- service role;
+- canais de push;
+- dados reais.
+
+---
+
+# Migrations
+
+Toda alteração estrutural do banco deve utilizar migration.
+
+Nunca alterar produção manualmente sem registrar a mudança.
+
+Após migration:
+
+- testar localmente;
+- executar seed;
+- regenerar tipos;
+- revisar RLS;
+- executar testes;
+- validar compatibilidade.
+
+---
+
+# Documentação
+
+Quando uma decisão mudar:
+
+- atualizar o documento correspondente;
+- atualizar ADR quando necessário;
+- atualizar código;
+- atualizar testes;
+- evitar contradição.
+
+Não permitir que o código seja a única documentação de uma decisão importante.
+
+---
+
+# Roadmap
+
+Toda implementação deve respeitar:
+
+    docs/roadmap.md
+
+Não iniciar Sprint futura sem autorização.
+
+Não aumentar silenciosamente o escopo da Sprint atual.
+
+---
+
+# Mudança Mínima
+
+Ao corrigir um bug ou implementar uma tarefa:
+
+- alterar apenas o necessário;
+- evitar refatoração paralela;
+- não mudar arquitetura;
+- não instalar dependências sem necessidade;
+- não alterar estilo de arquivos não relacionados;
+- não remover código funcional.
+
+---
+
+# Refatoração
+
+Refatorar quando houver:
+
+- duplicação real;
+- acoplamento;
+- dificuldade de teste;
+- responsabilidade misturada;
+- problema de manutenção;
+- dívida técnica comprovada.
+
+Não refatorar apenas por preferência pessoal.
+
+---
+
+# Compatibilidade
+
+Considerar que usuários mobile podem permanecer em versões anteriores.
+
+Mudanças de backend devem ser compatíveis durante um período de transição.
+
+Evitar alterações que exijam atualização simultânea de todos os clientes.
+
+---
+
+# Antes de Implementar
+
+Sempre:
+
+1. compreender a solicitação;
+2. consultar documentação;
+3. localizar arquivos relacionados;
+4. pesquisar padrões existentes;
+5. identificar impacto;
+6. confirmar escopo;
+7. planejar a menor mudança possível.
+
+---
+
+# Durante a Implementação
+
+Sempre:
+
+- reutilizar código;
+- preservar tipagem;
+- tratar erros;
+- tratar loading;
+- tratar estado vazio;
+- considerar permissões;
+- considerar offline;
+- evitar duplicação;
+- manter segurança;
+- atualizar testes quando necessário.
+
+---
+
+# Após Implementar
+
+Executar, quando disponíveis:
+
+    pnpm lint
+    pnpm typecheck
+    pnpm test
+    pnpm build
+
+Também validar:
+
+- fluxo principal;
+- erro;
+- permissão;
+- conectividade;
+- mobile;
+- web quando aplicável;
+- documentação.
+
+---
+
+# Relatório Final
+
+Ao concluir uma tarefa, informar:
+
+- o que foi alterado;
+- arquivos modificados;
+- validações executadas;
+- testes executados;
+- riscos residuais;
+- pendências;
+- próximo passo objetivo.
+
+Não afirmar que uma validação passou sem executá-la.
+
+---
+
+# Checklist de Engenharia
+
+Antes de concluir uma implementação:
+
+- [ ] Está alinhada à documentação.
+- [ ] Pertence ao escopo atual.
+- [ ] Utiliza estrutura existente.
+- [ ] Não duplica regra.
+- [ ] Não cria abstração desnecessária.
+- [ ] Mantém tipagem.
+- [ ] Valida no backend.
+- [ ] Respeita permissões.
+- [ ] Respeita RLS.
+- [ ] Trata loading.
+- [ ] Trata erro.
+- [ ] Trata estado vazio.
+- [ ] Considera offline.
+- [ ] Considera acessibilidade.
+- [ ] Atualiza cache corretamente.
+- [ ] Possui testes quando necessário.
+- [ ] Mantém documentação consistente.
+
+---
+
+# Ações Proibidas
+
+Nunca:
+
+- criar arquitetura paralela;
+- adicionar camada sem benefício;
+- duplicar tipos;
+- duplicar schemas;
+- duplicar query keys;
+- armazenar Server State em Zustand;
+- utilizar `any` por conveniência;
+- desabilitar lint;
+- usar `@ts-ignore` sem justificativa;
+- remover teste para fazer build passar;
+- alterar status diretamente;
+- enfraquecer segurança;
+- criar dependência circular;
+- adicionar funcionalidade fora do roadmap;
+- afirmar que validou sem executar.
+
+---
+
+# Regra Final
+
+Toda decisão de engenharia deve responder:
+
+- É a solução mais simples que resolve corretamente?
+- Está alinhada ao produto?
+- Respeita a arquitetura?
+- Mantém segurança?
+- Evita duplicação?
+- Facilita manutenção?
+- Funciona no mobile?
+- Pode ser testada?
+- Preserva compatibilidade?
+- Está dentro do escopo?
+
+Quando qualquer resposta for negativa, a implementação deve ser reavaliada.
+
+O SafeStop deve possuir uma arquitetura rigorosa onde a segurança exigir e simples em todo o restante.

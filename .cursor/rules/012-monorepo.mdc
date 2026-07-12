@@ -1,0 +1,708 @@
+---
+description: 012-monorepo.mdc Regras para estrutura do monorepo, pnpm Workspaces, apps, packages compartilhados, imports e dependências.
+alwaysApply: false
+---
+
+---
+
+## description: Regras de organização do monorepo do SafeStop. Aplicar em tarefas relacionadas à estrutura de pastas, packages compartilhados, dependências, importações, workspace pnpm e organização geral do projeto.
+
+# Monorepo — Regras do SafeStop
+
+## Objetivo
+
+O monorepo do SafeStop existe para:
+
+- compartilhar código entre plataformas;
+- evitar duplicação;
+- facilitar manutenção;
+- manter consistência entre Mobile e Web;
+- simplificar versionamento;
+- permitir evolução gradual.
+
+Toda alteração estrutural deve preservar essa organização.
+
+---
+
+# Fonte da Verdade
+
+Antes de alterar a estrutura do projeto consultar:
+
+1. docs/architecture.md
+2. docs/engineering.md
+3. docs/product.md
+4. docs/roadmap.md
+
+---
+
+# Estrutura Oficial
+
+A estrutura oficial do projeto é:
+
+    apps/
+        mobile/
+        web/
+
+    packages/
+        types/
+        validation/
+        utils/
+        config/
+        ui/
+
+    docs/
+    research/
+    supabase/
+    scripts/
+    .cursor/
+    .github/
+
+Não criar novas pastas de primeiro nível sem necessidade real.
+
+---
+
+# Apps
+
+## apps/mobile
+
+Responsável por:
+
+- Expo
+- React Native
+- navegação mobile
+- câmera
+- localização
+- notificações
+- armazenamento local
+- experiência em campo
+
+Não colocar lógica exclusiva do Web aqui.
+
+---
+
+## apps/web
+
+Responsável por:
+
+- Next.js
+- Dashboard
+- Administração
+- Relatórios
+- Gestão
+- Configurações
+
+Não colocar código específico do Expo.
+
+---
+
+# Packages
+
+Os packages existem para compartilhar código.
+
+Devem possuir baixo acoplamento.
+
+Nunca depender de apps.
+
+---
+
+## packages/types
+
+Contém:
+
+- tipos
+- enums
+- interfaces
+- DTOs
+- contratos
+
+Nunca importar React.
+
+Nunca importar Expo.
+
+Nunca importar Next.js.
+
+---
+
+## packages/validation
+
+Contém:
+
+- schemas Zod
+- validações
+- contratos de entrada
+- regras compartilhadas
+
+Pode depender de:
+
+- types
+
+Não pode depender de React.
+
+---
+
+## packages/utils
+
+Contém apenas funções puras.
+
+Exemplos:
+
+- formatadores
+- helpers
+- normalizadores
+- datas
+- strings
+- números
+
+Não pode depender de interface.
+
+---
+
+## packages/config
+
+Contém:
+
+- tsconfig
+- eslint
+- prettier
+- tailwind
+- configs compartilhadas
+
+Não deve possuir lógica de negócio.
+
+---
+
+## packages/ui
+
+Contém apenas componentes realmente compartilháveis.
+
+Exemplos:
+
+- Button
+- Card
+- Input
+- Badge
+- Modal
+- Avatar
+- EmptyState
+
+Não colocar componentes específicos do domínio.
+
+Errado:
+
+    OccurrenceCard
+
+Correto:
+
+    Card
+
+---
+
+# Estrutura por Domínio
+
+Dentro de cada app utilizar organização por domínio.
+
+Exemplo:
+
+    features/
+
+        auth/
+
+        occurrences/
+
+        notifications/
+
+        mdho/
+
+        action-plans/
+
+        dashboard/
+
+        users/
+
+        organizations/
+
+---
+
+# Estrutura de Feature
+
+Uma feature pode conter:
+
+    components/
+
+    hooks/
+
+    queries/
+
+    mutations/
+
+    services/
+
+    schemas/
+
+    types/
+
+    utils/
+
+    constants/
+
+Criar apenas pastas realmente utilizadas.
+
+---
+
+# Dependências
+
+A direção correta é:
+
+    apps
+        ↓
+
+    packages
+
+Nunca:
+
+    packages
+        ↓
+
+    apps
+
+Packages não podem conhecer aplicações.
+
+---
+
+# Fluxo das Dependências
+
+A ordem recomendada é:
+
+    UI
+
+↓
+
+Componentes
+
+↓
+
+Hooks
+
+↓
+
+Queries / Mutations
+
+↓
+
+Services
+
+↓
+
+Supabase
+
+↓
+
+Banco
+
+Não inverter essa ordem.
+
+---
+
+# Imports
+
+Sempre utilizar aliases.
+
+Exemplo:
+
+    @/features/occurrences
+
+Evitar:
+
+    ../../../../../../
+
+Imports relativos longos prejudicam manutenção.
+
+---
+
+# Barrel Files
+
+Utilizar apenas quando fizer sentido.
+
+Bom uso:
+
+    packages/types/index.ts
+
+Evitar:
+
+grandes arquivos index exportando centenas de elementos.
+
+---
+
+# Compartilhamento
+
+Antes de mover código para packages perguntar:
+
+O Mobile utiliza?
+
+O Web utiliza?
+
+Existe reutilização real?
+
+Se apenas uma aplicação utiliza, manter dentro dela.
+
+---
+
+# Duplicação
+
+É aceitável duplicar pequenas partes quando:
+
+- reduz acoplamento;
+- simplifica entendimento;
+- evita abstrações desnecessárias.
+
+Não criar abstração apenas porque dois arquivos possuem linhas parecidas.
+
+---
+
+# Organização
+
+Agrupar por domínio.
+
+Não agrupar por tecnologia.
+
+Evitar:
+
+    components/
+
+        occurrence-card
+
+        mdho-form
+
+        notification-card
+
+Preferir:
+
+    features/
+
+        occurrences/
+
+        mdho/
+
+        notifications/
+
+---
+
+# Configurações
+
+Toda configuração compartilhada deve ficar em:
+
+    packages/config
+
+Exemplos:
+
+- tsconfig
+- eslint
+- prettier
+- tailwind
+- shared configs
+
+---
+
+# Assets
+
+Cada aplicação possui seus próprios assets.
+
+Não compartilhar imagens sem necessidade.
+
+Caso um asset seja utilizado pelos dois aplicativos, avaliar criação de package compartilhado.
+
+---
+
+# Tipos
+
+Sempre compartilhar tipos em:
+
+    packages/types
+
+Não duplicar:
+
+Occurrence
+
+Notification
+
+User
+
+Organization
+
+em Mobile e Web.
+
+---
+
+# Schemas
+
+Todos os Schemas Zod compartilhados devem ficar em:
+
+    packages/validation
+
+Mobile e Web devem utilizar o mesmo schema.
+
+---
+
+# Helpers
+
+Funções puras devem ficar em:
+
+    packages/utils
+
+Exemplos:
+
+- formatDate()
+
+- formatOccurrenceCode()
+
+- formatRelativeTime()
+
+- truncate()
+
+- debounce()
+
+---
+
+# Código Específico
+
+Nunca mover para packages:
+
+- telas
+- páginas
+- rotas
+- layouts
+- providers específicos
+- navegação
+- Expo Router
+- App Router
+- Server Components
+
+---
+
+# UI Compartilhada
+
+Um componente deve entrar em packages/ui apenas quando:
+
+✔ usado pelo Mobile
+
+e
+
+✔ usado pelo Web
+
+Caso contrário manter dentro da aplicação.
+
+---
+
+# Dependências Externas
+
+Antes de instalar uma dependência verificar:
+
+Será usada apenas no Mobile?
+
+Será usada apenas no Web?
+
+Será compartilhada?
+
+Instalar somente onde necessário.
+
+---
+
+# pnpm Workspace
+
+O projeto utiliza:
+
+    pnpm-workspace.yaml
+
+Toda nova pasta deve respeitar os workspaces definidos.
+
+Não criar package fora do workspace.
+
+---
+
+# Package.json
+
+Cada app possui seu próprio package.json.
+
+Packages compartilhados também possuem package.json.
+
+Nunca criar dependências implícitas.
+
+---
+
+# Versionamento
+
+Todas as aplicações devem evoluir juntas.
+
+Evitar divergência de versões entre:
+
+- React
+- React Native
+- TypeScript
+- TanStack Query
+- Zod
+
+quando houver compartilhamento.
+
+---
+
+# Scripts
+
+Scripts comuns permanecem na raiz.
+
+Scripts específicos permanecem na aplicação.
+
+Exemplo:
+
+Raiz
+
+    pnpm lint
+
+    pnpm typecheck
+
+    pnpm build
+
+    pnpm test
+
+Mobile
+
+    pnpm start
+
+Web
+
+    pnpm dev
+
+---
+
+# Pesquisa Antes de Criar
+
+Antes de criar:
+
+- componente
+- hook
+- helper
+- schema
+- tipo
+- utilitário
+
+pesquisar no monorepo.
+
+Evitar duplicação.
+
+---
+
+# Refatoração
+
+Só mover código entre packages quando:
+
+- houver reutilização comprovada;
+- reduzir manutenção;
+- simplificar arquitetura.
+
+Não mover apenas por organização estética.
+
+---
+
+# Estrutura Futura
+
+Novos packages só podem ser criados quando houver necessidade clara.
+
+Exemplos possíveis:
+
+    packages/api
+
+    packages/testing
+
+    packages/storage
+
+Não criar antecipadamente.
+
+---
+
+# Organização dos Docs
+
+Toda documentação oficial permanece em:
+
+    docs/
+
+Pesquisa permanece em:
+
+    research/
+
+Nunca misturar documentação oficial com material de pesquisa.
+
+---
+
+# Organização da Pasta Cursor
+
+Toda configuração do Cursor permanece em:
+
+    .cursor/
+
+Rules:
+
+    .cursor/rules/
+
+Prompts compartilhados:
+
+    .cursor/prompts/
+
+Agents:
+
+    .cursor/agents/
+
+Não espalhar arquivos da IA pelo projeto.
+
+---
+
+# Git
+
+Não mover arquivos entre pastas sem necessidade.
+
+Movimentações dificultam revisão de Pull Requests.
+
+---
+
+# Checklist
+
+Antes de concluir uma alteração estrutural verificar:
+
+- [ ] Está na pasta correta.
+- [ ] Não cria duplicação.
+- [ ] Não aumenta acoplamento.
+- [ ] Não quebra dependências.
+- [ ] Respeita os packages.
+- [ ] Respeita os apps.
+- [ ] Respeita o workspace pnpm.
+- [ ] Mantém Mobile e Web organizados.
+
+---
+
+# Ações Proibidas
+
+Nunca:
+
+- importar apps dentro de packages;
+- criar dependências circulares;
+- duplicar tipos;
+- duplicar schemas;
+- criar packages desnecessários;
+- mover código apenas por estética;
+- colocar regra de negócio em packages/ui;
+- colocar React dentro de packages/utils;
+- colocar Expo dentro de packages compartilhados;
+- colocar páginas dentro de packages.
+
+---
+
+# Regra Final
+
+Toda alteração estrutural deve responder:
+
+- Está na pasta correta?
+- Pode ser encontrada facilmente?
+- Reduz manutenção?
+- Evita duplicação?
+- Respeita a arquitetura?
+- Facilita Mobile e Web?
+
+Se qualquer resposta for negativa, reavaliar a estrutura antes de implementar.

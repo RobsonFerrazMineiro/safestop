@@ -1,0 +1,1410 @@
+---
+description: 005-ui.mdc Regras de UI e UX para layouts, componentes, formulários, acessibilidade, responsividade e design system do SafeStop.
+alwaysApply: false
+---
+
+---
+
+## description: Regras de UI e UX do SafeStop. Aplicar em tarefas relacionadas a layout, componentes visuais, design system, responsividade, acessibilidade, feedback, formulários, estados de interface e experiência mobile e web.
+
+# UI e UX — Regras do SafeStop
+
+## Objetivo
+
+Toda interface do SafeStop deve priorizar:
+
+- clareza;
+- velocidade;
+- simplicidade;
+- segurança;
+- acessibilidade;
+- consistência;
+- uso em campo;
+- baixa carga cognitiva;
+- feedback imediato.
+
+A interface não deve apenas parecer profissional.
+
+Ela deve ajudar o usuário a agir rapidamente, compreender o status da ocorrência e identificar o próximo passo.
+
+---
+
+# Fonte da Verdade
+
+Antes de implementar ou alterar qualquer interface, consulte:
+
+1. `docs/product.md`
+2. `docs/workflow.md`
+3. `docs/architecture.md`
+4. `docs/engineering.md`
+5. `docs/notifications.md`
+6. `docs/decisions/ADR-003-communication.md`
+7. `docs/decisions/ADR-004-mobile-first.md`
+8. `docs/decisions/ADR-005-operational-simplicity.md`
+9. `reference/base44/`
+10. `reference/research/`
+
+Os arquivos do Base44 são referência visual e de fluxo.
+
+Eles não são fonte oficial de:
+
+- arquitetura;
+- banco;
+- segurança;
+- regras de negócio;
+- qualidade de código.
+
+---
+
+# Princípios Fundamentais
+
+Toda decisão visual deve respeitar:
+
+- Mobile First;
+- Simplicidade Operacional;
+- Comunicação antes da burocracia;
+- Segurança em primeiro lugar;
+- Rastreabilidade;
+- Consistência;
+- Acessibilidade.
+
+Quando existir conflito entre beleza e usabilidade, priorizar usabilidade.
+
+Quando existir conflito entre quantidade de informação e clareza, priorizar clareza.
+
+---
+
+# Mobile First
+
+Toda funcionalidade operacional deve ser projetada primeiro para smartphone.
+
+O painel web será complementar.
+
+Antes de aprovar uma tela, verificar:
+
+- funciona com uma mão;
+- possui poucos toques;
+- exige pouca digitação;
+- apresenta a ação principal claramente;
+- funciona com conexão instável;
+- possui áreas de toque adequadas;
+- mantém legibilidade em ambiente industrial.
+
+---
+
+# Simplicidade Visual
+
+Evitar:
+
+- excesso de informações;
+- muitos cards iguais;
+- múltiplas ações concorrentes;
+- excesso de cores;
+- excesso de ícones;
+- sombras pesadas;
+- animações desnecessárias;
+- formulários longos em uma única tela;
+- tabelas extensas no mobile;
+- textos explicativos excessivos.
+
+A interface deve mostrar apenas o necessário para a tarefa atual.
+
+---
+
+# Hierarquia Visual
+
+Toda tela deve possuir hierarquia clara.
+
+Ordem recomendada:
+
+1. contexto da tela;
+2. status atual;
+3. informação principal;
+4. ação principal;
+5. ações secundárias;
+6. detalhes;
+7. histórico.
+
+O usuário deve identificar rapidamente:
+
+- onde está;
+- o que aconteceu;
+- qual o status;
+- o que precisa fazer;
+- quem é o responsável.
+
+---
+
+# Ação Principal
+
+Cada tela deve possuir, preferencialmente, uma única ação principal.
+
+Exemplos:
+
+- Registrar Paralisação;
+- Confirmar ciência;
+- Enviar correção;
+- Aprovar MDHO;
+- Liberar atividade.
+
+A ação principal deve possuir maior destaque visual.
+
+Ações secundárias devem ter menor peso.
+
+Não criar vários botões com a mesma importância visual.
+
+---
+
+# Ações Críticas
+
+Ações críticas incluem:
+
+- confirmar Interdição Oficial;
+- rejeitar correção;
+- liberar atividade;
+- cancelar ocorrência;
+- devolver MDHO;
+- alterar referência IMS;
+- remover evidência.
+
+Essas ações devem:
+
+- utilizar linguagem clara;
+- apresentar contexto;
+- exigir confirmação quando necessário;
+- informar consequência;
+- registrar justificativa quando aplicável;
+- evitar confirmação genérica.
+
+Exemplo inadequado:
+
+    Tem certeza?
+
+Exemplo adequado:
+
+    Confirmar a liberação desta atividade?
+
+    Após a confirmação, os envolvidos serão notificados e a atividade poderá ser retomada.
+
+---
+
+# Linguagem da Interface
+
+Utilizar Português do Brasil.
+
+A linguagem deve ser:
+
+- direta;
+- profissional;
+- objetiva;
+- operacional;
+- fácil de compreender;
+- sem jargão técnico desnecessário.
+
+Preferir:
+
+    Registrar Paralisação
+
+Evitar:
+
+    Efetuar criação de novo registro de paralisação
+
+Preferir:
+
+    Confirmar ciência
+
+Evitar:
+
+    Confirmar recebimento da presente comunicação
+
+---
+
+# Terminologia Oficial
+
+Utilizar sempre os termos definidos no produto.
+
+Exemplos:
+
+- Paralisação Preventiva;
+- Ver e Agir;
+- Interdição Oficial;
+- Avaliação MDHO;
+- Referência IMS;
+- Plano de Ação;
+- Confirmação de Ciência;
+- Atividade Liberada;
+- Ocorrência Encerrada.
+
+Não substituir por sinônimos diferentes em cada tela.
+
+---
+
+# Design System
+
+A interface deve utilizar um design system consistente.
+
+O design system deve definir:
+
+- cores;
+- tipografia;
+- espaçamentos;
+- raios;
+- sombras;
+- ícones;
+- estados;
+- tamanhos;
+- componentes;
+- padrões de feedback.
+
+Não criar estilos isolados sem necessidade.
+
+---
+
+# Tokens Semânticos
+
+Utilizar tokens com significado.
+
+Exemplos:
+
+    critical
+    warning
+    success
+    information
+    surface
+    muted
+    border
+    foreground
+    destructive
+
+Evitar utilizar diretamente valores como:
+
+    red-500
+    yellow-400
+    green-600
+
+na lógica visual do domínio.
+
+A cor concreta pode existir internamente no tema.
+
+A interface deve utilizar significado semântico.
+
+---
+
+# Cores
+
+As cores devem transmitir prioridade sem gerar confusão.
+
+Sugestão semântica:
+
+- crítico: vermelho;
+- atenção: âmbar ou laranja;
+- sucesso: verde;
+- informação: azul neutro ou cor definida no design;
+- encerrado: neutro;
+- desabilitado: cinza.
+
+A cor não pode ser o único indicador.
+
+Sempre combinar com:
+
+- texto;
+- ícone;
+- badge;
+- descrição;
+- padrão visual.
+
+---
+
+# Identidade Visual
+
+O SafeStop deve transmitir:
+
+- segurança;
+- confiança;
+- rapidez;
+- tecnologia;
+- ambiente industrial;
+- profissionalismo.
+
+Evitar aparência:
+
+- infantil;
+- excessivamente colorida;
+- genérica;
+- cartunesca;
+- informal;
+- semelhante a aplicativo de rede social.
+
+---
+
+# Tipografia
+
+A tipografia deve favorecer leitura rápida.
+
+Definir níveis consistentes:
+
+- título da página;
+- título da seção;
+- título do card;
+- corpo;
+- legenda;
+- ajuda;
+- badge.
+
+Evitar:
+
+- fontes muito pequenas;
+- títulos excessivamente grandes;
+- pesos demais;
+- variações sem padrão;
+- textos longos em caixa alta.
+
+---
+
+# Tamanho de Texto
+
+No mobile:
+
+- evitar textos pequenos;
+- permitir leitura em campo;
+- respeitar escala do sistema;
+- manter labels claras;
+- evitar informação crítica em legenda minúscula.
+
+No web:
+
+- manter densidade equilibrada;
+- não reduzir fonte apenas para encaixar mais conteúdo;
+- priorizar leitura.
+
+---
+
+# Espaçamento
+
+Utilizar uma escala de espaçamento consistente.
+
+Exemplo conceitual:
+
+    4
+    8
+    12
+    16
+    24
+    32
+
+Evitar valores aleatórios repetidos.
+
+O espaçamento deve ajudar a separar:
+
+- grupos;
+- seções;
+- ações;
+- campos;
+- informações relacionadas.
+
+---
+
+# Layout Mobile
+
+Priorizar:
+
+- uma coluna;
+- conteúdo vertical;
+- ações acessíveis;
+- cards simples;
+- seções expansíveis;
+- botões fixos quando necessário;
+- scroll previsível.
+
+Evitar:
+
+- múltiplas colunas;
+- tabelas;
+- menus laterais;
+- campos muito próximos;
+- ações críticas pequenas no topo.
+
+---
+
+# Layout Web
+
+O painel web pode utilizar:
+
+- sidebar;
+- header;
+- breadcrumbs;
+- grids;
+- tabelas;
+- filtros;
+- dashboards.
+
+Mesmo assim, deve permanecer:
+
+- responsivo;
+- simples;
+- legível;
+- consistente;
+- utilizável em notebook;
+- utilizável em tablet.
+
+---
+
+# Responsividade
+
+Toda interface web deve funcionar em:
+
+- desktop;
+- notebook;
+- tablet;
+- navegador mobile.
+
+Toda interface mobile deve considerar:
+
+- diferentes tamanhos de tela;
+- notch;
+- Safe Area;
+- teclado;
+- orientação vertical;
+- barras do sistema.
+
+Não criar layouts rígidos baseados em uma única resolução.
+
+---
+
+# Cards
+
+Cards devem agrupar informações relacionadas.
+
+Utilizar cards para:
+
+- resumo da ocorrência;
+- status;
+- ação pendente;
+- indicador;
+- seção de detalhe;
+- evidência.
+
+Evitar:
+
+- card dentro de card sem necessidade;
+- sombras excessivas;
+- bordas fortes em todos os elementos;
+- muitos cards idênticos sem hierarquia.
+
+---
+
+# Status
+
+Todo status deve possuir representação consistente.
+
+Exemplo:
+
+    PARALISACAO_PREVENTIVA
+    EM_AVALIACAO
+    VER_E_AGIR
+    INTERDICAO_CONFIRMADA
+    MDHO_EM_PREENCHIMENTO
+    AGUARDANDO_APROVACAO_HSE
+    AGUARDANDO_REGISTRO_IMS
+    EM_TRATATIVA
+    AGUARDANDO_VALIDACAO
+    LIBERADA
+    ENCERRADA
+    CANCELADA
+
+Cada status deve possuir:
+
+- label;
+- cor semântica;
+- ícone quando útil;
+- descrição curta;
+- ordem;
+- comportamento.
+
+Não criar estilos diferentes para o mesmo status em telas diferentes.
+
+---
+
+# Badges
+
+Badges devem ser usados para:
+
+- status;
+- prioridade;
+- criticidade;
+- tipo de decisão;
+- estado de sincronização.
+
+Badges devem:
+
+- ser legíveis;
+- possuir contraste;
+- evitar textos longos;
+- não depender apenas de cor;
+- utilizar nomenclatura oficial.
+
+---
+
+# Criticidade
+
+A criticidade deve ser clara.
+
+Valores iniciais:
+
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+
+Na interface utilizar labels em português:
+
+    Baixa
+    Média
+    Alta
+    Crítica
+
+Não misturar criticidade com status.
+
+---
+
+# Ícones
+
+Ícones devem:
+
+- reforçar significado;
+- possuir estilo consistente;
+- ser reconhecíveis;
+- ter label acessível;
+- não substituir texto em ações críticas.
+
+Evitar:
+
+- misturar bibliotecas visuais;
+- ícones decorativos em excesso;
+- ícones ambíguos;
+- ações importantes representadas apenas por ícone.
+
+---
+
+# Botões
+
+Definir variantes consistentes:
+
+- primary;
+- secondary;
+- outline;
+- ghost;
+- destructive;
+- link.
+
+A ação principal deve usar a variante de maior destaque.
+
+Ações destrutivas devem usar variante apropriada.
+
+---
+
+# Estados dos Botões
+
+Todo botão deve considerar:
+
+- padrão;
+- pressionado;
+- hover no web;
+- foco;
+- loading;
+- desabilitado;
+- erro quando aplicável.
+
+Durante loading:
+
+- bloquear múltiplos cliques;
+- manter dimensão;
+- mostrar texto ou indicador;
+- preservar contexto.
+
+Exemplo:
+
+    Salvar
+
+    Salvando...
+
+---
+
+# Área de Toque
+
+No mobile, toda ação deve possuir área de toque confortável.
+
+Ícones pequenos devem ter área invisível ampliada quando necessário.
+
+Não exigir precisão excessiva do usuário.
+
+---
+
+# Inputs
+
+Inputs devem possuir:
+
+- label;
+- placeholder quando útil;
+- texto de ajuda quando necessário;
+- mensagem de erro;
+- estado desabilitado;
+- estado de loading quando aplicável.
+
+Não utilizar placeholder como substituto permanente da label.
+
+---
+
+# Selects e Listas
+
+Sempre que possível, preferir seleção estruturada a texto livre.
+
+Exemplos:
+
+- empresa;
+- área;
+- criticidade;
+- tipo de desvio;
+- categoria MDHO;
+- responsável.
+
+Em listas longas, oferecer:
+
+- busca;
+- agrupamento;
+- favoritos futuros quando necessário;
+- seleção clara.
+
+---
+
+# Checkboxes e Seleção Múltipla
+
+Utilizar para categorias MDHO com múltiplas opções.
+
+A seleção deve:
+
+- mostrar estado;
+- ser fácil de tocar;
+- permitir desmarcar;
+- manter ordem;
+- exigir detalhe quando a opção for “Outro”.
+
+---
+
+# Radio e Seleção Única
+
+Utilizar quando apenas uma opção puder ser escolhida.
+
+Exemplo:
+
+    Erro
+    Violação
+
+Não utilizar checkbox para seleção única.
+
+---
+
+# Textareas
+
+Utilizar apenas quando texto livre for necessário.
+
+Devem:
+
+- permitir leitura;
+- possuir limite quando aplicável;
+- mostrar contador quando útil;
+- preservar conteúdo;
+- crescer de forma controlada.
+
+Evitar exigir textos longos no registro inicial da paralisação.
+
+---
+
+# Formulários
+
+Formulários devem ser:
+
+- curtos;
+- objetivos;
+- progressivos;
+- tipados;
+- validados;
+- recuperáveis.
+
+A comunicação inicial não deve aguardar preenchimento burocrático.
+
+---
+
+# Formulários em Etapas
+
+Utilizar etapas quando reduzirem a carga cognitiva.
+
+Exemplo:
+
+    1. Local e atividade
+    2. Condição insegura
+    3. Evidências
+    4. Revisão
+
+Não dividir formulários pequenos apenas para criar mais telas.
+
+---
+
+# Progresso
+
+Quando houver etapas, mostrar:
+
+- etapa atual;
+- total;
+- título;
+- possibilidade de voltar;
+- preservação dos dados.
+
+Exemplo:
+
+    Etapa 2 de 4
+
+---
+
+# Campos Obrigatórios
+
+Indicar campos obrigatórios com clareza.
+
+Não marcar quase todos os campos como obrigatórios sem necessidade.
+
+O registro inicial deve exigir apenas o mínimo para comunicar.
+
+---
+
+# Erros de Formulário
+
+Mensagens devem ficar próximas ao campo.
+
+Exemplo:
+
+    Selecione a área da ocorrência.
+
+Evitar:
+
+    Campo inválido.
+
+Ao submeter, focar ou navegar para o primeiro erro.
+
+---
+
+# Feedback de Sucesso
+
+Toda ação importante deve mostrar confirmação.
+
+Exemplos:
+
+    Ocorrência registrada.
+
+    Responsáveis notificados.
+
+    Ciência confirmada.
+
+    Correção enviada.
+
+    Atividade liberada.
+
+O feedback deve informar o resultado real.
+
+Não mostrar “Responsáveis notificados” antes da confirmação do backend.
+
+---
+
+# Feedback de Erro
+
+Mensagens devem explicar:
+
+- o que falhou;
+- se os dados foram preservados;
+- o que fazer.
+
+Exemplo:
+
+    Não foi possível enviar a ocorrência.
+
+    Seus dados foram preservados. Tente novamente quando houver conexão.
+
+---
+
+# Toasts
+
+Utilizar toast para:
+
+- sucesso breve;
+- informação;
+- atualização simples;
+- erro recuperável.
+
+Não usar toast como única forma de comunicar:
+
+- ação crítica;
+- bloqueio;
+- erro persistente;
+- necessidade de decisão.
+
+---
+
+# Dialogs
+
+Utilizar dialog para:
+
+- confirmação crítica;
+- ação destrutiva;
+- mudança irreversível;
+- justificativa obrigatória.
+
+Evitar dialog para ações simples e reversíveis.
+
+---
+
+# Drawers e Bottom Sheets
+
+No mobile, bottom sheets podem ser utilizados para:
+
+- filtros;
+- seleção;
+- detalhes rápidos;
+- ações secundárias.
+
+Não esconder a ação principal dentro de bottom sheet sem necessidade.
+
+---
+
+# Modais
+
+Modais devem possuir:
+
+- título;
+- contexto;
+- ação principal;
+- ação de cancelar;
+- foco correto;
+- fechamento previsível.
+
+Evitar modais dentro de modais.
+
+---
+
+# Loading
+
+Toda espera perceptível deve possuir feedback.
+
+Utilizar:
+
+- skeleton;
+- spinner;
+- progresso;
+- texto;
+- estado de botão.
+
+Escolher conforme o contexto.
+
+---
+
+# Skeleton
+
+Utilizar skeleton quando a estrutura da tela for conhecida.
+
+Evitar skeleton excessivo ou distante do layout final.
+
+---
+
+# Estado Vazio
+
+Estados vazios devem orientar.
+
+Exemplo:
+
+    Nenhuma ocorrência encontrada.
+
+    As novas Paralisações Preventivas aparecerão aqui.
+
+Quando adequado, incluir ação:
+
+    Registrar Paralisação
+
+---
+
+# Estado de Erro
+
+Um estado de erro deve oferecer:
+
+- mensagem;
+- contexto;
+- nova tentativa;
+- alternativa;
+- retorno.
+
+Exemplo:
+
+    Não foi possível carregar as ocorrências.
+
+    Tentar novamente
+
+---
+
+# Estado Offline
+
+A interface deve diferenciar:
+
+    Você está offline.
+
+    Exibindo dados armazenados.
+
+    2 itens aguardando envio.
+
+Não utilizar apenas um ícone sem explicação.
+
+---
+
+# Estado de Sincronização
+
+Representações possíveis:
+
+    Salvo no dispositivo
+    Aguardando conexão
+    Enviando
+    Sincronizado
+    Falha no envio
+
+Esses estados não substituem o status oficial da ocorrência.
+
+---
+
+# Notificações
+
+A central de notificações deve mostrar:
+
+- prioridade;
+- título;
+- resumo;
+- data;
+- leitura;
+- ciência;
+- ocorrência relacionada.
+
+Filtros possíveis:
+
+- Todas;
+- Não lidas;
+- Pendentes de ciência;
+- Críticas;
+- Interdições;
+- Ver e Agir.
+
+---
+
+# Leitura e Ciência
+
+A interface deve deixar claro que são ações diferentes.
+
+Exemplo:
+
+    Lida
+
+não significa:
+
+    Ciência confirmada
+
+A confirmação de ciência deve possuir ação explícita quando exigida.
+
+---
+
+# Timeline
+
+A timeline deve apresentar eventos em ordem cronológica.
+
+Cada evento pode mostrar:
+
+- título;
+- descrição;
+- usuário;
+- data;
+- hora;
+- ícone;
+- status.
+
+Evitar excesso de detalhes técnicos.
+
+Eventos de sistema devem ser compreensíveis.
+
+---
+
+# Evidências
+
+Galerias de evidências devem permitir:
+
+- preview;
+- legenda;
+- autor;
+- data;
+- categoria;
+- estado de upload.
+
+Não exibir arquivos sem contexto.
+
+---
+
+# Imagens
+
+Imagens devem:
+
+- possuir proporção adequada;
+- carregar progressivamente quando possível;
+- possuir fallback;
+- permitir ampliação;
+- evitar distorção;
+- preservar qualidade suficiente.
+
+---
+
+# Tabelas
+
+No web, tabelas podem ser usadas para gestão.
+
+Toda tabela deve considerar:
+
+- paginação;
+- ordenação;
+- filtros;
+- busca;
+- estado vazio;
+- loading;
+- responsividade;
+- ações acessíveis.
+
+No mobile, preferir cards ou listas.
+
+---
+
+# Dashboard
+
+Dashboards devem priorizar:
+
+- decisões;
+- tendências;
+- pendências;
+- riscos;
+- tempo de resposta;
+- recorrência.
+
+Não criar gráficos apenas por estética.
+
+Cada indicador deve responder uma pergunta operacional.
+
+---
+
+# KPIs
+
+KPIs devem possuir:
+
+- título;
+- valor;
+- contexto;
+- período;
+- comparação quando útil;
+- definição clara.
+
+Evitar números sem explicação.
+
+---
+
+# Gráficos
+
+Gráficos devem:
+
+- possuir título;
+- possuir legenda;
+- possuir eixo legível;
+- funcionar em telas menores;
+- usar cores acessíveis;
+- mostrar tooltip;
+- evitar excesso de categorias.
+
+---
+
+# Filtros
+
+Filtros devem:
+
+- ser simples;
+- mostrar estado ativo;
+- permitir limpar;
+- persistir apenas quando útil;
+- evitar recarregamento excessivo;
+- funcionar em mobile e web.
+
+---
+
+# Busca
+
+Busca deve:
+
+- possuir placeholder claro;
+- permitir limpar;
+- informar ausência de resultados;
+- evitar execução a cada tecla sem controle;
+- respeitar filtros.
+
+---
+
+# Navegação
+
+A navegação deve ser previsível.
+
+O usuário deve saber:
+
+- onde está;
+- como voltar;
+- qual seção está ativa;
+- onde executar a ação principal.
+
+Evitar menus com muitos níveis.
+
+---
+
+# Breadcrumbs
+
+No web, utilizar quando ajudarem na orientação.
+
+Exemplo:
+
+    Ocorrências
+    >
+    SS-26-000001
+
+Não usar breadcrumbs desnecessários no mobile.
+
+---
+
+# Sidebar
+
+A sidebar web deve:
+
+- possuir poucos grupos;
+- destacar rota atual;
+- evitar excesso de itens;
+- adaptar-se a telas menores;
+- manter ações administrativas separadas.
+
+---
+
+# Cabeçalhos
+
+Cabeçalhos devem apresentar:
+
+- título;
+- contexto;
+- status;
+- ação principal;
+- ações secundárias quando necessárias.
+
+Não sobrecarregar o header com muitos botões.
+
+---
+
+# Densidade de Informação
+
+Mobile:
+
+- baixa a média densidade;
+- leitura rápida;
+- cards;
+- seções colapsáveis.
+
+Web:
+
+- média densidade;
+- tabelas quando apropriado;
+- detalhes organizados;
+- filtros.
+
+Não transformar o mobile em uma versão reduzida de uma tabela desktop.
+
+---
+
+# Acessibilidade
+
+Toda interface deve considerar:
+
+- contraste;
+- tamanho de fonte;
+- leitor de tela;
+- labels;
+- foco;
+- teclado;
+- área de toque;
+- mensagens de erro;
+- redução de movimento.
+
+Acessibilidade não deve ser tratada apenas no final.
+
+---
+
+# Contraste
+
+Texto e controles devem possuir contraste adequado.
+
+Estados desabilitados ainda precisam ser legíveis.
+
+Não usar cinza claro sobre fundo claro para informações importantes.
+
+---
+
+# Foco no Web
+
+Elementos interativos devem possuir foco visível.
+
+A navegação por teclado deve seguir ordem lógica.
+
+Modais devem prender e devolver foco corretamente.
+
+---
+
+# Leitor de Tela
+
+Fornecer labels para:
+
+- botões com ícone;
+- imagens;
+- inputs;
+- badges;
+- controles;
+- estados.
+
+Evitar repetir informação desnecessariamente.
+
+---
+
+# Movimento
+
+Respeitar preferência de redução de movimento quando possível.
+
+Não utilizar animações indispensáveis para compreender o fluxo.
+
+---
+
+# Tema Escuro
+
+Não implementar tema escuro por padrão apenas por tendência.
+
+Caso seja adotado:
+
+- utilizar tokens;
+- validar contraste;
+- testar gráficos;
+- testar badges;
+- testar estados críticos;
+- manter consistência.
+
+---
+
+# Consistência entre Mobile e Web
+
+Mobile e web devem compartilhar:
+
+- terminologia;
+- status;
+- ícones semânticos;
+- cores;
+- hierarquia;
+- feedback;
+- identidade.
+
+Eles não precisam possuir o mesmo layout.
+
+Cada plataforma deve utilizar o formato mais adequado.
+
+---
+
+# Referência Base44
+
+Ao reproduzir interfaces do Base44:
+
+- preservar intenção visual;
+- adaptar ao SafeStop real;
+- manter fluxo oficial;
+- corrigir inconsistências;
+- garantir responsividade;
+- garantir acessibilidade;
+- evitar copiar código ruim;
+- não copiar regras incorretas.
+
+Os prints ajudam a compreender a composição, mas não anulam o design system.
+
+---
+
+# Evitar
+
+Nunca:
+
+- adicionar campo apenas para preencher espaço;
+- criar botão sem função;
+- esconder ação crítica;
+- depender apenas de cor;
+- mostrar dado técnico ao usuário;
+- usar texto genérico;
+- criar telas sem loading;
+- criar telas sem erro;
+- criar telas sem estado vazio;
+- duplicar componentes;
+- alterar identidade sem aprovação;
+- aumentar burocracia visual.
+
+---
+
+# Revisão de UI
+
+Antes de concluir uma tela, verificar:
+
+- ação principal está clara;
+- fluxo está curto;
+- linguagem está correta;
+- status está consistente;
+- loading existe;
+- erro existe;
+- vazio existe;
+- offline foi considerado;
+- acessibilidade foi considerada;
+- mobile foi priorizado;
+- permissões foram consideradas;
+- componentes existentes foram reutilizados;
+- referência visual foi respeitada.
+
+---
+
+# Critérios de Aceite Visual
+
+Uma interface será considerada adequada quando:
+
+- o usuário compreender o objetivo sem treinamento extenso;
+- a ação principal estiver evidente;
+- o fluxo exigir poucos passos;
+- os estados estiverem claros;
+- não houver informações excessivas;
+- funcionar em telas menores;
+- possuir feedback;
+- possuir acessibilidade;
+- respeitar o design system;
+- apoiar a segurança operacional.
+
+---
+
+# Regra Final
+
+Toda interface do SafeStop deve ajudar o usuário a:
+
+- agir mais rápido;
+- entender melhor;
+- cometer menos erros;
+- comunicar com clareza;
+- acompanhar a ocorrência;
+- tomar decisões seguras.
+
+O design não deve criar burocracia.
+
+A melhor interface será aquela que parecer simples para o usuário, mesmo quando o sistema possuir regras complexas por trás.

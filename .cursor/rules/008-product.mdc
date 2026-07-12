@@ -1,0 +1,1011 @@
+---
+description: 008-product.mdc Regras de produto para requisitos, escopo, prioridades, Mobile First, simplicidade operacional e evolução do SafeStop.
+alwaysApply: false
+---
+
+---
+
+## description: Regras de produto do SafeStop. Aplicar em tarefas relacionadas a funcionalidades, requisitos, escopo, experiência operacional, decisões de produto, priorização, fluxos, critérios de aceite e evolução do sistema.
+
+# Produto — Regras do SafeStop
+
+## Objetivo
+
+Toda implementação do SafeStop deve preservar o propósito original do produto.
+
+O SafeStop existe para reduzir o tempo entre:
+
+- identificação de uma condição insegura;
+- paralisação da atividade;
+- comunicação aos responsáveis;
+- avaliação da liderança;
+- correção;
+- validação;
+- liberação.
+
+O sistema não existe para criar burocracia.
+
+O sistema existe para acelerar a resposta operacional com segurança e rastreabilidade.
+
+---
+
+# Fonte da Verdade
+
+Antes de implementar ou alterar qualquer funcionalidade de produto, consulte:
+
+1. `docs/product.md`
+2. `docs/workflow.md`
+3. `docs/notifications.md`
+4. `docs/roadmap.md`
+5. `docs/architecture.md`
+6. `docs/database.md`
+7. `docs/engineering.md`
+8. `docs/decisions/ADR-003-communication.md`
+9. `docs/decisions/ADR-004-mobile-first.md`
+10. `docs/decisions/ADR-005-operational-simplicity.md`
+
+Não inventar requisitos que contrariem esses documentos.
+
+---
+
+# Propósito do Produto
+
+O SafeStop deve resolver principalmente:
+
+- demora na comunicação;
+- falha no repasse de informação;
+- ausência de confirmação de ciência;
+- dificuldade para acompanhar decisões;
+- falta de rastreabilidade;
+- retrabalho;
+- excesso de ligações;
+- excesso de mensagens informais;
+- dificuldade para identificar responsáveis.
+
+Toda funcionalidade deve contribuir diretamente para pelo menos um desses objetivos.
+
+---
+
+# Usuário Principal
+
+O usuário principal é o profissional de HSE que atua em campo.
+
+Exemplos:
+
+- Técnico de Segurança do Trabalho;
+- Engenheiro de Segurança;
+- Supervisor HSE;
+- Fiscal;
+- profissional responsável pela paralisação.
+
+Esse usuário normalmente:
+
+- utiliza celular;
+- está em deslocamento;
+- possui pouco tempo;
+- pode estar sob pressão;
+- pode enfrentar conexão instável;
+- precisa agir rapidamente;
+- não pode preencher formulários longos antes de comunicar.
+
+---
+
+# Usuários Secundários
+
+O SafeStop também atenderá:
+
+- Liderança da Contratada;
+- Fiscal do Contrato;
+- Supervisor HSE;
+- Liderança HSE;
+- Gestores;
+- Administradores;
+- responsáveis por planos de ação;
+- responsáveis por validação;
+- responsáveis por liberação.
+
+Esses usuários utilizarão principalmente:
+
+- aplicativo mobile;
+- painel web;
+- central de notificações;
+- dashboards;
+- telas de avaliação;
+- relatórios;
+- auditoria.
+
+---
+
+# Mobile First
+
+Toda funcionalidade operacional deve ser pensada primeiro para o mobile.
+
+Antes de aprovar uma feature, verificar:
+
+- o profissional de campo consegue utilizar;
+- o fluxo exige poucos toques;
+- o fluxo exige pouca digitação;
+- a ação principal está clara;
+- funciona com conexão instável;
+- preserva os dados;
+- não depende de desktop;
+- pode ser concluída rapidamente.
+
+O painel web complementa a operação.
+
+Ele não deve substituir o fluxo principal de campo.
+
+---
+
+# Simplicidade Operacional
+
+Toda funcionalidade deve reduzir ou evitar:
+
+- burocracia;
+- digitação;
+- cliques;
+- telas;
+- decisões manuais repetitivas;
+- seleção manual de destinatários;
+- comunicação paralela;
+- retrabalho.
+
+Antes de adicionar uma nova etapa, justificar por que ela é realmente necessária.
+
+---
+
+# Comunicação Antes da Burocracia
+
+A comunicação inicial deve ocorrer antes da documentação completa.
+
+O registro inicial da Paralisação Preventiva deve exigir apenas o mínimo necessário.
+
+Não aguardar:
+
+- MDHO;
+- plano de ação;
+- referência IMS;
+- descrição extensa;
+- aprovação formal;
+- documentação complementar.
+
+A prioridade inicial é:
+
+    parar
+    comunicar
+    avaliar
+
+Depois:
+
+    documentar
+    corrigir
+    validar
+    liberar
+
+---
+
+# Registro em Menos de 60 Segundos
+
+O cadastro inicial de uma Paralisação Preventiva deve ser concluído em menos de 60 segundos em condições normais.
+
+Para isso, priorizar:
+
+- campos automáticos;
+- data e hora automáticas;
+- usuário autenticado;
+- organização ativa;
+- área pré-configurada;
+- seletores;
+- câmera;
+- geolocalização;
+- valores padrão;
+- poucas perguntas obrigatórias.
+
+Não adicionar campos obrigatórios sem necessidade operacional comprovada.
+
+---
+
+# Fluxo Principal
+
+O fluxo oficial do produto é:
+
+    Condição insegura identificada
+    ↓
+    Atividade interrompida
+    ↓
+    Paralisação Preventiva registrada
+    ↓
+    Responsáveis notificados
+    ↓
+    Liderança avalia
+    ↓
+    Ver e Agir ou Interdição Oficial
+    ↓
+    Correção ou fluxo MDHO
+    ↓
+    Validação
+    ↓
+    Liberação
+    ↓
+    Encerramento
+
+Toda funcionalidade deve respeitar esse fluxo.
+
+---
+
+# Paralisação Preventiva
+
+A Paralisação Preventiva:
+
+- interrompe a atividade;
+- inicia a comunicação;
+- não representa automaticamente Interdição Oficial;
+- aguarda avaliação da liderança;
+- deve possuir código interno;
+- deve registrar autor;
+- deve registrar data e hora;
+- deve gerar notificações;
+- deve iniciar timeline.
+
+---
+
+# Avaliação da Liderança
+
+A liderança deve decidir entre:
+
+    VER_E_AGIR
+
+ou:
+
+    INTERDICAO_OFICIAL
+
+A decisão deve possuir:
+
+- usuário;
+- data;
+- hora;
+- justificativa;
+- histórico;
+- auditoria.
+
+Não criar outros tipos de decisão sem atualização oficial da documentação.
+
+---
+
+# Ver e Agir
+
+O fluxo Ver e Agir deve ser simples.
+
+Etapas:
+
+    decisão
+    ↓
+    correção
+    ↓
+    evidência quando necessária
+    ↓
+    validação
+    ↓
+    liberação
+    ↓
+    encerramento
+
+Esse fluxo:
+
+- não exige MDHO;
+- não exige referência IMS;
+- não deve possuir plano de ação complexo por padrão;
+- deve permitir correção rápida;
+- deve registrar histórico.
+
+---
+
+# Interdição Oficial
+
+O fluxo de Interdição Oficial deve incluir:
+
+    decisão
+    ↓
+    MDHO
+    ↓
+    aprovação HSE
+    ↓
+    registro manual da referência IMS
+    ↓
+    plano de ação
+    ↓
+    correções
+    ↓
+    validação
+    ↓
+    liberação
+    ↓
+    encerramento
+
+A atividade permanece interrompida até a liberação autorizada.
+
+---
+
+# MDHO
+
+O MDHO deve ser preenchido por listas estruturadas.
+
+Categorias oficiais:
+
+- Comportamento;
+- Tipo de Desvio;
+- Pré-condições;
+- Questões Organizacionais;
+- Supervisão/Fiscalização.
+
+Regras:
+
+- existe apenas em Interdição Oficial;
+- permite rascunho;
+- permite envio;
+- permite aprovação;
+- permite devolução;
+- devolução exige justificativa;
+- opção “Outro” exige detalhe;
+- listas devem ser configuráveis;
+- avaliações antigas não devem mudar quando a lista for atualizada.
+
+---
+
+# Referência IMS
+
+O SafeStop não gera IMS.
+
+O SafeStop não consulta IMS.
+
+O SafeStop não sincroniza com IMS.
+
+O código é digitado manualmente após ser criado em outra plataforma.
+
+Exemplo:
+
+    BAA-26-0001
+
+A referência serve apenas para acompanhamento.
+
+Toda inclusão ou alteração deve registrar:
+
+- usuário;
+- data;
+- hora;
+- valor anterior;
+- novo valor;
+- auditoria.
+
+Não criar integração direta com IMS sem decisão oficial futura.
+
+---
+
+# Plano de Ação
+
+O plano de ação deve existir principalmente em Interdição Oficial.
+
+Cada ação deve possuir:
+
+- título;
+- descrição;
+- responsável;
+- organização responsável;
+- prazo;
+- prioridade;
+- status;
+- evidência quando necessária;
+- validação.
+
+Evitar planos excessivamente complexos no MVP.
+
+---
+
+# Validação
+
+A validação deve confirmar se a condição foi corrigida.
+
+Pode considerar:
+
+- evidências;
+- comentários;
+- ações concluídas;
+- responsável;
+- data;
+- autorização.
+
+A validação não deve ser confundida com liberação.
+
+---
+
+# Liberação
+
+A liberação é uma ação crítica.
+
+Deve exigir:
+
+- usuário autorizado;
+- status compatível;
+- correções concluídas;
+- evidências suficientes;
+- ações concluídas;
+- nota de liberação;
+- data e hora;
+- auditoria;
+- notificação.
+
+A interface não deve permitir liberação direta sem confirmação do backend.
+
+---
+
+# Encerramento
+
+O encerramento indica que a ocorrência foi concluída.
+
+Após encerramento:
+
+- manter histórico;
+- manter auditoria;
+- manter evidências;
+- permitir consulta;
+- impedir alterações comuns;
+- permitir apenas correções administrativas autorizadas.
+
+---
+
+# Cancelamento
+
+Cancelamento deve ser raro.
+
+Pode ocorrer em casos como:
+
+- duplicidade;
+- teste autorizado;
+- registro incorreto;
+- criação acidental.
+
+O cancelamento exige:
+
+- motivo;
+- usuário autorizado;
+- data;
+- hora;
+- auditoria.
+
+Não utilizar cancelamento para ocultar ocorrência válida.
+
+---
+
+# Notificações
+
+A comunicação é o centro do produto.
+
+Toda ocorrência relevante deve comunicar automaticamente os responsáveis.
+
+O usuário de campo não deve selecionar manualmente todos os destinatários.
+
+O backend deve considerar:
+
+- organização;
+- contratada;
+- área;
+- unidade;
+- contrato;
+- gerência;
+- papel;
+- permissão;
+- criticidade;
+- responsáveis cadastrados.
+
+---
+
+# Fonte Oficial da Comunicação
+
+A notificação armazenada no banco é a fonte oficial.
+
+Push é apenas um canal.
+
+Se o push falhar:
+
+- a notificação continua existindo;
+- o histórico permanece;
+- a falha deve ser registrada;
+- o usuário poderá visualizar na central.
+
+---
+
+# Leitura e Ciência
+
+Leitura e ciência são conceitos distintos.
+
+Leitura:
+
+    usuário abriu a notificação ou ocorrência
+
+Ciência:
+
+    usuário confirmou explicitamente conhecimento
+
+A interface e o backend devem preservar essa diferença.
+
+---
+
+# Escalonamento
+
+Notificações críticas podem gerar escalonamento.
+
+Condições possíveis:
+
+- ausência de leitura;
+- ausência de ciência;
+- atraso na avaliação;
+- ação atrasada;
+- validação pendente;
+- liberação pendente.
+
+O escalonamento deve ser:
+
+- configurável;
+- limitado;
+- auditável;
+- proporcional à criticidade;
+- sem spam.
+
+---
+
+# Rastreabilidade
+
+Toda ação relevante deve aparecer no histórico.
+
+Exemplos:
+
+- ocorrência criada;
+- destinatários identificados;
+- notificações enviadas;
+- leitura;
+- ciência;
+- avaliação iniciada;
+- decisão registrada;
+- MDHO enviado;
+- MDHO aprovado;
+- referência IMS registrada;
+- ação criada;
+- correção enviada;
+- validação;
+- liberação;
+- encerramento.
+
+---
+
+# Auditoria
+
+A auditoria deve registrar ações críticas no backend.
+
+O usuário comum não pode:
+
+- editar;
+- apagar;
+- ocultar;
+- reescrever.
+
+Alterações devem gerar novos registros, nunca apagar os anteriores.
+
+---
+
+# Offline
+
+O SafeStop deve considerar conexão instável.
+
+No MVP, priorizar:
+
+- preservação do formulário;
+- rascunho;
+- cache de leitura;
+- feedback;
+- retry;
+- prevenção contra duplicidade.
+
+No futuro, permitir sincronização de operações.
+
+Não afirmar que algo foi enviado enquanto existir apenas no dispositivo.
+
+---
+
+# Estados de Sincronização
+
+A interface pode exibir:
+
+    Salvo no dispositivo
+    Aguardando conexão
+    Enviando
+    Registrado no servidor
+    Sincronizado
+    Falha no envio
+
+Esses estados não substituem o status oficial da ocorrência.
+
+---
+
+# Geolocalização
+
+A geolocalização serve apenas para contextualizar a ocorrência.
+
+Regras:
+
+- não rastrear continuamente;
+- solicitar permissão;
+- permitir recusa;
+- permitir preenchimento manual;
+- registrar precisão;
+- não bloquear a comunicação inicial.
+
+---
+
+# Evidências
+
+Evidências podem incluir:
+
+- fotos;
+- documentos;
+- registros de correção;
+- registros de liberação;
+- anexos de plano de ação.
+
+Devem permanecer:
+
+- privadas;
+- vinculadas à ocorrência;
+- auditáveis;
+- protegidas;
+- preservadas após encerramento.
+
+---
+
+# Escopo do MVP
+
+O MVP deve focar no fluxo principal.
+
+Inclui:
+
+- autenticação;
+- organizações;
+- usuários;
+- Paralisação Preventiva;
+- comunicação;
+- avaliação;
+- Ver e Agir;
+- Interdição Oficial;
+- MDHO;
+- referência IMS manual;
+- plano de ação;
+- validação;
+- liberação;
+- timeline;
+- auditoria;
+- notificações;
+- experiência mobile.
+
+---
+
+# Fora do Escopo Inicial
+
+Não implementar sem decisão oficial:
+
+- integração direta com IMS;
+- WhatsApp como canal oficial;
+- workflows totalmente configuráveis;
+- múltiplos planos por ocorrência;
+- sistema documental complexo;
+- rastreamento de trabalhadores;
+- inteligência artificial automática para decisão;
+- automação de liberação;
+- excesso de relatórios;
+- funcionalidades administrativas sem necessidade.
+
+---
+
+# Roadmap
+
+Toda implementação deve respeitar:
+
+    docs/roadmap.md
+
+Não iniciar funcionalidades de Sprint futura sem autorização.
+
+Não alterar ordem ou escopo do roadmap silenciosamente.
+
+---
+
+# Priorização
+
+Priorizar nesta ordem:
+
+1. segurança operacional;
+2. comunicação;
+3. confiabilidade;
+4. experiência mobile;
+5. rastreabilidade;
+6. fluxo principal;
+7. gestão;
+8. relatórios;
+9. refinamentos.
+
+---
+
+# Critério para Nova Funcionalidade
+
+Antes de criar uma nova feature, responder:
+
+- resolve um problema real;
+- reduz tempo;
+- reduz ligações;
+- reduz mensagens informais;
+- reduz retrabalho;
+- melhora rastreabilidade;
+- melhora segurança;
+- funciona no mobile;
+- mantém simplicidade;
+- pertence ao roadmap atual.
+
+Se a resposta for negativa, reavaliar.
+
+---
+
+# Critérios de Aceite
+
+Toda funcionalidade deve possuir critérios verificáveis.
+
+Exemplos:
+
+- ocorrência criada com sucesso;
+- código interno gerado;
+- responsáveis identificados;
+- notificações criadas;
+- status atualizado;
+- histórico registrado;
+- auditoria registrada;
+- permissões respeitadas;
+- feedback apresentado;
+- dados preservados em falha.
+
+Evitar critérios vagos como:
+
+    funcionar corretamente
+
+---
+
+# Métricas de Produto
+
+O sistema deve permitir acompanhar:
+
+- tempo para registrar;
+- tempo até primeiro alerta;
+- tempo até leitura;
+- tempo até ciência;
+- tempo até avaliação;
+- tempo até decisão;
+- tempo até correção;
+- tempo até liberação;
+- ações atrasadas;
+- ocorrências por área;
+- ocorrências por empresa;
+- fatores MDHO;
+- falhas de entrega.
+
+Métricas devem apoiar decisões operacionais.
+
+---
+
+# Dashboard
+
+O dashboard deve responder perguntas reais.
+
+Exemplos:
+
+- quantas ocorrências estão abertas;
+- quais aguardam avaliação;
+- quais ações estão atrasadas;
+- quais áreas possuem recorrência;
+- quanto tempo leva até a ciência;
+- quanto tempo leva até a liberação.
+
+Não criar gráficos sem finalidade operacional.
+
+---
+
+# Experiência do Usuário
+
+Toda tela deve mostrar:
+
+- contexto;
+- status;
+- próximo passo;
+- responsável;
+- ação principal;
+- feedback;
+- erro quando aplicável;
+- estado vazio;
+- conectividade quando relevante.
+
+---
+
+# Linguagem
+
+Utilizar linguagem oficial do SafeStop.
+
+Evitar termos genéricos quando houver termo de domínio.
+
+Preferir:
+
+    Paralisação Preventiva
+
+Evitar:
+
+    Registro
+
+Preferir:
+
+    Confirmar ciência
+
+Evitar:
+
+    Marcar como visto
+
+Preferir:
+
+    Referência IMS
+
+Evitar:
+
+    Integração IMS
+
+---
+
+# Consistência entre Plataformas
+
+Mobile e web devem compartilhar:
+
+- regras;
+- status;
+- terminologia;
+- permissões;
+- validações;
+- histórico;
+- critérios.
+
+Eles podem possuir layouts diferentes.
+
+Não criar comportamentos contraditórios entre plataformas.
+
+---
+
+# Referência Base44
+
+O Base44 serve como referência de:
+
+- protótipo;
+- composição;
+- fluxo visual;
+- ideias de navegação.
+
+Não copiar:
+
+- regras incorretas;
+- arquitetura;
+- banco;
+- segurança;
+- código frágil;
+- fluxos contraditórios.
+
+A documentação oficial sempre prevalece.
+
+---
+
+# Alteração de Requisito
+
+Quando um requisito mudar:
+
+1. identificar documentos afetados;
+2. atualizar o documento oficial;
+3. criar ADR quando necessário;
+4. atualizar banco;
+5. atualizar fluxo;
+6. atualizar testes;
+7. atualizar interface;
+8. registrar impacto.
+
+Não alterar somente o código e deixar a documentação contraditória.
+
+---
+
+# Não Inventar
+
+Nunca inventar:
+
+- novos status;
+- novos papéis;
+- novas permissões;
+- novos campos obrigatórios;
+- novas aprovações;
+- novos canais;
+- novas integrações;
+- novas etapas;
+- novos tipos de decisão.
+
+Quando houver dúvida, consultar a documentação ou solicitar decisão.
+
+---
+
+# Evitar Complexidade
+
+Não transformar o SafeStop em:
+
+- ERP;
+- sistema de documentos;
+- plataforma de RH;
+- sistema completo de gestão HSE;
+- substituto de todos os sistemas corporativos;
+- ferramenta de rastreamento;
+- sistema altamente configurável sem necessidade.
+
+O SafeStop deve permanecer focado em paralisação, comunicação, avaliação, tratativa e liberação.
+
+---
+
+# Checklist de Produto
+
+Antes de concluir uma funcionalidade, verificar:
+
+- [ ] Está alinhada ao `product.md`.
+- [ ] Respeita o `workflow.md`.
+- [ ] Respeita o roadmap.
+- [ ] Prioriza mobile.
+- [ ] Mantém simplicidade.
+- [ ] Não adiciona burocracia.
+- [ ] Considera comunicação.
+- [ ] Considera ciência.
+- [ ] Considera auditoria.
+- [ ] Considera permissões.
+- [ ] Considera conexão instável.
+- [ ] Possui critérios de aceite.
+- [ ] Possui feedback.
+- [ ] Não duplica funcionalidade existente.
+
+---
+
+# Ações Proibidas
+
+Nunca:
+
+- criar feature fora do escopo sem autorização;
+- adicionar campos por precaução;
+- criar etapa sem necessidade;
+- exigir MDHO no Ver e Agir;
+- gerar IMS dentro do SafeStop;
+- criar integração com IMS sem decisão formal;
+- tratar push como fonte oficial;
+- tratar leitura como ciência;
+- permitir liberação sem autorização;
+- ocultar histórico;
+- apagar auditoria;
+- transformar o web em fluxo principal;
+- comprometer simplicidade.
+
+---
+
+# Regra Final
+
+Toda decisão de produto deve responder:
+
+- Isso ajuda o profissional em campo?
+- Isso reduz o tempo de comunicação?
+- Isso reduz burocracia?
+- Isso melhora a segurança?
+- Isso mantém rastreabilidade?
+- Isso respeita o fluxo oficial?
+- Isso pertence ao escopo atual?
+- Isso é realmente necessário?
+
+Quando qualquer resposta for negativa, a funcionalidade deve ser reavaliada antes da implementação.
+
+O SafeStop deve continuar simples, rápido, seguro e focado no problema que deu origem ao produto.

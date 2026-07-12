@@ -1,0 +1,1163 @@
+---
+description: 004-supabase.mdc Regras para Supabase, PostgreSQL, Auth, RLS, Storage, Realtime, Edge Functions, migrations e operações de backend.
+alwaysApply: false
+---
+
+---
+
+## description: Regras de Supabase para o SafeStop. Aplicar em tarefas relacionadas a PostgreSQL, autenticação, RLS, Storage, Realtime, Edge Functions, migrations, funções SQL, auditoria, notificações e segurança de dados.
+
+# Supabase — Regras do SafeStop
+
+## Objetivo
+
+O Supabase será a plataforma principal de backend do SafeStop.
+
+Ele será responsável por:
+
+- PostgreSQL;
+- autenticação;
+- autorização;
+- Row Level Security;
+- Storage;
+- Realtime;
+- funções PostgreSQL;
+- Edge Functions;
+- auditoria;
+- eventos de notificação.
+
+Toda implementação deve priorizar:
+
+- segurança;
+- integridade;
+- rastreabilidade;
+- simplicidade;
+- tipagem;
+- isolamento entre organizações;
+- compatibilidade entre mobile e web.
+
+---
+
+# Fonte da Verdade
+
+Antes de implementar qualquer funcionalidade relacionada ao Supabase, consulte:
+
+1. `docs/product.md`
+2. `docs/workflow.md`
+3. `docs/database.md`
+4. `docs/architecture.md`
+5. `docs/engineering.md`
+6. `docs/notifications.md`
+7. `docs/decisions/ADR-001-architecture.md`
+8. `docs/decisions/ADR-002-stack.md`
+9. `docs/decisions/ADR-003-communication.md`
+
+Não criar tabelas, funções, status ou fluxos que contrariem esses documentos.
+
+---
+
+# Responsabilidade do Backend
+
+Regras críticas devem permanecer protegidas no backend.
+
+Exemplos:
+
+- criação da Paralisação Preventiva;
+- alteração de status;
+- avaliação da liderança;
+- confirmação da Interdição Oficial;
+- envio e aprovação do MDHO;
+- registro manual da referência IMS;
+- validação de correções;
+- liberação da atividade;
+- cancelamento;
+- encerramento;
+- confirmação de ciência;
+- criação de auditoria;
+- criação de notificações.
+
+A interface não deve ser a única responsável por validar essas operações.
+
+---
+
+# Cliente Supabase
+
+Utilizar o cliente oficial do Supabase.
+
+Devem existir configurações adequadas para:
+
+- React Native;
+- navegador;
+- Server Components;
+- Route Handlers;
+- Server Actions;
+- Edge Functions;
+- scripts administrativos.
+
+Não utilizar incorretamente o mesmo cliente em todos os ambientes.
+
+---
+
+# Cliente Mobile
+
+O cliente mobile deve:
+
+- utilizar somente chave pública apropriada;
+- persistir sessão de forma segura;
+- renovar tokens;
+- tratar expiração;
+- tratar logout;
+- limpar dados sensíveis;
+- funcionar com React Native;
+- respeitar conectividade instável.
+
+Nunca utilizar `service_role` no aplicativo mobile.
+
+---
+
+# Cliente Web
+
+No Next.js, separar clientes quando necessário:
+
+- browser client;
+- server client;
+- route handler client;
+- server action client;
+- admin client seguro.
+
+Não enviar secrets ao navegador.
+
+Não importar clientes administrativos em Client Components.
+
+---
+
+# Service Role
+
+A chave `service_role` ignora RLS.
+
+Por isso:
+
+- nunca deve existir no mobile;
+- nunca deve existir em variável pública;
+- nunca deve ser enviada ao navegador;
+- nunca deve aparecer em logs;
+- deve ser utilizada apenas em ambiente seguro;
+- seu uso deve ser mínimo;
+- toda operação deve validar organização e escopo manualmente.
+
+---
+
+# Banco de Dados
+
+O PostgreSQL será a fonte oficial dos dados.
+
+Toda estrutura deve seguir:
+
+    docs/database.md
+
+Toda alteração estrutural deve utilizar migration.
+
+Não alterar o banco de produção manualmente.
+
+---
+
+# Convenções de Banco
+
+Utilizar:
+
+    snake_case
+
+para:
+
+- tabelas;
+- colunas;
+- funções;
+- índices;
+- constraints;
+- políticas.
+
+Exemplos:
+
+    organization_id
+    created_at
+    occurrence_status_history
+    confirm_notification_awareness
+
+No TypeScript, utilizar:
+
+    camelCase
+
+A conversão deve ocorrer na fronteira da camada de dados.
+
+---
+
+# Identificadores
+
+Utilizar UUID nas entidades principais.
+
+Exemplo:
+
+    id uuid primary key default gen_random_uuid()
+
+Códigos visíveis não substituem o UUID.
+
+Exemplos:
+
+    SS-26-000001
+    BAA-26-0001
+
+O código IMS é apenas uma referência digitada manualmente.
+
+Não existe integração direta com o sistema IMS.
+
+---
+
+# Datas e Horários
+
+Armazenar datas em UTC.
+
+Utilizar:
+
+    timestamptz
+
+A aplicação deve converter para o fuso local apenas na apresentação.
+
+Evitar campos separados de data e hora quando um único `timestamptz` resolver.
+
+---
+
+# Integridade
+
+O banco deve proteger:
+
+- campos obrigatórios;
+- unicidade;
+- relacionamentos;
+- chaves estrangeiras;
+- transições válidas;
+- consistência organizacional;
+- duplicidade;
+- escopo;
+- valores permitidos.
+
+Não depender apenas de Zod ou do frontend.
+
+---
+
+# Foreign Keys
+
+Definir comportamento de exclusão explicitamente.
+
+Avaliar:
+
+- `restrict`;
+- `cascade`;
+- `set null`.
+
+Não utilizar `cascade` indiscriminadamente em dados auditáveis.
+
+Ocorrências, auditorias, decisões e históricos devem ser preservados.
+
+---
+
+# Constraints
+
+Utilizar constraints quando representarem regras estruturais.
+
+Exemplos:
+
+- código interno único;
+- referência IMS única quando preenchida;
+- seleção MDHO não duplicada;
+- papel e permissão não duplicados;
+- vínculo organizacional único;
+- valores obrigatórios;
+- checks de formato.
+
+Não esconder regras complexas em constraints ilegíveis.
+
+---
+
+# Migrations
+
+Toda alteração deve possuir migration versionada.
+
+Local:
+
+    supabase/migrations/
+
+Uma migration deve:
+
+- possuir nome claro;
+- conter uma mudança coerente;
+- ser revisável;
+- ser testada;
+- preservar dados;
+- incluir índices necessários;
+- incluir políticas relacionadas;
+- evitar alterações destrutivas sem estratégia.
+
+Exemplo de nome:
+
+    202607110001_create_organizations.sql
+    202607110002_create_occurrences.sql
+    202607110003_create_notifications.sql
+
+---
+
+# Alterações Destrutivas
+
+Antes de:
+
+- remover coluna;
+- renomear coluna;
+- alterar tipo;
+- remover tabela;
+- tornar campo obrigatório;
+- alterar enum;
+- remover policy;
+
+avaliar:
+
+- dados existentes;
+- compatibilidade mobile;
+- compatibilidade web;
+- rollback;
+- versão anterior do aplicativo;
+- migração gradual.
+
+Preferir mudanças compatíveis em etapas.
+
+---
+
+# Seeds
+
+Seeds devem existir para desenvolvimento e homologação.
+
+Podem incluir:
+
+- organização fictícia;
+- unidades;
+- áreas;
+- papéis;
+- permissões;
+- usuários de teste;
+- categorias MDHO;
+- opções MDHO;
+- ocorrências fictícias;
+- notificações fictícias;
+- planos de ação fictícios.
+
+Não utilizar dados reais sem autorização.
+
+---
+
+# Tipos Gerados
+
+Após mudanças no schema, regenerar os tipos do Supabase.
+
+Local sugerido:
+
+    packages/types/src/database.types.ts
+
+Nunca editar manualmente arquivos gerados.
+
+Tipos gerados não precisam ser usados diretamente em toda a interface.
+
+Criar DTOs e tipos de domínio quando necessário.
+
+---
+
+# Row Level Security
+
+Todas as tabelas acessíveis pelo cliente devem possuir RLS habilitado.
+
+Exemplo:
+
+    alter table occurrences enable row level security;
+
+Nunca desabilitar RLS para resolver um problema de desenvolvimento.
+
+---
+
+# Negação por Padrão
+
+Quando nenhuma policy permitir a ação, o acesso deve ser negado.
+
+Não criar policies excessivamente permissivas.
+
+Evitar:
+
+    using (true)
+
+em tabelas operacionais.
+
+---
+
+# Escopo Organizacional
+
+Toda policy deve considerar quando aplicável:
+
+- usuário autenticado;
+- vínculo organizacional ativo;
+- organização;
+- unidade;
+- área;
+- contrato;
+- empresa contratada;
+- participação;
+- permissão;
+- responsabilidade atribuída.
+
+Possuir permissão não significa acesso a todas as organizações.
+
+---
+
+# Policies de Leitura
+
+Policies de leitura devem validar:
+
+- autenticação;
+- vínculo ativo;
+- organização correta;
+- escopo;
+- permissão;
+- relação com a ocorrência.
+
+Um usuário nunca deve visualizar dados de outra organização sem autorização explícita.
+
+---
+
+# Policies de Inserção
+
+A inserção deve impedir que o cliente defina livremente:
+
+- `created_by` de outro usuário;
+- organização não autorizada;
+- status avançado;
+- datas de aprovação;
+- usuário aprovador;
+- auditoria;
+- campos administrativos.
+
+Valores derivados do usuário autenticado devem ser definidos ou validados no backend.
+
+---
+
+# Policies de Atualização
+
+Atualizações diretas devem ser limitadas.
+
+Campos críticos não devem ser alterados diretamente pelo cliente.
+
+Exemplos:
+
+- `status`;
+- `decision_type`;
+- `released_at`;
+- `closed_at`;
+- `approved_at`;
+- `approved_by`;
+- `ims_reference_registered_by`;
+- campos de auditoria.
+
+Utilizar funções controladas para essas operações.
+
+---
+
+# Policies de Exclusão
+
+Negar exclusão direta em tabelas críticas.
+
+Exemplos:
+
+- occurrences;
+- occurrence_decisions;
+- occurrence_status_history;
+- notifications;
+- audit_events;
+- mdho_assessments;
+- evidências encerradas.
+
+Quando necessário, utilizar:
+
+- `is_active`;
+- `deleted_at`;
+- `cancelled_at`;
+- `archived_at`.
+
+---
+
+# Funções Auxiliares de Segurança
+
+Funções possíveis:
+
+    current_profile_id()
+    current_organization_ids()
+    has_permission(permission_code)
+    can_access_occurrence(occurrence_id)
+    can_manage_organization(organization_id)
+    is_platform_admin()
+
+Essas funções devem:
+
+- ser pequenas;
+- ser previsíveis;
+- ser testadas;
+- evitar recursão;
+- controlar `search_path`;
+- respeitar RLS;
+- evitar consultas pesadas.
+
+---
+
+# Security Definer
+
+Utilizar `security definer` somente quando necessário.
+
+Toda função com `security definer` deve:
+
+- validar autenticação;
+- validar organização;
+- validar permissão;
+- validar escopo;
+- controlar `search_path`;
+- limitar privilégios;
+- não confiar em parâmetros;
+- retornar apenas o necessário;
+- possuir testes.
+
+Não utilizar `security definer` como atalho para ignorar RLS.
+
+---
+
+# Funções PostgreSQL
+
+Operações críticas devem utilizar funções PostgreSQL quando precisarem de atomicidade.
+
+Exemplos:
+
+    create_occurrence()
+    start_occurrence_evaluation()
+    record_occurrence_decision()
+    submit_mdho_assessment()
+    approve_mdho_assessment()
+    return_mdho_assessment()
+    register_ims_reference()
+    update_ims_reference()
+    submit_correction()
+    validate_correction()
+    release_occurrence()
+    close_occurrence()
+    cancel_occurrence()
+    confirm_notification_awareness()
+
+---
+
+# Requisitos de Funções Críticas
+
+Toda função crítica deve:
+
+1. validar autenticação;
+2. validar vínculo organizacional;
+3. validar permissão;
+4. validar escopo;
+5. validar status atual;
+6. validar campos obrigatórios;
+7. executar a mudança;
+8. registrar histórico;
+9. registrar auditoria;
+10. criar evento de notificação;
+11. retornar resultado padronizado.
+
+A operação deve ser transacional sempre que essas etapas fizerem parte da mesma ação.
+
+---
+
+# Mudanças de Status
+
+Nunca permitir que o frontend altere status diretamente.
+
+Exemplo inadequado:
+
+    update occurrences
+    set status = 'LIBERADA'
+
+Exemplo adequado:
+
+    release_occurrence(
+      occurrence_id,
+      release_note
+    )
+
+O backend deve decidir se a transição é válida.
+
+---
+
+# Máquina de Estados
+
+As transições devem respeitar:
+
+    docs/workflow.md
+
+Não criar transições fora do fluxo oficial.
+
+Não permitir saltos de etapa sem regra explícita, permissão e auditoria.
+
+---
+
+# Idempotência
+
+Operações críticas devem impedir duplicidade.
+
+Exemplos:
+
+- criação de ocorrência;
+- decisão;
+- envio de MDHO;
+- aprovação;
+- referência IMS;
+- confirmação de ciência;
+- liberação;
+- cancelamento.
+
+Utilizar quando apropriado:
+
+- `idempotency_key`;
+- unique constraints;
+- transações;
+- upsert;
+- validação de estado atual.
+
+---
+
+# Respostas Padronizadas
+
+Funções devem retornar resultados previsíveis.
+
+Exemplo conceitual:
+
+    {
+      "success": true,
+      "data": {}
+    }
+
+ou:
+
+    {
+      "success": false,
+      "error": {
+        "code": "INVALID_STATUS",
+        "message": "A ocorrência não pode ser liberada neste status."
+      }
+    }
+
+Não expor mensagens internas do PostgreSQL diretamente ao usuário.
+
+---
+
+# Códigos de Erro
+
+Utilizar códigos consistentes.
+
+Exemplos:
+
+    UNAUTHORIZED
+    FORBIDDEN
+    NOT_FOUND
+    VALIDATION_ERROR
+    INVALID_STATUS
+    DUPLICATE_OPERATION
+    MISSING_EVIDENCE
+    MDHO_NOT_APPROVED
+    ACTIONS_NOT_COMPLETED
+    INTERNAL_ERROR
+
+---
+
+# Auditoria
+
+Toda ação crítica deve gerar auditoria no backend.
+
+Eventos incluem:
+
+- ocorrência criada;
+- status alterado;
+- decisão registrada;
+- Interdição confirmada;
+- MDHO enviado;
+- MDHO aprovado;
+- MDHO devolvido;
+- referência IMS registrada;
+- referência IMS alterada;
+- correção enviada;
+- correção validada;
+- atividade liberada;
+- ocorrência cancelada;
+- permissões alteradas.
+
+O frontend não deve ser a única fonte de auditoria.
+
+---
+
+# Histórico de Status
+
+Toda mudança de status deve gerar registro em:
+
+    occurrence_status_history
+
+Registrar:
+
+- status anterior;
+- novo status;
+- usuário;
+- data;
+- motivo;
+- metadata quando necessária.
+
+O histórico deve ser criado na mesma transação da mudança.
+
+---
+
+# Referência IMS
+
+O SafeStop não gera IMS.
+
+O SafeStop não consulta o sistema IMS.
+
+O SafeStop não sincroniza com o sistema IMS.
+
+O código será digitado manualmente.
+
+Exemplo:
+
+    BAA-26-0001
+
+Registrar:
+
+- código;
+- usuário;
+- data;
+- alteração;
+- valor anterior;
+- novo valor;
+- auditoria.
+
+Não criar campos separados para IMS e BAA.
+
+---
+
+# Storage
+
+Utilizar Supabase Storage para:
+
+- fotos iniciais;
+- evidências;
+- documentos;
+- imagens de perfil;
+- anexos de ações.
+
+Buckets devem ser privados.
+
+---
+
+# Buckets
+
+Buckets iniciais:
+
+    occurrence-evidence
+    action-plan-evidence
+    profile-images
+
+Não criar bucket público para evidências operacionais.
+
+---
+
+# Caminhos de Storage
+
+Formato recomendado:
+
+    {organization_id}/{occurrence_id}/{attachment_id}/{file_name}
+
+O caminho deve facilitar:
+
+- isolamento;
+- autorização;
+- auditoria;
+- limpeza;
+- associação.
+
+---
+
+# Policies do Storage
+
+As policies devem validar:
+
+- autenticação;
+- organização;
+- ocorrência;
+- permissão;
+- caminho;
+- tipo de operação.
+
+O caminho do arquivo não é uma proteção suficiente por si só.
+
+---
+
+# URLs Assinadas
+
+Utilizar URLs assinadas para arquivos privados.
+
+Regras:
+
+- tempo de expiração;
+- geração sob demanda;
+- autorização;
+- não armazenar URL temporária no banco;
+- armazenar apenas o caminho.
+
+---
+
+# Uploads
+
+Antes de registrar um anexo:
+
+- validar arquivo;
+- enviar ao Storage;
+- confirmar upload;
+- registrar metadados;
+- tratar falhas;
+- evitar arquivos órfãos.
+
+Se o banco falhar após o upload, remover o arquivo quando possível.
+
+---
+
+# Realtime
+
+Realtime deve melhorar a experiência, não substituir o banco.
+
+Casos possíveis:
+
+- notificações;
+- timeline;
+- status;
+- ciência;
+- ações;
+- evidências;
+- filas operacionais.
+
+---
+
+# Realtime e RLS
+
+Subscriptions devem respeitar RLS.
+
+Nunca receber dados fora do escopo para filtrar apenas no frontend.
+
+---
+
+# Realtime e Cache
+
+Eventos devem:
+
+- invalidar queries;
+- atualizar cache quando seguro;
+- evitar duplicidade;
+- lidar com reconexão.
+
+TanStack Query continua responsável pelo estado remoto no cliente.
+
+---
+
+# Edge Functions
+
+Utilizar Edge Functions para:
+
+- Expo Push;
+- e-mail;
+- WhatsApp futuro;
+- webhooks;
+- integrações externas;
+- secrets de provedores;
+- processamento assíncrono;
+- operações que não devem ocorrer no cliente.
+
+Não utilizar Edge Function para consulta simples.
+
+---
+
+# Edge Functions e Segurança
+
+Toda Edge Function deve:
+
+- validar token;
+- validar usuário;
+- validar organização;
+- validar permissão;
+- validar payload;
+- não confiar no cliente;
+- proteger secrets;
+- tratar erros;
+- registrar logs seguros.
+
+---
+
+# Notificações
+
+A implementação deve seguir:
+
+    docs/notifications.md
+
+A notificação interna registrada no banco é a fonte oficial.
+
+Push é apenas canal de entrega.
+
+---
+
+# Eventos de Notificação
+
+Criar eventos de negócio separados das notificações individuais.
+
+Exemplos:
+
+    OCCURRENCE_CREATED
+    DECISION_REQUIRED
+    INTERDICTION_CONFIRMED
+    MDHO_APPROVAL_REQUIRED
+    IMS_REFERENCE_REGISTERED
+    ACTION_DUE
+    RELEASE_REQUIRED
+    OCCURRENCE_RELEASED
+
+---
+
+# Destinatários
+
+O backend deve determinar destinatários considerando:
+
+- organização;
+- contratada;
+- área;
+- unidade;
+- contrato;
+- gerência;
+- papel;
+- permissão;
+- criticidade;
+- responsáveis configurados.
+
+O usuário de campo não deve selecionar manualmente todos os destinatários.
+
+---
+
+# Leitura e Ciência
+
+Leitura e ciência são eventos diferentes.
+
+Leitura:
+
+    usuário abriu a notificação ou ocorrência
+
+Ciência:
+
+    usuário confirmou explicitamente conhecimento
+
+A ciência deve ser idempotente e auditável.
+
+---
+
+# Auth
+
+Utilizar Supabase Auth.
+
+O perfil complementar deve existir em:
+
+    profiles
+
+O vínculo organizacional deve existir em:
+
+    organization_members
+
+Não utilizar apenas dados de `auth.users` como modelo completo do usuário.
+
+---
+
+# Criação de Perfil
+
+A criação do usuário deve garantir:
+
+- perfil;
+- vínculo organizacional;
+- papel inicial;
+- auditoria;
+- consistência.
+
+Evitar usuário autenticado sem perfil operacional quando isso impedir o uso.
+
+---
+
+# Sessão
+
+A aplicação deve tratar:
+
+- login;
+- logout;
+- renovação;
+- expiração;
+- recuperação de senha;
+- usuário inativo;
+- vínculo inativo;
+- troca de organização.
+
+---
+
+# Multiempresa
+
+Toda entidade operacional deve pertencer a uma organização quando aplicável.
+
+Não misturar dados entre organizações.
+
+A modelagem e as policies devem permitir evolução para múltiplas empresas.
+
+---
+
+# Views
+
+Criar views somente quando houver necessidade real.
+
+Possíveis exemplos:
+
+    occurrence_summary_view
+    open_occurrences_view
+    notification_status_view
+    mdho_statistics_view
+    action_plan_progress_view
+
+Não criar views prematuramente.
+
+---
+
+# Índices
+
+Criar índices para consultas reais.
+
+Colunas prioritárias:
+
+- `organization_id`;
+- `status`;
+- `created_at`;
+- `occurrence_id`;
+- `recipient_member_id`;
+- `area_id`;
+- `contractor_organization_id`;
+- `ims_reference_code`.
+
+Avaliar planos de execução quando houver lentidão.
+
+---
+
+# Performance
+
+Evitar:
+
+- `select("*")`;
+- consultas sem filtro;
+- carregamento de todos os registros;
+- N+1 queries;
+- policies excessivamente pesadas;
+- subscriptions desnecessárias;
+- funções com múltiplas consultas repetidas.
+
+Utilizar:
+
+- paginação;
+- DTOs;
+- views quando justificadas;
+- índices;
+- consultas específicas;
+- cache controlado.
+
+---
+
+# Logs
+
+Logs não devem conter:
+
+- senha;
+- tokens;
+- service role;
+- arquivos;
+- dados pessoais desnecessários;
+- URLs assinadas completas;
+- conteúdo confidencial.
+
+---
+
+# Testes
+
+Testar:
+
+- migrations;
+- functions;
+- constraints;
+- RLS;
+- Storage policies;
+- Auth;
+- transições;
+- permissões;
+- auditoria;
+- notificações;
+- idempotência;
+- múltiplas organizações.
+
+---
+
+# Testes de RLS
+
+Criar cenários para:
+
+- usuário autorizado;
+- usuário sem permissão;
+- usuário de outra organização;
+- usuário inativo;
+- contratada;
+- fiscal;
+- liderança HSE;
+- administrador;
+- destinatário de notificação.
+
+---
+
+# Validação Após Mudanças
+
+Após alterar banco ou Supabase:
+
+- aplicar migration local;
+- executar seed;
+- regenerar tipos;
+- executar testes;
+- executar lint;
+- executar typecheck;
+- validar mobile;
+- validar web;
+- revisar policies.
+
+---
+
+# Regra Final
+
+Toda implementação Supabase deve garantir:
+
+- segurança no banco;
+- isolamento entre organizações;
+- integridade;
+- rastreabilidade;
+- operações atômicas;
+- RLS;
+- auditoria;
+- compatibilidade entre mobile e web.
+
+Nunca enfraquecer a segurança ou a integridade para tornar uma implementação mais rápida.
+
+O Supabase deve simplificar a infraestrutura do SafeStop, sem transformar o frontend em fonte de regras críticas.

@@ -1,0 +1,1407 @@
+---
+description: 007-testing.mdc Regras para testes unitários, integração, E2E, RLS, regressão, mobile, web, offline e critérios de qualidade.
+alwaysApply: false
+---
+
+---
+
+## description: Regras de testes do SafeStop. Aplicar em tarefas relacionadas a testes unitários, integração, E2E, componentes, hooks, Supabase, RLS, Storage, notificações, offline, sincronização, regressão e critérios de qualidade.
+
+# Testes — Regras do SafeStop
+
+## Objetivo
+
+Todo teste do SafeStop deve existir para proteger comportamento real do produto.
+
+Os testes devem priorizar:
+
+- regras de negócio;
+- segurança;
+- permissões;
+- transições de status;
+- comunicação;
+- integridade dos dados;
+- experiência mobile;
+- fluxos críticos;
+- prevenção de regressões.
+
+Não criar testes apenas para aumentar cobertura numérica.
+
+---
+
+# Fonte da Verdade
+
+Antes de criar ou alterar testes, consulte:
+
+1. `docs/product.md`
+2. `docs/workflow.md`
+3. `docs/database.md`
+4. `docs/architecture.md`
+5. `docs/engineering.md`
+6. `docs/notifications.md`
+7. `docs/roadmap.md`
+8. `docs/decisions/`
+
+Os testes devem validar o comportamento definido nesses documentos.
+
+Não adaptar a regra de negócio apenas para fazer um teste passar.
+
+---
+
+# Estratégia Geral
+
+O SafeStop utilizará diferentes níveis de teste:
+
+- testes unitários;
+- testes de componentes;
+- testes de hooks;
+- testes de integração;
+- testes de banco;
+- testes de RLS;
+- testes de Storage;
+- testes de Edge Functions;
+- testes E2E;
+- testes manuais em dispositivo real;
+- testes de regressão.
+
+Cada tipo de teste deve validar o nível correto.
+
+---
+
+# Ferramentas Oficiais
+
+Utilizar, conforme o contexto:
+
+- Vitest;
+- Testing Library;
+- React Native Testing Library;
+- Playwright;
+- Supabase CLI;
+- testes SQL;
+- Maestro ou Detox futuramente;
+- ferramentas oficiais do Expo quando aplicáveis.
+
+Não adicionar nova ferramenta de testes sem necessidade comprovada.
+
+---
+
+# Testes Unitários
+
+Testes unitários devem validar funções isoladas.
+
+Priorizar:
+
+- validações;
+- schemas;
+- mapeadores;
+- formatadores;
+- helpers;
+- seleção de destinatários;
+- regras de permissão;
+- cálculo de duração;
+- máquina de estados;
+- normalização;
+- transformação de dados.
+
+Exemplos:
+
+    canTransitionOccurrenceStatus()
+    formatOccurrenceCode()
+    mapOccurrenceRowToSummary()
+    selectNotificationRecipients()
+    calculateResponseTime()
+
+---
+
+# Características de um Bom Teste Unitário
+
+Um bom teste unitário deve ser:
+
+- rápido;
+- determinístico;
+- isolado;
+- legível;
+- previsível;
+- fácil de manter;
+- focado em uma regra.
+
+Evitar testes que dependam de:
+
+- rede;
+- banco real;
+- hora atual sem controle;
+- ambiente externo;
+- ordem de execução;
+- dados globais mutáveis.
+
+---
+
+# Estrutura dos Testes
+
+Preferir organização clara.
+
+Exemplo:
+
+    describe("canTransitionOccurrenceStatus", () => {
+      it("allows EM_AVALIACAO to VER_E_AGIR", () => {
+        const result = canTransitionOccurrenceStatus(
+          "EM_AVALIACAO",
+          "VER_E_AGIR",
+        );
+
+        expect(result).toBe(true);
+      });
+    });
+
+O nome do teste deve explicar o comportamento esperado.
+
+---
+
+# Padrão de Nomenclatura
+
+Arquivos de teste podem utilizar:
+
+    occurrence-status.test.ts
+    occurrence-card.test.tsx
+    use-occurrence.test.ts
+    create-occurrence.integration.test.ts
+
+Evitar nomes genéricos:
+
+    test1.test.ts
+    helpers.test.ts
+    component.test.tsx
+
+---
+
+# Arrange, Act, Assert
+
+Organizar testes em três partes:
+
+1. preparação;
+2. execução;
+3. verificação.
+
+Exemplo:
+
+    it("rejects release without required evidence", async () => {
+      const occurrence = createOccurrenceFixture({
+        status: "AGUARDANDO_VALIDACAO",
+        attachments: [],
+      });
+
+      const result = validateReleaseRequirements(
+        occurrence,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.errorCode).toBe(
+        "MISSING_EVIDENCE",
+      );
+    });
+
+---
+
+# Testes de Schemas
+
+Todo schema Zod relevante deve possuir testes.
+
+Validar:
+
+- payload válido;
+- campo obrigatório;
+- formato inválido;
+- valor fora do domínio;
+- regra condicional;
+- campo “Outro”;
+- referência IMS;
+- quantidade de arquivos;
+- tamanho;
+- strings vazias;
+- valores nulos;
+- campos extras quando relevante.
+
+---
+
+# Referência IMS
+
+Testar que:
+
+- o código é manual;
+- o formato básico é aceito;
+- valor inválido é rejeitado;
+- não existe validação contra sistema externo;
+- só pode ser registrado em Interdição Oficial;
+- alteração gera regra de auditoria;
+- Ver e Agir não aceita referência IMS.
+
+Exemplo válido:
+
+    BAA-26-0001
+
+O teste não deve simular integração inexistente com IMS.
+
+---
+
+# Máquina de Estados
+
+A máquina de estados é crítica.
+
+Testar todas as transições permitidas.
+
+Exemplos:
+
+    PARALISACAO_PREVENTIVA
+    → EM_AVALIACAO
+
+    EM_AVALIACAO
+    → VER_E_AGIR
+
+    EM_AVALIACAO
+    → INTERDICAO_CONFIRMADA
+
+    AGUARDANDO_VALIDACAO
+    → LIBERADA
+
+Testar também transições proibidas.
+
+Exemplos:
+
+    PARALISACAO_PREVENTIVA
+    → LIBERADA
+
+    VER_E_AGIR
+    → AGUARDANDO_REGISTRO_IMS
+
+    ENCERRADA
+    → EM_AVALIACAO
+
+---
+
+# Testes de Componentes
+
+Testes de componentes devem validar comportamento visível.
+
+Priorizar:
+
+- conteúdo;
+- estado;
+- acessibilidade;
+- evento;
+- loading;
+- erro;
+- estado vazio;
+- permissão;
+- botão desabilitado;
+- feedback.
+
+Não testar detalhes internos de implementação.
+
+---
+
+# Testing Library
+
+Testar da forma como o usuário interage.
+
+Preferir consultas por:
+
+- role;
+- label;
+- texto;
+- acessibilidade;
+- placeholder quando apropriado.
+
+Evitar consultar por:
+
+- classe CSS;
+- estrutura interna;
+- índice;
+- seletor frágil.
+
+---
+
+# Componentes Mobile
+
+Com React Native Testing Library, validar:
+
+- labels;
+- press;
+- campos;
+- loading;
+- estado offline;
+- sincronização;
+- mensagens;
+- permissões;
+- navegação simulada quando necessário.
+
+---
+
+# Componentes Web
+
+Com Testing Library, validar:
+
+- navegação por teclado;
+- foco;
+- formulários;
+- dialogs;
+- tabelas;
+- filtros;
+- estados;
+- responsividade lógica;
+- acessibilidade.
+
+---
+
+# Snapshots
+
+Snapshots não devem ser usados como estratégia principal.
+
+Podem ser úteis em casos pequenos e estáveis.
+
+Evitar snapshots gigantes que quebram por qualquer alteração visual.
+
+Preferir assertions sobre comportamento.
+
+---
+
+# Testes de Hooks
+
+Testar hooks quando houver:
+
+- transformação;
+- coordenação;
+- estado;
+- efeitos;
+- retry;
+- cache;
+- conectividade;
+- sincronização;
+- comportamento complexo.
+
+Hooks simples que apenas repassam uma query podem ser testados indiretamente.
+
+---
+
+# TanStack Query
+
+Testar:
+
+- query key;
+- loading;
+- sucesso;
+- erro;
+- retry;
+- invalidação;
+- atualização de cache;
+- mutation;
+- comportamento offline quando aplicável.
+
+Utilizar um QueryClient isolado por teste.
+
+Não compartilhar cache entre testes.
+
+---
+
+# Testes de Mutations
+
+Validar:
+
+- payload;
+- sucesso;
+- erro;
+- loading;
+- feedback;
+- invalidação;
+- idempotência;
+- preservação de formulário;
+- não execução duplicada.
+
+Ações críticas devem aguardar confirmação do backend.
+
+---
+
+# Testes de Integração
+
+Testes de integração devem validar múltiplas camadas trabalhando juntas.
+
+Exemplos:
+
+- formulário + schema + mutation;
+- função PostgreSQL + histórico;
+- ocorrência + notificação;
+- MDHO + aprovação;
+- plano de ação + validação;
+- upload + metadados;
+- Auth + vínculo organizacional;
+- deep link + autorização.
+
+---
+
+# Banco de Dados
+
+Testar:
+
+- migrations;
+- constraints;
+- foreign keys;
+- defaults;
+- unicidade;
+- checks;
+- funções;
+- triggers;
+- índices críticos;
+- transações;
+- rollback.
+
+---
+
+# Migrations
+
+Toda migration importante deve ser testada.
+
+Verificar:
+
+- aplicação em banco vazio;
+- aplicação sobre dados existentes;
+- compatibilidade;
+- ausência de perda;
+- rollback quando planejado;
+- geração de tipos;
+- seed após migration.
+
+---
+
+# Funções PostgreSQL
+
+Testar funções críticas.
+
+Exemplos:
+
+    create_occurrence()
+    record_occurrence_decision()
+    submit_mdho_assessment()
+    approve_mdho_assessment()
+    register_ims_reference()
+    validate_correction()
+    release_occurrence()
+    confirm_notification_awareness()
+
+Validar:
+
+- usuário autorizado;
+- usuário sem permissão;
+- status correto;
+- status incorreto;
+- dados obrigatórios;
+- histórico;
+- auditoria;
+- notificação;
+- idempotência.
+
+---
+
+# Transações
+
+Testar que uma falha não deixa dados parciais.
+
+Exemplo:
+
+Se a criação do evento de notificação falhar dentro de uma operação atômica, validar se:
+
+- status não foi alterado parcialmente;
+- histórico não ficou inconsistente;
+- auditoria não ficou incompleta.
+
+---
+
+# Testes de RLS
+
+RLS deve possuir testes explícitos.
+
+Cenários mínimos:
+
+- usuário autenticado;
+- usuário não autenticado;
+- vínculo ativo;
+- vínculo inativo;
+- usuário de outra organização;
+- usuário com permissão;
+- usuário sem permissão;
+- administrador de outra empresa;
+- destinatário da notificação;
+- usuário fora do contrato;
+- usuário fora da área.
+
+---
+
+# Perfis para Testes de RLS
+
+Criar fixtures para:
+
+- HSE de Campo;
+- Liderança da Contratada;
+- Fiscal do Contrato;
+- Supervisor HSE;
+- Liderança HSE;
+- Gestor;
+- Administrador da Empresa;
+- Administrador da Plataforma;
+- usuário sem vínculo;
+- usuário inativo.
+
+---
+
+# Testes de Leitura
+
+Validar que:
+
+- usuário lê dados do seu escopo;
+- usuário não lê dados de outra organização;
+- destinatário lê sua notificação;
+- usuário não lê notificação de outro;
+- administrador respeita organização;
+- auditoria restrita não fica pública.
+
+---
+
+# Testes de Escrita
+
+Validar que:
+
+- usuário autorizado cria;
+- usuário sem permissão não cria;
+- cliente não altera autor;
+- cliente não altera organização;
+- cliente não altera status crítico;
+- cliente não altera auditoria;
+- usuário não aprova MDHO sem permissão;
+- usuário não libera fora do fluxo.
+
+---
+
+# Testes de Storage
+
+Validar:
+
+- bucket privado;
+- upload autorizado;
+- upload negado;
+- caminho correto;
+- organização correta;
+- URL assinada;
+- expiração;
+- tipo inválido;
+- tamanho inválido;
+- exclusão bloqueada após encerramento;
+- usuário de outra organização sem acesso.
+
+---
+
+# Arquivos Órfãos
+
+Testar cenários em que:
+
+- upload é concluído;
+- registro no banco falha.
+
+Validar estratégia de limpeza ou rollback.
+
+---
+
+# Edge Functions
+
+Testar:
+
+- autenticação;
+- autorização;
+- payload;
+- secrets;
+- resposta;
+- falha externa;
+- retry;
+- idempotência;
+- logs;
+- organização;
+- rate limiting quando existir.
+
+---
+
+# Notificações
+
+Testar:
+
+- evento criado;
+- destinatários corretos;
+- uma notificação por destinatário;
+- prioridade;
+- canal;
+- falha de push;
+- notificação interna preservada;
+- leitura;
+- ciência;
+- escalonamento;
+- múltiplos dispositivos;
+- token inválido;
+- deep link.
+
+---
+
+# Leitura e Ciência
+
+Testar separadamente.
+
+Cenários:
+
+- notificação criada e não lida;
+- notificação lida sem ciência;
+- ciência confirmada;
+- confirmação repetida;
+- usuário diferente tentando confirmar;
+- ciência após outro dispositivo;
+- data e hora registradas.
+
+Não considerar leitura como ciência.
+
+---
+
+# Escalonamento
+
+Testar:
+
+- prazo atingido;
+- ciência pendente;
+- ciência já confirmada;
+- destinatário correto;
+- limite de tentativas;
+- ausência de spam;
+- auditoria;
+- criticidade;
+- regra configurada.
+
+---
+
+# Testes Offline
+
+Testar:
+
+- formulário preservado;
+- item salvo localmente;
+- estado aguardando conexão;
+- envio após reconexão;
+- erro de sincronização;
+- retry;
+- duplicidade;
+- logout;
+- troca de organização;
+- arquivo pendente;
+- conflito com servidor.
+
+---
+
+# Sincronização
+
+Testar:
+
+- ordem da fila;
+- dependências;
+- idempotency key;
+- retry;
+- backoff;
+- operação inválida;
+- sessão expirada;
+- usuário inativo;
+- conflito de status;
+- limpeza após sucesso;
+- preservação após falha.
+
+---
+
+# Upload Offline
+
+Testar:
+
+- arquivo local existente;
+- arquivo local removido;
+- ocorrência ainda sem ID oficial;
+- upload após criação;
+- falha parcial;
+- retry individual;
+- associação correta;
+- limpeza temporária.
+
+---
+
+# Geolocalização
+
+Testar:
+
+- permissão concedida;
+- permissão negada;
+- timeout;
+- localização obtida;
+- baixa precisão;
+- preenchimento manual;
+- funcionamento offline;
+- fluxo não bloqueado.
+
+---
+
+# Câmera
+
+Testar:
+
+- permissão concedida;
+- permissão negada;
+- captura;
+- cancelamento;
+- preview;
+- remoção;
+- compressão;
+- falha;
+- preservação local.
+
+---
+
+# Autenticação
+
+Testar:
+
+- login válido;
+- login inválido;
+- logout;
+- recuperação de senha;
+- sessão expirada;
+- token renovado;
+- usuário inativo;
+- vínculo inativo;
+- troca de organização;
+- dispositivo compartilhado;
+- limpeza de cache.
+
+---
+
+# Permissões
+
+Testar ações por permissão, não apenas por nome de papel.
+
+Exemplos:
+
+- usuário com `occurrence.evaluate`;
+- usuário sem `occurrence.evaluate`;
+- usuário com permissão fora do escopo;
+- usuário com múltiplas organizações;
+- cache de permissão desatualizado;
+- mudança administrativa.
+
+---
+
+# Fluxo Ver e Agir
+
+Testar:
+
+1. ocorrência criada;
+2. avaliação iniciada;
+3. decisão Ver e Agir;
+4. correção registrada;
+5. evidência anexada;
+6. envio para validação;
+7. aprovação ou rejeição;
+8. liberação;
+9. encerramento.
+
+Testar também:
+
+- ausência de evidência;
+- usuário sem permissão;
+- rejeição;
+- clique duplicado;
+- notificação.
+
+---
+
+# Fluxo de Interdição Oficial
+
+Testar:
+
+1. ocorrência criada;
+2. avaliação;
+3. Interdição confirmada;
+4. MDHO iniciado;
+5. MDHO enviado;
+6. MDHO aprovado ou devolvido;
+7. referência IMS registrada manualmente;
+8. plano de ação;
+9. correções;
+10. validação;
+11. liberação;
+12. encerramento.
+
+---
+
+# MDHO
+
+Testar:
+
+- categorias obrigatórias;
+- múltipla seleção;
+- seleção única;
+- opção Outro;
+- detalhe obrigatório;
+- rascunho;
+- envio;
+- devolução;
+- aprovação;
+- usuário sem permissão;
+- opções inativas;
+- histórico.
+
+---
+
+# Plano de Ação
+
+Testar:
+
+- criação;
+- responsável;
+- prazo;
+- prioridade;
+- evidência;
+- conclusão;
+- validação;
+- rejeição;
+- atraso;
+- notificação;
+- cancelamento autorizado.
+
+---
+
+# Liberação
+
+A liberação é um fluxo crítico.
+
+Testar:
+
+- status correto;
+- permissão;
+- evidências;
+- ações concluídas;
+- MDHO aprovado;
+- nota de liberação;
+- usuário;
+- data;
+- histórico;
+- auditoria;
+- notificação;
+- tentativa duplicada.
+
+---
+
+# Cancelamento
+
+Testar:
+
+- motivo obrigatório;
+- permissão;
+- status permitido;
+- auditoria;
+- histórico;
+- prevenção contra ocultação indevida;
+- ocorrência já encerrada;
+- notificação quando aplicável.
+
+---
+
+# Testes E2E Web
+
+Utilizar Playwright para fluxos críticos do painel web.
+
+Priorizar:
+
+- login;
+- consulta;
+- avaliação;
+- MDHO;
+- plano de ação;
+- validação;
+- liberação;
+- notificações;
+- administração;
+- permissões.
+
+---
+
+# Testes E2E Mobile
+
+Avaliar Maestro ou Detox quando o fluxo mobile estiver estável.
+
+Priorizar:
+
+- login;
+- criar paralisação;
+- tirar foto;
+- obter localização;
+- enviar;
+- receber push;
+- confirmar ciência;
+- registrar correção;
+- comportamento offline;
+- sincronização.
+
+---
+
+# Dispositivo Real
+
+Recursos nativos devem ser testados em dispositivo real.
+
+Exemplos:
+
+- câmera;
+- galeria;
+- localização;
+- push;
+- deep link;
+- SecureStore;
+- FileSystem;
+- segundo plano;
+- rede instável;
+- permissões;
+- Android.
+
+Não considerar emulador suficiente para todos os casos.
+
+---
+
+# Testes de Acessibilidade
+
+Validar:
+
+- labels;
+- roles;
+- foco;
+- teclado;
+- leitor de tela;
+- contraste;
+- área de toque;
+- mensagens de erro;
+- estado desabilitado;
+- não dependência exclusiva de cor.
+
+---
+
+# Testes de Responsividade
+
+No web, validar:
+
+- desktop;
+- notebook;
+- tablet;
+- navegador mobile.
+
+No mobile, validar:
+
+- telas pequenas;
+- telas maiores;
+- teclado;
+- Safe Area;
+- notch;
+- diferentes densidades.
+
+---
+
+# Testes de Performance
+
+Avaliar:
+
+- tempo de carregamento;
+- listas;
+- consultas;
+- upload;
+- sincronização;
+- renderizações;
+- dashboard;
+- Realtime;
+- RLS;
+- funções SQL.
+
+Não criar testes de performance sem métrica clara.
+
+---
+
+# Testes de Regressão
+
+Todo bug corrigido deve possuir teste quando viável.
+
+O teste deve reproduzir a falha anterior e validar a correção.
+
+Não aceitar correção que dependa apenas de teste manual repetitivo.
+
+---
+
+# Fixtures
+
+Criar fixtures reutilizáveis para:
+
+- usuários;
+- organizações;
+- ocorrências;
+- notificações;
+- MDHO;
+- ações;
+- evidências;
+- permissões.
+
+Fixtures devem ser:
+
+- simples;
+- previsíveis;
+- tipadas;
+- independentes;
+- fáceis de sobrescrever.
+
+---
+
+# Builders
+
+Builders podem ser utilizados quando fixtures possuírem muitas variações.
+
+Exemplo conceitual:
+
+    createOccurrenceFixture({
+      status: "EM_AVALIACAO",
+      severity: "CRITICAL",
+    });
+
+Não criar builders complexos sem necessidade.
+
+---
+
+# Mocks
+
+Mockar apenas fronteiras externas.
+
+Exemplos:
+
+- Expo Location;
+- câmera;
+- push provider;
+- Supabase client em teste unitário;
+- serviço externo;
+- relógio;
+- rede.
+
+Evitar mockar internamente tudo, pois o teste perde valor.
+
+---
+
+# Tempo e Datas
+
+Testes dependentes de tempo devem controlar o relógio.
+
+Não depender da data real.
+
+Utilizar datas fixas e previsíveis.
+
+---
+
+# IDs
+
+Utilizar IDs previsíveis em testes.
+
+Evitar UUID aleatório quando não for necessário.
+
+Isso melhora legibilidade e debug.
+
+---
+
+# Dados Reais
+
+Nunca utilizar dados pessoais ou corporativos reais em testes.
+
+Utilizar:
+
+- nomes fictícios;
+- empresas fictícias;
+- áreas fictícias;
+- códigos fictícios;
+- arquivos de teste.
+
+---
+
+# Isolamento
+
+Cada teste deve preparar e limpar seu próprio estado.
+
+Não depender de teste anterior.
+
+Não compartilhar banco sujo.
+
+Não depender da ordem da suíte.
+
+---
+
+# Determinismo
+
+Um teste deve produzir o mesmo resultado em todas as execuções.
+
+Evitar:
+
+- aleatoriedade sem seed;
+- tempo real;
+- rede externa;
+- concorrência não controlada;
+- dependência de timezone;
+- dependência de ordem.
+
+---
+
+# Cobertura
+
+Cobertura é um indicador, não um objetivo isolado.
+
+Priorizar cobertura de:
+
+- regras críticas;
+- segurança;
+- workflow;
+- notificações;
+- offline;
+- sincronização;
+- permissões.
+
+Não criar testes frágeis apenas para elevar porcentagem.
+
+---
+
+# Testes Frágeis
+
+Evitar testes que quebram por:
+
+- mudança de texto não relevante;
+- estrutura interna;
+- classes;
+- ordem visual sem importância;
+- implementação;
+- delays fixos;
+- dependência externa.
+
+---
+
+# Esperas
+
+Em testes assíncronos, utilizar mecanismos apropriados.
+
+Evitar:
+
+    sleep(3000)
+
+Preferir esperar por:
+
+- elemento;
+- estado;
+- resposta;
+- evento;
+- condição.
+
+---
+
+# Flaky Tests
+
+Testes instáveis devem ser corrigidos.
+
+Não aceitar retry permanente como solução.
+
+Investigar:
+
+- concorrência;
+- tempo;
+- limpeza;
+- rede;
+- estado compartilhado;
+- seletor frágil.
+
+---
+
+# CI
+
+Na integração contínua, executar no mínimo:
+
+    pnpm lint
+    pnpm typecheck
+    pnpm test
+    pnpm build
+
+Quando aplicável:
+
+- testes de banco;
+- testes de RLS;
+- Playwright;
+- validação de migrations.
+
+---
+
+# Ordem no CI
+
+Sugestão:
+
+1. instalar dependências;
+2. lint;
+3. typecheck;
+4. testes unitários;
+5. testes de integração;
+6. build;
+7. testes E2E quando aplicável.
+
+Falhar cedo quando possível.
+
+---
+
+# Testes e Migrations
+
+Quando houver migration:
+
+- iniciar banco limpo;
+- aplicar migrations;
+- executar seeds;
+- executar testes;
+- regenerar tipos;
+- validar políticas;
+- validar funções.
+
+---
+
+# Testes em Staging
+
+Antes de produção, validar em staging:
+
+- autenticação;
+- notificações;
+- push;
+- Storage;
+- RLS;
+- workflow;
+- offline;
+- sincronização;
+- Edge Functions;
+- deep links;
+- permissões.
+
+---
+
+# Checklist de Teste por Feature
+
+Antes de concluir uma feature:
+
+- [ ] Fluxo principal testado.
+- [ ] Fluxo de erro testado.
+- [ ] Permissão testada.
+- [ ] Status inválido testado.
+- [ ] Clique duplo testado.
+- [ ] Loading testado.
+- [ ] Estado vazio testado.
+- [ ] Offline considerado.
+- [ ] Mobile validado.
+- [ ] Web validado quando aplicável.
+- [ ] Auditoria validada.
+- [ ] Notificação validada.
+- [ ] Regressão avaliada.
+
+---
+
+# Antes do Commit
+
+Executar:
+
+- testes relacionados;
+- lint;
+- typecheck.
+
+Não criar commit com teste quebrado.
+
+---
+
+# Antes do Merge
+
+Garantir:
+
+- testes atualizados;
+- suíte aprovada;
+- build aprovado;
+- migrations testadas;
+- RLS testada;
+- critérios de aceite atendidos;
+- regressões avaliadas.
+
+---
+
+# Antes da Release
+
+Executar validação dos fluxos críticos:
+
+- login;
+- Paralisação Preventiva;
+- comunicação;
+- ciência;
+- avaliação;
+- Ver e Agir;
+- Interdição Oficial;
+- MDHO;
+- referência IMS;
+- plano de ação;
+- validação;
+- liberação;
+- auditoria;
+- offline;
+- sincronização.
+
+---
+
+# Ações Proibidas
+
+Nunca:
+
+- remover teste para fazer build passar;
+- alterar regra de negócio para satisfazer teste incorreto;
+- usar `skip` sem justificativa;
+- manter teste flaky ignorado;
+- desabilitar suíte;
+- mockar toda a implementação;
+- afirmar que testou sem executar;
+- usar dado real;
+- ignorar RLS;
+- testar apenas caminho feliz;
+- depender apenas de cobertura.
+
+---
+
+# Relatório de Testes
+
+Ao concluir uma tarefa, informar:
+
+- testes criados;
+- testes alterados;
+- comandos executados;
+- resultado;
+- testes não executados;
+- riscos residuais;
+- validações manuais necessárias.
+
+Nunca afirmar que todos os testes passaram quando algum comando não foi executado.
+
+---
+
+# Regra Final
+
+Os testes do SafeStop devem proteger aquilo que realmente importa:
+
+- comunicação rápida;
+- segurança;
+- autorização;
+- integridade;
+- rastreabilidade;
+- fluxo operacional;
+- preservação de dados;
+- experiência em campo.
+
+Um teste bom não apenas verifica código.
+
+Ele impede que o SafeStop deixe de cumprir seu propósito operacional.

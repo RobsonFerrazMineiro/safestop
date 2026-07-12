@@ -1,0 +1,32 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Notification title",
+    },
+    "area": {
+      "type": "string",
+      "description": "Related area",
+    },
+    "status": {
+      "type": "string",
+      "description": "Related status",
+    },
+    "priority": {
+      "type": "string",
+      "enum": ["Baixa", "M\u00e9dia", "Alta", "Cr\u00edtica"],
+      "default": "M\u00e9dia",
+    },
+    "read": {
+      "type": "boolean",
+      "default": false,
+    },
+    "interdiction_id": {
+      "type": "string",
+      "description": "Reference to the related interdiction",
+    },
+  },
+  "required": ["title"],
+}

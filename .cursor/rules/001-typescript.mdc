@@ -1,0 +1,443 @@
+---
+description: 001-typescript.mdc Padrões de TypeScript aplicáveis a código, tipos, schemas, funções, componentes e contratos do SafeStop.
+alwaysApply: false
+---
+
+---
+
+## description: TypeScript standards for the SafeStop project. Defines typing conventions, strict mode, shared types, naming, and best practices.
+
+# TypeScript Rules
+
+## Objective
+
+All TypeScript code must prioritize:
+
+- type safety;
+- readability;
+- maintainability;
+- predictability;
+- reuse.
+
+TypeScript exists to prevent errors before runtime.
+
+Never bypass the type system to "make the code work".
+
+---
+
+# Strict Mode
+
+Always assume the project uses TypeScript in strict mode.
+
+The generated code must be compatible with:
+
+- `"strict": true`
+- `"noImplicitAny": true`
+- `"strictNullChecks": true`
+
+Never rely on relaxed compiler options.
+
+---
+
+# Never use `any`
+
+Never introduce `any` unless explicitly requested.
+
+Prefer, in this order:
+
+1. existing domain type;
+2. shared type;
+3. generic;
+4. `unknown`;
+5. discriminated union.
+
+`any` is always the last resort.
+
+---
+
+# Prefer Existing Types
+
+Before creating a new interface or type:
+
+1. Search the project.
+2. Search `packages/types`.
+3. Search shared models.
+4. Search Supabase generated types.
+
+Avoid duplicated definitions.
+
+---
+
+# Shared Types
+
+Domain types must live in shared packages whenever they are used by more than one application.
+
+Examples:
+
+- User
+- Occurrence
+- Notification
+- Organization
+- Company
+- Attachment
+
+Do not duplicate these types inside `apps/mobile` or `apps/web`.
+
+---
+
+# Domain First
+
+Always model business concepts.
+
+Good:
+
+```ts
+type OccurrenceStatus = ...
+```
+
+Bad:
+
+```ts
+type ScreenData = ...
+```
+
+Types should represent the business, not the UI.
+
+---
+
+# Interfaces vs Type
+
+Use:
+
+`interface`
+
+for:
+
+- object contracts;
+- public APIs;
+- class contracts.
+
+Use:
+
+`type`
+
+for:
+
+- unions;
+- mapped types;
+- utility types;
+- aliases;
+- intersections.
+
+---
+
+# Enums
+
+Avoid TypeScript enums unless required.
+
+Prefer literal unions.
+
+Good:
+
+```ts
+type Severity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+```
+
+Instead of:
+
+```ts
+enum Severity { ... }
+```
+
+Literal unions are easier to infer, serialize and validate.
+
+---
+
+# Discriminated Unions
+
+Whenever an object has multiple states, prefer discriminated unions.
+
+Example:
+
+```ts
+type SyncState =
+  | { state: "pending" }
+  | { state: "syncing" }
+  | { state: "failed"; reason: string }
+  | { state: "completed" };
+```
+
+Avoid multiple unrelated booleans.
+
+Bad:
+
+```ts
+isLoading;
+isPending;
+isSuccess;
+isError;
+```
+
+---
+
+# Optional Properties
+
+Only make a property optional if it is truly optional in the business domain.
+
+Do not use optional properties simply to silence TypeScript.
+
+---
+
+# Null vs Undefined
+
+Prefer:
+
+`undefined`
+
+for absent values.
+
+Use:
+
+`null`
+
+only when required by external APIs or database semantics.
+
+---
+
+# Function Return Types
+
+Exported functions should always declare an explicit return type.
+
+Example:
+
+```ts
+export function createOccurrence(): Promise<Occurrence>;
+```
+
+Avoid relying solely on inference for public APIs.
+
+---
+
+# Async Functions
+
+Always return typed Promises.
+
+Good:
+
+```ts
+Promise<void>;
+
+Promise<User>;
+
+Promise<Result<T>>;
+```
+
+Never return implicit Promise<any>.
+
+---
+
+# Generic Types
+
+Use generics only when they improve reuse.
+
+Avoid unnecessary complexity.
+
+Good:
+
+```ts
+Result<T>;
+```
+
+Bad:
+
+```ts
+Result<T, U, K, V, X>;
+```
+
+---
+
+# Utility Types
+
+Prefer native utility types.
+
+Examples:
+
+- Partial
+- Pick
+- Omit
+- Record
+- Required
+- Readonly
+
+Avoid recreating existing utility types.
+
+---
+
+# Zod
+
+Validation schemas are the source of truth.
+
+Whenever possible:
+
+```ts
+type FormData = z.infer<typeof schema>;
+```
+
+Never duplicate the same structure manually.
+
+---
+
+# React Components
+
+Always type component props.
+
+Good:
+
+```ts
+interface ButtonProps {
+  label: string;
+}
+```
+
+Avoid anonymous prop objects.
+
+---
+
+# Hooks
+
+Every exported hook must declare its return type.
+
+Custom hooks should expose stable and predictable APIs.
+
+---
+
+# Event Handlers
+
+Always type event handlers.
+
+Avoid implicit event types.
+
+---
+
+# Error Handling
+
+Prefer typed errors.
+
+Do not throw strings.
+
+Good:
+
+```ts
+throw new Error("...");
+```
+
+---
+
+# Imports
+
+Prefer importing types separately when appropriate.
+
+Example:
+
+```ts
+import type { User } from "@/types";
+```
+
+Avoid importing runtime values when only the type is needed.
+
+---
+
+# Naming Conventions
+
+Types:
+
+```text
+Occurrence
+Notification
+User
+```
+
+Interfaces:
+
+```text
+OccurrenceProps
+NotificationPayload
+```
+
+Generics:
+
+```text
+T
+TData
+TError
+TResult
+```
+
+Booleans:
+
+```text
+isLoading
+isReleased
+hasPermission
+canApprove
+```
+
+---
+
+# Readability
+
+Prefer clear code over clever code.
+
+Avoid deeply nested generic expressions.
+
+Avoid over-engineering.
+
+---
+
+# SafeStop Standards
+
+Every type must reflect the business language of the project.
+
+Prefer names such as:
+
+- Occurrence
+- Notification
+- IMSReference
+- MDHOAssessment
+- CorrectiveAction
+- ReleaseDecision
+
+Avoid generic names such as:
+
+- Item
+- Data
+- Object
+- Info
+
+---
+
+# Before Creating New Types
+
+Always verify whether the type already exists.
+
+Priority:
+
+1. packages/types
+2. Supabase generated types
+3. Shared domain models
+4. Existing feature types
+
+Only create a new type when no reusable alternative exists.
+
+---
+
+# Final Rule
+
+Every line of TypeScript should make the code:
+
+- safer;
+- easier to understand;
+- easier to maintain;
+- easier to refactor.
+
+Never weaken the type system for convenience.

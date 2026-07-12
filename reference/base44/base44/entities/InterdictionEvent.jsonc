@@ -1,0 +1,34 @@
+{
+  "name": "InterdictionEvent",
+  "type": "object",
+  "properties": {
+    "interdiction_id": {
+      "type": "string",
+      "description": "Reference to the interdiction",
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "created",
+        "notified",
+        "viewed",
+        "comment",
+        "decision",
+        "correction",
+        "released",
+        "cancelled",
+        "status_change",
+      ],
+      "description": "Type of event",
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the event",
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Name of the person who performed the action",
+    },
+  },
+  "required": ["interdiction_id", "type", "description"],
+}

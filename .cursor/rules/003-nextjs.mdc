@@ -1,0 +1,505 @@
+---
+description: 003-nextjs.mdc Regras para tarefas relacionadas ao painel web, Next.js, App Router, Server Components, Client Components e responsividade.
+alwaysApply: false
+---
+
+---
+
+## description: Next.js standards for the SafeStop Web application. Defines architecture, App Router conventions, Server Components, Client Components, Server Actions, data fetching, and best practices.
+
+# Next.js Rules
+
+## Objetivo
+
+Toda implementação Web deve priorizar:
+
+- simplicidade;
+- desempenho;
+- tipagem forte;
+- segurança;
+- reutilização;
+- consistência com o Mobile.
+
+O painel Web existe para complementar a operação realizada no aplicativo mobile.
+
+Nunca desenvolver funcionalidades Web que contrariem os fluxos oficiais do projeto.
+
+---
+
+# Fonte da Verdade
+
+Antes de implementar qualquer funcionalidade Web consulte:
+
+1. docs/product.md
+2. docs/workflow.md
+3. docs/architecture.md
+4. docs/database.md
+5. docs/engineering.md
+6. docs/notifications.md
+7. docs/roadmap.md
+8. docs/decisions/
+
+---
+
+# Stack Oficial
+
+Utilizar:
+
+- Next.js App Router
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- TanStack Query
+- React Hook Form
+- Zod
+- Supabase
+
+Não substituir tecnologias sem aprovação.
+
+---
+
+# App Router
+
+Utilizar exclusivamente App Router.
+
+Não utilizar Pages Router.
+
+Estrutura esperada:
+
+app/
+(auth)/
+(dashboard)/
+api/
+layout.tsx
+page.tsx
+loading.tsx
+error.tsx
+not-found.tsx
+
+---
+
+# Server Components
+
+Utilizar Server Components por padrão.
+
+Sempre que possível:
+
+- carregar dados no servidor;
+- reduzir JavaScript enviado ao navegador;
+- evitar hidratação desnecessária.
+
+---
+
+# Client Components
+
+Adicionar `"use client"` apenas quando realmente necessário.
+
+Exemplos:
+
+- formulários;
+- estados locais;
+- eventos;
+- drag and drop;
+- gráficos interativos;
+- componentes que dependem do navegador.
+
+Nunca transformar páginas inteiras em Client Components sem necessidade.
+
+---
+
+# Server Actions
+
+Utilizar Server Actions para operações simples do Next.js quando apropriado.
+
+Exemplos:
+
+- formulários administrativos;
+- pequenas atualizações;
+- operações internas.
+
+Não utilizar Server Actions para substituir funcionalidades próprias do Supabase quando isso aumentar a complexidade.
+
+---
+
+# Route Handlers
+
+Utilizar Route Handlers apenas quando houver necessidade.
+
+Exemplos:
+
+- webhooks;
+- integrações externas;
+- downloads;
+- callbacks;
+- autenticação específica.
+
+Evitar criar APIs internas desnecessárias.
+
+---
+
+# Estrutura
+
+Cada funcionalidade deve possuir organização clara.
+
+Exemplo:
+
+features/
+occurrences/
+notifications/
+dashboard/
+users/
+
+Evitar componentes gigantes.
+
+---
+
+# Componentes
+
+Separar:
+
+- componentes de layout;
+- componentes de apresentação;
+- componentes de formulário;
+- componentes reutilizáveis.
+
+Cada componente deve possuir uma única responsabilidade.
+
+---
+
+# Layouts
+
+Utilizar layouts compartilhados.
+
+Evitar duplicação.
+
+Exemplos:
+
+- Dashboard Layout
+- Auth Layout
+
+---
+
+# Loading
+
+Criar loading apropriado utilizando:
+
+loading.tsx
+
+Sempre apresentar feedback durante carregamentos longos.
+
+---
+
+# Error Boundaries
+
+Utilizar:
+
+error.tsx
+
+para capturar erros inesperados.
+
+Não permitir quebra completa da aplicação.
+
+---
+
+# Not Found
+
+Utilizar:
+
+not-found.tsx
+
+para recursos inexistentes.
+
+---
+
+# Fetching
+
+Priorizar:
+
+- Server Components;
+- Supabase;
+- TanStack Query quando necessário.
+
+Evitar múltiplas consultas iguais.
+
+---
+
+# TanStack Query
+
+Utilizar para:
+
+- cache;
+- invalidação;
+- sincronização;
+- refetch.
+
+Não utilizar para dados exclusivamente estáticos.
+
+---
+
+# Cache
+
+Sempre considerar:
+
+- staleTime;
+- gcTime;
+- invalidação;
+- refetch.
+
+Não utilizar cache infinito sem necessidade.
+
+---
+
+# Estado
+
+Server State:
+
+TanStack Query
+
+Client State:
+
+React
+
+Form State:
+
+React Hook Form
+
+Não duplicar estado.
+
+---
+
+# Formulários
+
+Utilizar:
+
+- React Hook Form
+- Zod
+
+Toda validação deve ocorrer:
+
+- cliente;
+- servidor.
+
+---
+
+# Validação
+
+Nunca confiar apenas na validação do frontend.
+
+Toda regra crítica deve ser validada novamente no backend.
+
+---
+
+# Componentes UI
+
+Utilizar prioritariamente:
+
+shadcn/ui
+
+Não criar novos componentes quando já existir equivalente.
+
+---
+
+# Tailwind
+
+Utilizar Tailwind CSS.
+
+Evitar estilos inline.
+
+Reutilizar tokens.
+
+---
+
+# Responsividade
+
+O painel deve funcionar em:
+
+- Desktop;
+- Notebook;
+- Tablet.
+
+O Mobile continuará sendo responsabilidade do aplicativo Expo.
+
+---
+
+# Navegação
+
+Utilizar navegação clara.
+
+Evitar:
+
+- múltiplos níveis;
+- menus escondidos;
+- rotas confusas.
+
+---
+
+# Permissões
+
+Antes de exibir qualquer informação validar:
+
+- autenticação;
+- organização;
+- papel;
+- permissão.
+
+Nunca confiar apenas na interface.
+
+---
+
+# Sessão
+
+Toda página protegida deve verificar sessão.
+
+Caso inválida:
+
+redirecionar para login.
+
+---
+
+# Segurança
+
+Nunca:
+
+- expor Service Role;
+- expor secrets;
+- confiar em parâmetros vindos do cliente;
+- remover RLS;
+- utilizar dados sem autorização.
+
+---
+
+# Uploads
+
+Uploads devem:
+
+- validar tamanho;
+- validar tipo;
+- validar usuário;
+- validar organização;
+- mostrar progresso;
+- tratar erros.
+
+---
+
+# Tabelas
+
+Tabelas grandes devem possuir:
+
+- paginação;
+- filtros;
+- ordenação;
+- busca;
+- loading;
+- estado vazio.
+
+Evitar renderizar milhares de registros.
+
+---
+
+# Dashboard
+
+Dashboards devem priorizar:
+
+- indicadores;
+- gráficos;
+- filtros;
+- desempenho.
+
+Não carregar informações desnecessárias.
+
+---
+
+# Gráficos
+
+Carregar somente quando necessários.
+
+Evitar renderizações constantes.
+
+---
+
+# SEO
+
+Aplicar metadados adequados.
+
+Utilizar Metadata API.
+
+---
+
+# Imagens
+
+Utilizar:
+
+next/image
+
+sempre que possível.
+
+---
+
+# Fontes
+
+Utilizar:
+
+next/font
+
+Evitar carregamento manual.
+
+---
+
+# Performance
+
+Evitar:
+
+- consultas duplicadas;
+- hidratação excessiva;
+- componentes gigantes;
+- re-renderizações desnecessárias.
+
+---
+
+# Imports
+
+Utilizar aliases oficiais do projeto.
+
+Evitar caminhos relativos extensos.
+
+---
+
+# Código
+
+Todo código deve ser:
+
+- tipado;
+- reutilizável;
+- previsível;
+- organizado.
+
+---
+
+# Testes
+
+Sempre validar:
+
+- autenticação;
+- permissões;
+- formulários;
+- filtros;
+- dashboard;
+- notificações.
+
+---
+
+# Regra Final
+
+O painel Web existe para apoiar:
+
+- gestores;
+- supervisores;
+- administradores;
+- liderança.
+
+Nunca transformar o painel Web na principal experiência do SafeStop.
+
+O aplicativo Mobile continua sendo o centro operacional do sistema.
+
+Toda implementação Web deve complementar a operação realizada em campo, mantendo consistência com a arquitetura geral do projeto.

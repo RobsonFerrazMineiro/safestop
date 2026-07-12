@@ -1,0 +1,173 @@
+{
+  "name": "Interdiction",
+  "type": "object",
+  "properties": {
+    "number": {
+      "type": "string",
+      "description": "Unique occurrence number (PP-XXXX)",
+    },
+    "area": {
+      "type": "string",
+      "description": "Area where the stoppage occurred",
+    },
+    "location": {
+      "type": "string",
+      "description": "Specific location",
+    },
+    "company": {
+      "type": "string",
+      "description": "Company involved",
+    },
+    "activity": {
+      "type": "string",
+      "description": "Activity being performed",
+    },
+    "unsafe_condition": {
+      "type": "string",
+      "description": "Description of the unsafe condition",
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for the stoppage",
+    },
+    "observations": {
+      "type": "string",
+      "description": "Additional observations",
+    },
+    "criticality": {
+      "type": "string",
+      "enum": ["Baixa", "M\u00e9dia", "Alta", "Cr\u00edtica"],
+      "default": "M\u00e9dia",
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Paralisa\u00e7\u00e3o Preventiva",
+        "Em Avalia\u00e7\u00e3o",
+        "Ver e Agir",
+        "Interdi\u00e7\u00e3o Oficial",
+        "Liberada",
+        "Encerrada",
+      ],
+      "default": "Paralisa\u00e7\u00e3o Preventiva",
+    },
+    "photos": {
+      "type": "array",
+      "items": {
+        "type": "string",
+      },
+      "description": "Photos of the unsafe condition",
+    },
+    "release_photos": {
+      "type": "array",
+      "items": {
+        "type": "string",
+      },
+      "description": "Photos after correction",
+    },
+    "correction_description": {
+      "type": "string",
+      "description": "Description of the correction performed",
+    },
+    "latitude": {
+      "type": "number",
+      "description": "Latitude of the stoppage location",
+    },
+    "longitude": {
+      "type": "number",
+      "description": "Longitude of the stoppage location",
+    },
+    "responsible_name": {
+      "type": "string",
+      "description": "Name of the person who created the stoppage",
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the stoppage was released",
+    },
+    "decision_by": {
+      "type": "string",
+      "description": "Who made the leadership decision",
+    },
+    "decision_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the decision was made",
+    },
+    "mdho_status": {
+      "type": "string",
+      "enum": ["pending", "submitted", "approved"],
+      "default": "pending",
+      "description": "MDHO technical assessment status",
+    },
+    "mdho_behavior": {
+      "type": "string",
+      "description": "MDHO: behavior factor",
+    },
+    "mdho_behavior_other": {
+      "type": "string",
+      "description": "MDHO: behavior factor (if Other)",
+    },
+    "mdho_deviation_type": {
+      "type": "string",
+      "enum": ["Erro", "Viola\u00e7\u00e3o"],
+      "description": "MDHO: type of deviation",
+    },
+    "mdho_preconditions": {
+      "type": "string",
+      "description": "MDHO: pre-conditions that contributed",
+    },
+    "mdho_organizational": {
+      "type": "string",
+      "description": "MDHO: organizational factors",
+    },
+    "mdho_supervision": {
+      "type": "string",
+      "description": "MDHO: supervision/inspection aspects",
+    },
+    "mdho_submitted_by": {
+      "type": "string",
+      "description": "Who submitted the MDHO assessment",
+    },
+    "mdho_submitted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When MDHO was submitted",
+    },
+    "mdho_approved_by": {
+      "type": "string",
+      "description": "HSE leader who approved the MDHO",
+    },
+    "mdho_approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When MDHO was approved",
+    },
+    "ims_code": {
+      "type": "string",
+      "description": "IMS code (e.g. BAA-26-0001), issued after MDHO approval",
+    },
+    "action_plan": {
+      "type": "string",
+      "description": "Action plan (official interdiction only)",
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date",
+      "description": "Deadline (official interdiction only)",
+    },
+    "action_responsible": {
+      "type": "string",
+      "description": "Responsible for action plan (official interdiction only)",
+    },
+  },
+  "required": [
+    "area",
+    "company",
+    "activity",
+    "unsafe_condition",
+    "reason",
+    "criticality",
+  ],
+}

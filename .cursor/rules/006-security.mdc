@@ -1,0 +1,1267 @@
+---
+description: 006-security.mdc Regras de segurança para autenticação, autorização, permissões, RLS, dados sensíveis, arquivos, sessão e auditoria.
+alwaysApply: false
+---
+
+---
+
+## description: Regras de segurança do SafeStop. Aplicar em tarefas relacionadas a autenticação, autorização, RLS, dados sensíveis, sessões, uploads, notificações, auditoria, secrets, APIs, banco de dados e proteção contra acesso indevido.
+
+# Segurança — Regras do SafeStop
+
+## Objetivo
+
+Toda implementação do SafeStop deve adotar segurança por padrão.
+
+O sistema trabalha com:
+
+- ocorrências de segurança operacional;
+- dados de empresas;
+- evidências fotográficas;
+- localização;
+- usuários;
+- responsabilidades;
+- notificações;
+- registros de ciência;
+- histórico auditável;
+- planos de ação;
+- decisões de liderança.
+
+Esses dados não podem ser expostos, alterados ou acessados fora do escopo autorizado.
+
+A segurança nunca deve depender exclusivamente da interface.
+
+---
+
+# Fonte da Verdade
+
+Antes de implementar qualquer funcionalidade relacionada à segurança, consulte:
+
+1. `docs/product.md`
+2. `docs/workflow.md`
+3. `docs/database.md`
+4. `docs/architecture.md`
+5. `docs/engineering.md`
+6. `docs/notifications.md`
+7. `docs/decisions/ADR-001-architecture.md`
+8. `docs/decisions/ADR-002-stack.md`
+9. `docs/decisions/ADR-003-communication.md`
+10. `docs/decisions/ADR-004-mobile-first.md`
+11. `docs/decisions/ADR-005-operational-simplicity.md`
+
+Não enfraquecer controles definidos nesses documentos.
+
+---
+
+# Princípios Fundamentais
+
+Toda implementação deve seguir:
+
+- menor privilégio;
+- negação por padrão;
+- defesa em profundidade;
+- validação no backend;
+- isolamento entre organizações;
+- minimização de dados;
+- rastreabilidade;
+- proteção de secrets;
+- arquivos privados;
+- auditoria de ações críticas;
+- segurança sem burocracia desnecessária.
+
+---
+
+# Defesa em Profundidade
+
+A segurança deve existir em múltiplas camadas:
+
+1. interface;
+2. validação de schema;
+3. autenticação;
+4. autorização;
+5. backend;
+6. funções PostgreSQL;
+7. Row Level Security;
+8. constraints;
+9. Storage policies;
+10. auditoria.
+
+Nenhuma camada isolada é suficiente.
+
+---
+
+# Negação por Padrão
+
+Quando houver dúvida, ausência de informação ou falha no carregamento de permissões, negar a ação.
+
+Não permitir acesso por falta de contexto.
+
+Não utilizar comportamento permissivo como fallback.
+
+---
+
+# Autenticação
+
+Utilizar Supabase Auth.
+
+Toda ação protegida deve validar:
+
+- sessão existente;
+- token válido;
+- usuário ativo;
+- perfil válido;
+- vínculo organizacional ativo.
+
+Não considerar o usuário autorizado apenas porque existe uma sessão local.
+
+---
+
+# Sessão
+
+A sessão deve:
+
+- renovar tokens;
+- detectar expiração;
+- reagir à inativação;
+- reagir à perda de vínculo;
+- ser limpa no logout;
+- impedir acesso após saída;
+- separar dados por usuário;
+- impedir exibição de cache anterior.
+
+---
+
+# Sessão Mobile
+
+No mobile:
+
+- utilizar armazenamento seguro compatível;
+- proteger tokens;
+- limpar sessão no logout;
+- limpar cache sensível;
+- cancelar subscriptions;
+- remover dados do usuário anterior;
+- validar sessão ao retornar do segundo plano.
+
+Não utilizar armazenamento inseguro para secrets quando existir alternativa apropriada.
+
+---
+
+# Sessão Web
+
+No web:
+
+- utilizar cookies seguros;
+- separar contexto de servidor e navegador;
+- renovar sessão corretamente;
+- proteger rotas;
+- limpar cookies no logout;
+- não expor tokens desnecessariamente ao cliente.
+
+---
+
+# Dispositivos Compartilhados
+
+Considerar que dispositivos podem ser compartilhados em ambientes industriais.
+
+Após logout:
+
+- remover sessão;
+- limpar dados sensíveis;
+- limpar organização ativa;
+- limpar cache protegido;
+- impedir retorno para telas autenticadas;
+- validar novamente ao reabrir o aplicativo.
+
+---
+
+# Autorização
+
+Toda ação crítica deve validar:
+
+1. usuário autenticado;
+2. perfil ativo;
+3. vínculo organizacional ativo;
+4. organização;
+5. permissão;
+6. escopo;
+7. status atual;
+8. regra de negócio;
+9. campos obrigatórios.
+
+---
+
+# Permissões
+
+Utilizar permissões atômicas.
+
+Exemplos:
+
+    occurrence.create
+    occurrence.read
+    occurrence.evaluate
+    occurrence.confirm_interdiction
+    occurrence.validate_correction
+    occurrence.release
+    occurrence.cancel
+
+    mdho.fill
+    mdho.submit
+    mdho.approve
+    mdho.return
+
+    ims_reference.register
+    ims_reference.update
+
+    action_plan.create
+    action_plan.manage
+    action_plan.validate
+
+    notification.read
+    notification.confirm_awareness
+
+    user.manage
+    organization.manage
+    area.manage
+    contract.manage
+    settings.manage
+
+    report.read
+    audit.read
+
+Não autorizar apenas pelo nome do papel.
+
+---
+
+# Papéis
+
+Papéis agrupam permissões.
+
+Exemplos:
+
+- HSE de Campo;
+- Liderança da Contratada;
+- Fiscal do Contrato;
+- Supervisor HSE;
+- Liderança HSE;
+- Gestor;
+- Administrador da Empresa;
+- Administrador da Plataforma.
+
+Evitar:
+
+    if (role === "SUPERVISOR") {
+      allow();
+    }
+
+Preferir:
+
+    if (hasPermission("occurrence.evaluate")) {
+      allow();
+    }
+
+---
+
+# Escopo
+
+Permissão não significa acesso global.
+
+Sempre considerar:
+
+- organização;
+- unidade;
+- área;
+- contrato;
+- empresa contratada;
+- gerência;
+- ocorrência;
+- responsabilidade atribuída.
+
+Um usuário pode possuir `occurrence.read` e ainda assim acessar apenas ocorrências do seu escopo.
+
+---
+
+# Interface não é Segurança
+
+A interface pode:
+
+- esconder botões;
+- desabilitar ações;
+- bloquear navegação;
+- adaptar menus.
+
+Isso melhora a experiência, mas não protege o sistema.
+
+O backend deve validar novamente.
+
+---
+
+# Row Level Security
+
+Todas as tabelas acessíveis pelo cliente devem possuir RLS habilitado.
+
+Exemplo:
+
+    alter table occurrences enable row level security;
+
+Nunca desabilitar RLS para resolver erro de desenvolvimento.
+
+---
+
+# Policies de Leitura
+
+Policies devem validar, quando aplicável:
+
+- autenticação;
+- vínculo ativo;
+- organização;
+- permissão;
+- escopo;
+- participação;
+- responsabilidade;
+- contrato;
+- área.
+
+Um usuário nunca deve receber dados fora do seu escopo para que o frontend filtre depois.
+
+---
+
+# Policies de Inserção
+
+Impedir que o cliente defina livremente:
+
+- outro autor;
+- organização não autorizada;
+- status avançado;
+- datas de aprovação;
+- usuário aprovador;
+- dados de auditoria;
+- permissões;
+- campos administrativos.
+
+Valores derivados do usuário autenticado devem ser definidos ou confirmados pelo backend.
+
+---
+
+# Policies de Atualização
+
+Atualizações diretas devem ser restritas.
+
+Campos críticos devem ser alterados por funções controladas.
+
+Exemplos:
+
+- `status`;
+- `decision_type`;
+- `released_at`;
+- `closed_at`;
+- `approved_at`;
+- `approved_by`;
+- `ims_reference_registered_by`;
+- campos de auditoria.
+
+---
+
+# Policies de Exclusão
+
+Negar exclusão direta em dados críticos.
+
+Exemplos:
+
+- ocorrências;
+- decisões;
+- histórico de status;
+- notificações;
+- auditoria;
+- MDHO;
+- planos de ação;
+- evidências encerradas.
+
+Utilizar:
+
+- `is_active`;
+- `deleted_at`;
+- `cancelled_at`;
+- `archived_at`.
+
+---
+
+# Service Role
+
+A chave `service_role` ignora RLS.
+
+Por isso:
+
+- nunca utilizar no mobile;
+- nunca utilizar em Client Components;
+- nunca colocar em variável pública;
+- nunca registrar em logs;
+- nunca enviar ao navegador;
+- nunca expor em respostas;
+- utilizar apenas em backend seguro;
+- validar escopo manualmente;
+- manter uso mínimo e justificado.
+
+---
+
+# Variáveis de Ambiente
+
+Secrets devem permanecer fora do Git.
+
+O arquivo:
+
+    .env.example
+
+deve conter apenas nomes de variáveis e exemplos seguros.
+
+Nunca incluir:
+
+- senhas;
+- tokens reais;
+- chaves privadas;
+- service role;
+- secrets de provedores;
+- credenciais de produção.
+
+---
+
+# Variáveis Públicas
+
+Variáveis com prefixos como:
+
+    NEXT_PUBLIC_
+    EXPO_PUBLIC_
+
+ficam disponíveis no cliente.
+
+Nunca armazenar secrets nessas variáveis.
+
+---
+
+# Validação de Entrada
+
+Toda entrada externa deve ser considerada não confiável.
+
+Validar:
+
+- formulários;
+- parâmetros;
+- IDs;
+- filtros;
+- arquivos;
+- deep links;
+- payloads;
+- webhooks;
+- respostas externas;
+- variáveis de ambiente;
+- query strings;
+- headers;
+- dados offline sincronizados.
+
+---
+
+# Zod
+
+Utilizar Zod para validar:
+
+- formulários;
+- payloads;
+- parâmetros;
+- variáveis de ambiente;
+- respostas externas;
+- contratos;
+- dados locais antes da sincronização.
+
+A validação do frontend melhora a experiência.
+
+A validação do backend protege o sistema.
+
+---
+
+# Identificadores
+
+Nunca confiar que um UUID recebido pertence ao usuário.
+
+Antes de utilizar:
+
+- validar formato;
+- validar existência;
+- validar organização;
+- validar escopo;
+- validar permissão.
+
+---
+
+# Operações Críticas
+
+Operações críticas incluem:
+
+- criar ocorrência;
+- avaliar;
+- confirmar Interdição Oficial;
+- enviar MDHO;
+- aprovar MDHO;
+- registrar referência IMS;
+- alterar referência IMS;
+- validar correção;
+- liberar atividade;
+- cancelar ocorrência;
+- confirmar ciência;
+- alterar papel;
+- inativar usuário.
+
+Essas operações devem ocorrer no backend, com validação e auditoria.
+
+---
+
+# Mudanças de Status
+
+Nunca permitir alteração direta de status pelo cliente.
+
+Exemplo inadequado:
+
+    updateOccurrence({
+      status: "LIBERADA",
+    });
+
+Exemplo adequado:
+
+    releaseOccurrence({
+      occurrenceId,
+      releaseNote,
+    });
+
+O backend deve validar a transição.
+
+---
+
+# Idempotência
+
+Operações críticas devem impedir duplicidade.
+
+Casos:
+
+- clique duplo;
+- retry de rede;
+- timeout;
+- reconexão;
+- múltiplas abas;
+- resposta duplicada;
+- processamento repetido.
+
+Utilizar quando apropriado:
+
+- idempotency key;
+- unique constraint;
+- transação;
+- validação de status;
+- upsert.
+
+---
+
+# Segurança das Funções PostgreSQL
+
+Funções críticas devem:
+
+- validar autenticação;
+- validar organização;
+- validar permissão;
+- validar escopo;
+- validar status;
+- validar dados;
+- registrar histórico;
+- registrar auditoria;
+- operar em transação;
+- retornar apenas o necessário.
+
+---
+
+# Security Definer
+
+Utilizar `security definer` apenas quando necessário.
+
+Toda função deve:
+
+- controlar `search_path`;
+- validar usuário;
+- validar organização;
+- limitar privilégios;
+- evitar SQL dinâmico;
+- retornar dados mínimos;
+- possuir testes.
+
+Não utilizar `security definer` como atalho para ignorar RLS.
+
+---
+
+# SQL Dinâmico
+
+Evitar SQL dinâmico.
+
+Quando inevitável:
+
+- validar todos os valores;
+- utilizar parâmetros;
+- restringir identificadores;
+- evitar concatenação de entrada;
+- revisar risco de injeção.
+
+---
+
+# Storage
+
+Evidências operacionais devem permanecer privadas.
+
+Nunca tornar bucket público por conveniência.
+
+Buckets iniciais:
+
+    occurrence-evidence
+    action-plan-evidence
+    profile-images
+
+---
+
+# Storage Policies
+
+Policies devem validar:
+
+- autenticação;
+- organização;
+- ocorrência;
+- usuário;
+- permissão;
+- caminho;
+- operação.
+
+O caminho do arquivo não é proteção suficiente.
+
+---
+
+# Uploads
+
+Todo upload deve validar:
+
+- autenticação;
+- autorização;
+- organização;
+- ocorrência;
+- tipo MIME;
+- extensão;
+- tamanho;
+- quantidade;
+- categoria;
+- nome;
+- caminho.
+
+Não confiar apenas na extensão.
+
+---
+
+# Nomes de Arquivos
+
+Não utilizar diretamente nomes enviados pelo usuário como caminho definitivo.
+
+Gerar identificadores seguros.
+
+Exemplo:
+
+    {attachment_id}.jpg
+
+O nome original pode permanecer apenas nos metadados.
+
+---
+
+# URLs Assinadas
+
+URLs assinadas devem:
+
+- possuir expiração;
+- ser geradas sob demanda;
+- exigir autorização;
+- não ser armazenadas permanentemente;
+- não ser registradas em logs;
+- não ser compartilhadas publicamente.
+
+---
+
+# Arquivos Órfãos
+
+Evitar arquivos sem registro correspondente no banco.
+
+Quando o upload for concluído e o registro falhar:
+
+- remover o arquivo quando possível;
+- registrar falha;
+- permitir recuperação;
+- executar limpeza posterior.
+
+---
+
+# Evidências
+
+Evidências críticas não devem ser alteradas ou excluídas silenciosamente.
+
+Após encerramento:
+
+- preservar arquivos;
+- preservar metadados;
+- negar exclusão comum;
+- registrar qualquer correção;
+- manter histórico.
+
+---
+
+# Dados Sensíveis
+
+Armazenar apenas dados necessários.
+
+Evitar:
+
+- documentos pessoais desnecessários;
+- dados médicos;
+- rastreamento contínuo;
+- informações privadas fora do fluxo;
+- contatos expostos sem necessidade;
+- conteúdo sensível em logs.
+
+---
+
+# Geolocalização
+
+A geolocalização deve:
+
+- ser utilizada apenas no contexto da ocorrência;
+- não rastrear continuamente;
+- depender de permissão;
+- possuir finalidade clara;
+- permitir preenchimento manual;
+- registrar precisão quando obtida.
+
+---
+
+# Notificações Push
+
+Push deve conter apenas informações mínimas.
+
+Exemplo adequado:
+
+    Nova Paralisação Preventiva registrada.
+    Toque para visualizar.
+
+Evitar:
+
+- descrições extensas;
+- dados confidenciais;
+- imagens;
+- informações contratuais;
+- nomes desnecessários.
+
+Os detalhes devem ficar dentro da aplicação autenticada.
+
+---
+
+# Leitura e Ciência
+
+Não marcar leitura ou ciência automaticamente sem a ação correspondente.
+
+Leitura e ciência são eventos diferentes.
+
+A ciência deve registrar:
+
+- usuário;
+- notificação;
+- ocorrência;
+- data;
+- hora;
+- dispositivo;
+- canal.
+
+---
+
+# Deep Links
+
+Antes de abrir um recurso vindo de deep link:
+
+1. validar sessão;
+2. validar organização;
+3. validar permissão;
+4. validar escopo;
+5. validar existência.
+
+Não exibir dados durante a validação.
+
+---
+
+# Realtime
+
+Subscriptions devem respeitar RLS.
+
+Nunca entregar dados fora do escopo para filtrar no frontend.
+
+Toda subscription deve:
+
+- utilizar filtros;
+- ser removida;
+- reagir à mudança de usuário;
+- reagir à mudança de organização;
+- evitar listeners duplicados.
+
+---
+
+# Offline
+
+Dados offline devem ser separados por:
+
+- usuário;
+- organização;
+- funcionalidade.
+
+Ao sair:
+
+- limpar dados sensíveis;
+- cancelar filas;
+- remover sessão;
+- impedir sincronização em nome de outro usuário.
+
+---
+
+# Sincronização
+
+Antes de sincronizar:
+
+- validar sessão;
+- validar organização;
+- validar permissão;
+- validar payload;
+- validar versão;
+- utilizar idempotência.
+
+O servidor continua sendo a fonte oficial.
+
+---
+
+# Cache
+
+Ao realizar logout:
+
+- limpar cache sensível;
+- limpar dados protegidos;
+- remover organização ativa;
+- cancelar queries;
+- remover subscriptions;
+- impedir acesso pela navegação anterior.
+
+Ao trocar de organização:
+
+- invalidar cache;
+- remover dados da organização anterior;
+- atualizar permissões;
+- atualizar subscriptions.
+
+---
+
+# Logs
+
+Nunca registrar:
+
+- senha;
+- access token;
+- refresh token;
+- service role;
+- secrets;
+- fotos;
+- arquivos;
+- conteúdo confidencial;
+- URL assinada completa;
+- dados pessoais desnecessários.
+
+---
+
+# Mensagens de Erro
+
+Não expor:
+
+- SQL;
+- stack trace;
+- nome de tabela;
+- policy;
+- estrutura interna;
+- segredo;
+- payload técnico.
+
+Exemplo inadequado:
+
+    new row violates row-level security policy for table occurrences
+
+Exemplo adequado:
+
+    Você não possui permissão para realizar esta ação.
+
+---
+
+# Auditoria
+
+Toda ação crítica deve gerar auditoria.
+
+Eventos importantes:
+
+- login;
+- logout;
+- falha de login;
+- recuperação de senha;
+- ocorrência criada;
+- decisão registrada;
+- Interdição confirmada;
+- MDHO aprovado;
+- IMS registrado;
+- IMS alterado;
+- correção validada;
+- atividade liberada;
+- ocorrência cancelada;
+- papel alterado;
+- usuário inativado;
+- tentativa negada.
+
+---
+
+# Auditoria Imutável
+
+Usuários comuns não podem:
+
+- editar;
+- remover;
+- reescrever;
+- ocultar.
+
+Alterações administrativas devem gerar novos eventos, nunca apagar os anteriores.
+
+---
+
+# Administradores
+
+Administradores também devem possuir limites.
+
+Um administrador de uma organização não pode administrar outra organização sem autorização.
+
+Ações administrativas devem:
+
+- exigir permissão;
+- respeitar escopo;
+- gerar auditoria;
+- registrar valor anterior e novo;
+- exigir justificativa quando sensível.
+
+---
+
+# Criação de Usuários
+
+A criação de usuário deve garantir:
+
+- autenticação;
+- perfil;
+- vínculo organizacional;
+- papel;
+- permissões;
+- estado ativo;
+- auditoria.
+
+Evitar usuários autenticados sem contexto organizacional válido.
+
+---
+
+# Inativação de Usuário
+
+Ao inativar:
+
+- bloquear acesso;
+- invalidar vínculo;
+- impedir novas ações;
+- preservar histórico;
+- manter autoria anterior;
+- registrar auditoria.
+
+Não apagar o usuário de registros históricos.
+
+---
+
+# Alteração de Permissões
+
+Alterações devem:
+
+- exigir permissão administrativa;
+- impedir autoelevação;
+- respeitar organização;
+- registrar auditoria;
+- atualizar cache;
+- entrar em vigor de forma previsível.
+
+---
+
+# Segurança de Dependências
+
+Antes de instalar biblioteca:
+
+- verificar manutenção;
+- verificar vulnerabilidades;
+- verificar permissões;
+- verificar compatibilidade;
+- verificar reputação;
+- avaliar necessidade.
+
+Não instalar dependência sem benefício concreto.
+
+---
+
+# Scripts de Instalação
+
+Dependências com scripts nativos devem ser avaliadas.
+
+Não permitir execução indiscriminada de scripts desconhecidos.
+
+---
+
+# Atualizações de Segurança
+
+Atualizações críticas devem receber prioridade.
+
+Antes de atualizar:
+
+- ler changelog;
+- validar compatibilidade;
+- executar testes;
+- revisar impacto;
+- testar mobile;
+- testar web;
+- testar Supabase.
+
+---
+
+# Rate Limiting
+
+Avaliar rate limiting em:
+
+- login;
+- recuperação de senha;
+- criação repetida;
+- webhooks;
+- integrações;
+- endpoints públicos;
+- envio de notificações.
+
+Não criar bloqueios que prejudiquem o fluxo de segurança em campo sem análise.
+
+---
+
+# Proteção Contra Abuso
+
+O sistema poderá detectar:
+
+- tentativas repetidas;
+- acessos negados;
+- múltiplas operações iguais;
+- uso anormal;
+- falhas de autenticação;
+- manipulação de IDs.
+
+Registrar eventos relevantes sem coletar dados excessivos.
+
+---
+
+# Webhooks
+
+Todo webhook deve:
+
+- validar assinatura;
+- validar origem;
+- validar payload;
+- impedir replay;
+- utilizar idempotência;
+- proteger secrets;
+- registrar falhas;
+- não confiar apenas no endereço IP.
+
+---
+
+# Edge Functions
+
+Toda Edge Function deve:
+
+- validar JWT;
+- validar organização;
+- validar permissão;
+- validar payload;
+- proteger secrets;
+- limitar resposta;
+- tratar erros;
+- registrar logs seguros.
+
+---
+
+# Integrações Futuras
+
+Qualquer integração externa deve avaliar:
+
+- autorização formal;
+- segurança;
+- autenticação;
+- escopo;
+- dados enviados;
+- dados recebidos;
+- retenção;
+- auditoria;
+- falhas;
+- revogação.
+
+Não criar integração direta com IMS sem decisão formal.
+
+No fluxo atual, a referência IMS é manual.
+
+---
+
+# Backups
+
+Produção deve possuir estratégia de backup.
+
+Antes de migrations destrutivas:
+
+- confirmar backup;
+- validar rollback;
+- testar staging;
+- revisar dados;
+- documentar risco.
+
+---
+
+# Ambientes
+
+Separar:
+
+    local
+    development
+    staging
+    production
+
+Não compartilhar:
+
+- bancos;
+- buckets;
+- secrets;
+- tokens;
+- service role;
+- canais de push;
+- credenciais.
+
+---
+
+# Dados de Produção
+
+Não copiar dados reais para desenvolvimento sem:
+
+- autorização;
+- anonimização;
+- processo formal;
+- necessidade comprovada.
+
+Preferir seeds fictícios.
+
+---
+
+# Testes de Segurança
+
+Testar:
+
+- acesso entre organizações;
+- usuário sem permissão;
+- usuário inativo;
+- sessão expirada;
+- upload indevido;
+- URL assinada;
+- manipulação de IDs;
+- RLS;
+- funções críticas;
+- Storage policies;
+- alteração de status;
+- autoelevação;
+- acesso a auditoria.
+
+---
+
+# Testes de RLS
+
+Criar cenários para:
+
+- HSE de Campo;
+- Liderança da Contratada;
+- Fiscal;
+- Supervisor HSE;
+- Liderança HSE;
+- Gestor;
+- Administrador;
+- usuário de outra organização;
+- usuário sem vínculo;
+- usuário inativo.
+
+---
+
+# Revisão de Segurança
+
+Antes de concluir uma feature, verificar:
+
+- autenticação;
+- permissão;
+- escopo;
+- RLS;
+- validação;
+- secrets;
+- uploads;
+- auditoria;
+- erros;
+- logs;
+- cache;
+- offline;
+- idempotência;
+- dados sensíveis.
+
+---
+
+# Ações Proibidas
+
+Nunca:
+
+- desabilitar RLS para corrigir erro;
+- usar `service_role` no cliente;
+- criar bucket público de evidências;
+- confiar apenas no frontend;
+- expor secrets;
+- registrar tokens;
+- ignorar autorização;
+- permitir mudança direta de status;
+- apagar auditoria;
+- apagar histórico crítico;
+- expor dados entre organizações;
+- armazenar senha;
+- usar dados reais em seed;
+- ocultar erro de segurança;
+- enfraquecer validação para fazer teste passar.
+
+---
+
+# Regra Final
+
+Toda implementação deve responder:
+
+- O usuário está autenticado?
+- Ele possui vínculo ativo?
+- Ele possui a permissão necessária?
+- Ele está dentro do escopo correto?
+- O backend valida novamente?
+- A operação gera auditoria?
+- Os dados estão protegidos?
+- Os arquivos permanecem privados?
+- A ação é idempotente?
+- Existe risco de exposição entre organizações?
+
+Quando qualquer resposta for negativa, a implementação não está pronta.
+
+A segurança deve proteger o SafeStop sem impedir a comunicação rápida e a atuação segura em campo.
