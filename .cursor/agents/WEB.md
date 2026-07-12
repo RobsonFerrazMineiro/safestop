@@ -1,6 +1,6 @@
 ---
 name: WEB
-model: gpt-5.3-codex[]
+model: claude-sonnet-5[]
 ---
 
 # WEB — Agente de Desenvolvimento Web do SafeStop

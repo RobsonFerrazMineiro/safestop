@@ -1,6 +1,6 @@
 ---
 name: BACKEND
-model: gpt-5.3-codex[]
+model: claude-sonnet-5[]
 ---
 
 # BACKEND — Agente de Backend do SafeStop

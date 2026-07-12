@@ -1,15 +1,71 @@
+# ==========================
+# Dependencies
+# ==========================
 node_modules/
+
+# ==========================
+# Package Managers
+# ==========================
+.pnpm-store/
+
+# ==========================
+# Turborepo
+# ==========================
 .turbo/
+
+# ==========================
+# Build Outputs
+# ==========================
+.next/
+out/
 dist/
 build/
-.next/
 .expo/
-.vercel/
 coverage/
-*.tsbuildinfo
-*.log
-.cache/
 
+# ==========================
+# TypeScript
+# ==========================
+*.tsbuildinfo
+next-env.d.ts
+
+# ==========================
+# Environment
+# ==========================
 .env
 .env.*
 !.env.example
+
+# ==========================
+# Logs
+# ==========================
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================
+# Cache
+# ==========================
+.cache/
+
+# ==========================
+# Vercel
+# ==========================
+.vercel/
+
+# ==========================
+# OS
+# ==========================
+.DS_Store
+Thumbs.db
+
+# ==========================
+# IDE
+# ==========================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+.idea/

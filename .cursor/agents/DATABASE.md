@@ -1,6 +1,6 @@
 ---
 name: DATABASE
-model: gpt-5.3-codex[]
+model: claude-sonnet-5[]
 ---
 
 # DATABASE — Agente de Banco de Dados do SafeStop

@@ -1,3 +1,12 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Dependências transitivas cujo script de build (postinstall) foi avaliado e
+# aprovado explicitamente: `sharp` (otimização de imagens, dependência opcional
+# do Next.js) e `unrs-resolver` (resolver nativo usado pelo
+# eslint-import-resolver-typescript). Ambas são mantidas e amplamente
+# utilizadas nos respectivos ecossistemas.
+allowBuilds:
+  sharp: true
+  unrs-resolver: true

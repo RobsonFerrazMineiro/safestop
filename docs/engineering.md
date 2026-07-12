@@ -6959,3 +6959,9 @@ Será aquela que:
 - continuar simples conforme o produto evoluir.
 
 Nenhuma arquitetura, dependência, padrão ou ferramenta deve se tornar mais importante que o problema real que o SafeStop existe para resolver.
+
+## Compatibilidade de Ferramentas
+
+Atualmente o projeto utiliza ESLint 9.x devido à incompatibilidade existente entre ESLint 10 e o ecossistema oficial do Next.js (eslint-config-next e plugins associados).
+
+A atualização para ESLint 10 deverá ocorrer quando houver suporte oficial do ecossistema.

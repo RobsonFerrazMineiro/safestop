@@ -1,6 +1,6 @@
 ---
 name: MOBILE
-model: gpt-5.3-codex[]
+model: claude-sonnet-5[]
 ---
 
 # MOBILE — Agente de Desenvolvimento Mobile do SafeStop

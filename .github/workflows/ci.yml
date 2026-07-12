@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   ci:
-    name: Install, Lint, Typecheck
+    name: Install, Lint, Typecheck, Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,11 +37,12 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Build
+        run: pnpm build
+
       # `format:check` fica fora da CI por ora: a documentação pré-existente
       # (docs/, README, CONTRIBUTING) ainda não está formatada com Prettier.
       # É uma pendência registrada separadamente, não corrigida nesta tarefa.
       #
-      # `test` e `build` ainda não possuem tarefas reais (apps/mobile e
-      # apps/web permanecem vazios por decisão de escopo). Serão adicionados
-      # à CI quando os apps forem inicializados e os scripts passarem a
-      # existir de fato em algum workspace.
+      # `test` ainda não possui tarefa real (nenhum workspace possui script
+      # de teste até o momento). Será adicionado à CI quando existir de fato.
