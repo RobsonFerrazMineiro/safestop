@@ -72,7 +72,7 @@ apps/
 packages/
 supabase/
 docs/
-research/
+reference/
 .cursor/
 ```
 

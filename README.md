@@ -6,7 +6,7 @@
 
 **Enterprise HSE Platform for Preventive Work Stoppages and Official Work Interdictions**
 
-Mobile First • Industrial Safety • Enterprise • Offline First • Real-time • Audit Ready
+Mobile First • Industrial Safety • Enterprise • Resiliência Offline • Real-time • Audit Ready
 
 </p>
 
@@ -190,11 +190,13 @@ Envio automático de notificações conforme o Workflow.
 
 ---
 
-## Operação Offline
+## Resiliência e Offline
 
-O aplicativo continua funcionando mesmo sem conexão.
+O aplicativo é resiliente a conexões instáveis e preserva localmente os dados digitados para evitar perdas.
 
-Quando a internet retornar, os dados serão sincronizados automaticamente.
+O suporte offline completo é uma evolução gradual: a arquitetura é preparada para essa evolução, sem prometer operação offline plena no MVP.
+
+Quando a conexão retornar, os dados são sincronizados de forma segura e transparente.
 
 ---
 
@@ -266,7 +268,7 @@ O SafeStop utiliza arquitetura moderna baseada em monorepo.
 - NativeWind
 - React Hook Form
 - TanStack Query
-- Zustand
+- Zustand (opcional, apenas quando necessário)
 
 ---
 
@@ -296,7 +298,7 @@ O SafeStop utiliza arquitetura moderna baseada em monorepo.
 ## Infraestrutura
 
 - pnpm Workspaces
-- Turborepo (quando adotado)
+- Turborepo
 - GitHub
 - Vercel
 - Expo Application Services (EAS)
@@ -313,15 +315,15 @@ SafeStop/
 │   └── web/
 │
 ├── packages/
-│   ├── ui/
+│   ├── config/
 │   ├── types/
-│   ├── shared/
 │   ├── validation/
-│   └── config/
+│   ├── utils/
+│   └── ui/
 │
 ├── docs/
 │
-├── research/
+├── reference/
 │
 ├── scripts/
 │
@@ -543,7 +545,7 @@ SafeStop/
 apps/
 packages/
 docs/
-research/
+reference/
 scripts/
 supabase/
 ```
@@ -815,15 +817,15 @@ Schemas Zod compartilhados.
 
 ---
 
-## packages/shared
+## packages/utils
 
-Constantes.
+Funções utilitárias independentes de plataforma.
 
 Helpers.
 
-Hooks compartilhados.
+Formatações.
 
-Utilidades.
+Constantes.
 
 ---
 
@@ -956,12 +958,12 @@ Planejamento oficial do projeto.
 
 ---
 
-# Research
+# Reference
 
 A pasta:
 
 ```text
-research/
+reference/
 ```
 
 armazena:

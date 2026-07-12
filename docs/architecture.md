@@ -349,14 +349,14 @@ safestop/
 │   ├── product.md
 │   ├── workflow.md
 │   ├── notifications.md
-│   ├── mobile.md
 │   ├── api.md
 │   ├── roadmap.md
 │   └── decisions/
 │
 ├── reference/
 │   ├── base44/
-│   └── research/
+│   ├── Fluxo.md
+│   └── Exemplo.md
 │
 ├── assets/
 │
@@ -774,7 +774,7 @@ VER_E_AGIR
 INTERDICAO_CONFIRMADA
 MDHO_EM_PREENCHIMENTO
 AGUARDANDO_APROVACAO_HSE
-AGUARDANDO_IMS
+AGUARDANDO_REGISTRO_IMS
 EM_TRATATIVA
 AGUARDANDO_VALIDACAO
 LIBERADA
@@ -848,9 +848,11 @@ occurrence.validate_correction
 occurrence.release
 mdho.fill
 mdho.approve
-ims.link
+ims_reference.register
+ims_reference.update
 action_plan.manage
-notification.manage
+notification.read
+notification.confirm_awareness
 user.manage
 organization.manage
 report.read

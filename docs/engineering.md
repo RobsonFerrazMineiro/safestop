@@ -237,7 +237,7 @@ packages/
 
 docs/
 
-research/
+reference/
 
 scripts/
 
@@ -257,19 +257,19 @@ web/
 
 packages/
 
-ui/
-
-shared/
+config/
 
 types/
 
+validation/
+
 utils/
 
-config/
+ui/
 
 docs/
 
-research/
+reference/
 
 supabase/
 
@@ -301,6 +301,64 @@ Mesma regra do Mobile.
 
 ---
 
+## packages/config
+
+Configurações compartilhadas.
+
+Exemplos:
+
+ESLint
+
+Prettier
+
+TypeScript
+
+Tailwind
+
+---
+
+## packages/types
+
+Tipos e enums compartilhados.
+
+Exemplos:
+
+Tipos
+
+Enums
+
+Nunca conter regras de negócio.
+
+---
+
+## packages/validation
+
+Schemas e validações compartilhados.
+
+Exemplos:
+
+Schemas
+
+Validações
+
+---
+
+## packages/utils
+
+Funções utilitárias.
+
+Sem dependência do React.
+
+Exemplos:
+
+Helpers
+
+Formatações
+
+Constantes
+
+---
+
 ## packages/ui
 
 Componentes compartilhados.
@@ -327,52 +385,6 @@ Nunca conter regras de negócio.
 
 ---
 
-## packages/shared
-
-Toda regra reutilizável.
-
-Exemplos:
-
-Enums
-
-Constantes
-
-Schemas
-
-Tipos
-
-Helpers
-
-Validações
-
-Formatações
-
----
-
-## packages/utils
-
-Funções utilitárias.
-
-Sem dependência do React.
-
----
-
-## packages/config
-
-Configurações compartilhadas.
-
-Exemplos:
-
-ESLint
-
-Prettier
-
-TypeScript
-
-Tailwind
-
----
-
 ## docs
 
 Toda documentação oficial.
@@ -381,7 +393,7 @@ Nunca armazenar código.
 
 ---
 
-## research
+## reference
 
 Referências.
 

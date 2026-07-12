@@ -223,7 +223,7 @@ Esse código servirá apenas para vincular a ocorrência do SafeStop ao registro
 
 Enquanto esse código não for informado, o sistema exibirá:
 
-**Aguardando emissão do IMS**
+**Aguardando registro do IMS**
 
 O acompanhamento da ocorrência continuará normalmente.
 
