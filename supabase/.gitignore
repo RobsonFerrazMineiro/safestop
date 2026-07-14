@@ -6,3 +6,6 @@
 .env.keys
 .env.local
 .env.*.local
+
+# Credenciais locais de QA (somente desenvolvimento)
+qa-credentials.local

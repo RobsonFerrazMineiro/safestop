@@ -1,0 +1,102 @@
+import { useRouter } from "expo-router";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+import { useAuth } from "@/hooks/use-auth";
+import { authRoutes } from "@/lib/auth/routes";
+
+export default function AuthenticatedHomeScreen() {
+  const router = useRouter();
+  const { user, signOut, isRefreshing } = useAuth();
+
+  async function handleSignOut() {
+    await signOut();
+    router.replace(authRoutes.login);
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <Text style={styles.title}>SafeStop</Text>
+        <Text style={styles.subtitle}>Sessão autenticada</Text>
+        <Text style={styles.email}>{user?.email ?? "Usuário autenticado"}</Text>
+
+        {isRefreshing ? (
+          <View style={styles.refreshing}>
+            <ActivityIndicator color="#F97316" size="small" />
+            <Text style={styles.refreshingText}>Revalidando sessão…</Text>
+          </View>
+        ) : null}
+
+        <Pressable
+          accessibilityLabel="Sair"
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+          onPress={() => {
+            void handleSignOut();
+          }}
+        >
+          <Text style={styles.buttonText}>Sair</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0F1115",
+  },
+  content: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    paddingHorizontal: 24,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: "#F97316",
+  },
+  subtitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#F9FAFB",
+    textAlign: "center",
+  },
+  email: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center",
+  },
+  refreshing: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
+  },
+  refreshingText: {
+    color: "#9CA3AF",
+    fontSize: 13,
+  },
+  button: {
+    alignItems: "center",
+    backgroundColor: "#374151",
+    borderRadius: 8,
+    justifyContent: "center",
+    marginTop: 16,
+    minHeight: 48,
+    minWidth: 160,
+    paddingHorizontal: 24,
+  },
+  buttonPressed: {
+    opacity: 0.85,
+  },
+  buttonText: {
+    color: "#F9FAFB",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+});

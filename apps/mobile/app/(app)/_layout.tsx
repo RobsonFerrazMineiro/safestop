@@ -1,11 +1,13 @@
-import { Redirect } from "expo-router";
+import { Stack } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
 import { useAuth } from "@/hooks/use-auth";
-import { authRoutes } from "@/lib/auth/routes";
+import { useAuthGuard } from "@/hooks/use-auth-guard";
 
-export default function IndexScreen() {
-  const { isAuthenticated, isLoading, pendingRedirect } = useAuth();
+export default function AppLayout() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  useAuthGuard("authenticated");
 
   if (isLoading) {
     return (
@@ -15,15 +17,11 @@ export default function IndexScreen() {
     );
   }
 
-  if (isAuthenticated) {
-    if (pendingRedirect) {
-      return <Redirect href={pendingRedirect} />;
-    }
-
-    return <Redirect href={authRoutes.app} />;
+  if (!isAuthenticated) {
+    return null;
   }
 
-  return <Redirect href={authRoutes.login} />;
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
 
 const styles = StyleSheet.create({

@@ -25,7 +25,9 @@
     "supabase:status": "pnpm exec supabase status",
     "supabase:link": "pnpm exec supabase link",
     "supabase:db:reset": "pnpm exec supabase db reset",
-    "supabase:types": "pnpm exec supabase gen types typescript --local > packages/types/src/database.types.ts"
+    "supabase:types": "pnpm exec supabase gen types typescript --local > packages/types/src/database.types.ts",
+    "supabase:provision-qa-user": "node supabase/scripts/provision-qa-user.mjs",
+    "supabase:smoke-auth": "node supabase/scripts/smoke-auth.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.1",

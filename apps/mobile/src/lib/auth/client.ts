@@ -2,7 +2,8 @@ import "react-native-url-polyfill/auto";
 
 import { createClient } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import "expo-sqlite/localStorage/install";
+
+import { secureStoreAdapter } from "./storage";
 
 type SupabaseEnv = {
   url: string;
@@ -24,17 +25,21 @@ function getSupabaseEnv(): SupabaseEnv {
   return { url, publishableKey };
 }
 
-function createSupabaseClient(): SupabaseClient {
-  const { url, publishableKey } = getSupabaseEnv();
+let supabaseClient: SupabaseClient | null = null;
 
-  return createClient(url, publishableKey, {
-    auth: {
-      storage: localStorage,
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: false,
-    },
-  });
+export function getSupabaseClient(): SupabaseClient {
+  if (!supabaseClient) {
+    const { url, publishableKey } = getSupabaseEnv();
+
+    supabaseClient = createClient(url, publishableKey, {
+      auth: {
+        storage: secureStoreAdapter,
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false,
+      },
+    });
+  }
+
+  return supabaseClient;
 }
-
-export const supabase = createSupabaseClient();

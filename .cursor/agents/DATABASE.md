@@ -1130,7 +1130,10 @@ Funções possíveis:
 
     current_profile_id()
     current_organization_ids()
-    has_permission(permission_code)
+    has_permission(
+    permission_code,
+    target_organization_id
+)
     can_access_occurrence(occurrence_id)
     can_manage_organization(organization_id)
     is_platform_admin()
