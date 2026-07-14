@@ -1885,10 +1885,12 @@ Poderão existir funções PostgreSQL:
 ```text
 current_profile_id()
 current_organization_ids()
-has_permission(permission_code)
+has_permission(permission_code, target_organization_id)
 can_access_occurrence(occurrence_id)
 is_platform_admin()
 ```
+
+`has_permission` exige o escopo organizacional como argumento obrigatório: verifica a permissão apenas dentro de `target_organization_id`, nunca em qualquer organização ativa do usuário. Isso evita que um usuário com papel elevado na Organização A satisfaça, indevidamente, uma verificação de permissão relativa à Organização B.
 
 ---
 

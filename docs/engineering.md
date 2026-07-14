@@ -2035,11 +2035,13 @@ Exemplos:
 ```
 current_profile_id()
 current_organization_ids()
-has_permission(permission_code)
+has_permission(permission_code, target_organization_id)
 can_access_occurrence(occurrence_id)
 can_manage_organization(organization_id)
 is_platform_admin()
 ```
+
+`has_permission` recebe a organização a ser verificada como argumento obrigatório, para não permitir que a permissão concedida em uma organização seja usada indevidamente para autorizar uma ação em outra organização.
 
 Essas funções devem:
 
