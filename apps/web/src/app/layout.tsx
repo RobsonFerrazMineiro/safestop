@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { AuthProvider, QueryProvider } from "@/providers";
+import { OrganizationProvider } from "@/features/organization/provider/organization-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     <html lang="pt-BR" className={inter.variable}>
       <body>
         <QueryProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <OrganizationProvider>{children}</OrganizationProvider>
+          </AuthProvider>
         </QueryProvider>
       </body>
     </html>

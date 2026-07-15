@@ -10,6 +10,7 @@ import * as authService from "@/lib/auth/auth.service";
 import { createClient } from "@/lib/auth/client";
 import type { AuthContextValue } from "@/lib/auth/types";
 import { PROFILE_QUERY_KEY } from "@/features/profile/types";
+import { clearOrganizationSession } from "@/features/organization/provider/organization-provider";
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -62,6 +63,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } else {
       queryClient.removeQueries({ queryKey: [PROFILE_QUERY_KEY] });
     }
+
+    clearOrganizationSession(queryClient, userId);
 
     setUser(null);
     router.refresh();

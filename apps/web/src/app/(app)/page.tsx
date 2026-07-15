@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 
+import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function HomePage() {
   const { user, isLoading, signOut } = useAuth();
+  const { activeOrganization, hasMultipleOrganizations } = useActiveOrganization();
 
   if (isLoading) {
     return (
@@ -25,9 +27,24 @@ export default function HomePage() {
             Conectado como <span className="font-medium text-gray-200">{user.email}</span>
           </p>
         ) : null}
+        {activeOrganization ? (
+          <p className="text-sm text-gray-400">
+            Organização ativa:{" "}
+            <span className="font-medium text-gray-200">{activeOrganization.name}</span>
+          </p>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-3">
+        {hasMultipleOrganizations ? (
+          <Link
+            className="rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-500 hover:text-white"
+            href="/organizations"
+          >
+            Trocar organização
+          </Link>
+        ) : null}
+
         <Link
           className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-400"
           href="/profile"
