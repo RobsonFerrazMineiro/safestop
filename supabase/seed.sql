@@ -8,9 +8,13 @@
 --   - organizações e vínculos organization_members para cenários F3/F4/F5/F7.
 --
 -- Cenários QA:
---   qa-field@safestop.local  — 1 organização (auto-seleção F3)
---   qa-multi@safestop.local  — 2 organizações (seletor/troca F4, F5)
---   qa-noorg@safestop.local  — 0 organizações (OrganizationEmpty F7)
+--   qa-field@safestop.local    — 1 org, HSE de Campo (F3/F8)
+--   qa-multi@safestop.local    — 2 orgs, papéis distintos (F4/F5 cross-tenant)
+--   qa-noorg@safestop.local    — 0 orgs (OrganizationEmpty F7)
+--   qa-noperm@safestop.local   — 1 org, sem member_roles (hasNoPermissions F9)
+--   qa-emptyrole@safestop.local — 1 org, papel sem role_permissions (F2)
+--   qa-dualrole@safestop.local  — 1 org, HSE + Gestor no mesmo vínculo (F10)
+--   qa-platform@safestop.local  — PLATFORM_ADMIN + papel plataforma (bypass UI)
 --
 -- Idempotente: seguro executar múltiplas vezes (supabase db reset).
 -- ============================================================================
@@ -70,21 +74,136 @@ on conflict (code)
 do update set description = excluded.description;
 
 -- ----------------------------------------------------------------------------
--- Relacionamentos padrão papel-permissão (role_permissions)
+-- Matriz oficial papel-permissão (role_permissions)
 -- ----------------------------------------------------------------------------
--- NÃO SEMEADO NESTA SPRINT.
---
--- docs/database.md e docs/workflow.md não definem uma matriz explícita e
--- definitiva de papel -> permissões (workflow.md §3 afirma literalmente:
--- "As permissões reais deverão ser verificadas por códigos de autorização",
--- e docs/workflow.md §26 lista "permissões de cada perfil" como decisão
--- pendente). Derivar essa matriz apenas da descrição textual dos papéis
--- seria inventar regra de negócio não documentada.
---
--- Conforme instrução do prompt desta Sprint, o ponto foi registrado como
--- divergência/ambiguidade e não implementado (ver relatório final —
--- "Decisões ou ambiguidades"). A estrutura (tabela role_permissions) está
--- pronta para receber esses vínculos quando a matriz for aprovada.
+-- Aprovada em docs/decisions/RBAC-MATRIX-APPROVED.md (2026-07-15).
+-- notification.read omitido (decisão #6) até módulo de notificações.
+
+insert into public.role_permissions (role_id, permission_id)
+select r.id, p.id
+from public.roles r
+cross join public.permissions p
+where r.organization_id is null
+  and r.name = 'HSE de Campo'
+  and p.code in (
+    'occurrence.create',
+    'occurrence.read',
+    'notification.confirm_awareness'
+  )
+on conflict (role_id, permission_id) do nothing;
+
+insert into public.role_permissions (role_id, permission_id)
+select r.id, p.id
+from public.roles r
+cross join public.permissions p
+where r.organization_id is null
+  and r.name = 'Liderança da Contratada'
+  and p.code in (
+    'occurrence.read',
+    'occurrence.validate_correction',
+    'action_plan.manage',
+    'notification.confirm_awareness'
+  )
+on conflict (role_id, permission_id) do nothing;
+
+insert into public.role_permissions (role_id, permission_id)
+select r.id, p.id
+from public.roles r
+cross join public.permissions p
+where r.organization_id is null
+  and r.name = 'Fiscal do Contrato'
+  and p.code in (
+    'occurrence.read',
+    'occurrence.evaluate',
+    'occurrence.validate_correction',
+    'notification.confirm_awareness'
+  )
+on conflict (role_id, permission_id) do nothing;
+
+insert into public.role_permissions (role_id, permission_id)
+select r.id, p.id
+from public.roles r
+cross join public.permissions p
+where r.organization_id is null
+  and r.name = 'Supervisor HSE'
+  and p.code in (
+    'occurrence.read',
+    'occurrence.evaluate',
+    'occurrence.confirm_interdiction',
+    'occurrence.validate_correction',
+    'occurrence.release',
+    'occurrence.cancel',
+    'mdho.fill',
+    'mdho.submit',
+    'ims_reference.register',
+    'ims_reference.update',
+    'action_plan.create',
+    'action_plan.manage',
+    'notification.confirm_awareness'
+  )
+on conflict (role_id, permission_id) do nothing;
+
+insert into public.role_permissions (role_id, permission_id)
+select r.id, p.id
+from public.roles r
+cross join public.permissions p
+where r.organization_id is null
+  and r.name = 'Liderança HSE'
+  and p.code in (
+    'occurrence.read',
+    'occurrence.evaluate',
+    'occurrence.confirm_interdiction',
+    'occurrence.validate_correction',
+    'occurrence.release',
+    'mdho.fill',
+    'mdho.approve',
+    'mdho.return',
+    'action_plan.validate',
+    'ims_reference.register',
+    'ims_reference.update',
+    'audit.read',
+    'notification.confirm_awareness'
+  )
+on conflict (role_id, permission_id) do nothing;
+
+insert into public.role_permissions (role_id, permission_id)
+select r.id, p.id
+from public.roles r
+cross join public.permissions p
+where r.organization_id is null
+  and r.name = 'Gestor'
+  and p.code in (
+    'occurrence.read',
+    'report.read',
+    'notification.confirm_awareness'
+  )
+on conflict (role_id, permission_id) do nothing;
+
+insert into public.role_permissions (role_id, permission_id)
+select r.id, p.id
+from public.roles r
+cross join public.permissions p
+where r.organization_id is null
+  and r.name = 'Administrador da Empresa'
+  and p.code in (
+    'user.manage',
+    'organization.manage',
+    'area.manage',
+    'contract.manage',
+    'settings.manage',
+    'audit.read',
+    'occurrence.read',
+    'report.read'
+  )
+on conflict (role_id, permission_id) do nothing;
+
+insert into public.role_permissions (role_id, permission_id)
+select r.id, p.id
+from public.roles r
+cross join public.permissions p
+where r.organization_id is null
+  and r.name = 'Administrador da Plataforma'
+on conflict (role_id, permission_id) do nothing;
 
 -- ----------------------------------------------------------------------------
 -- Organizações de QA local (somente desenvolvimento — 127.0.0.1:54321)
@@ -123,12 +242,47 @@ values
     '33.333.333/0001-03',
     'CLIENT',
     true
+  ),
+  (
+    'b0000000-0000-4000-8000-000000000004',
+    'QA Delta Plataforma',
+    'QA Delta Plataforma Ltda',
+    '44.444.444/0001-04',
+    'PLATFORM',
+    true
   )
 on conflict (id) do update set
   name = excluded.name,
   legal_name = excluded.legal_name,
   document_number = excluded.document_number,
   organization_type = excluded.organization_type,
+  is_active = true;
+
+-- ----------------------------------------------------------------------------
+-- Papel de QA sem permissões (cenário F2)
+-- ----------------------------------------------------------------------------
+-- Papel personalizado da organização Alpha, intencionalmente sem linhas em
+-- role_permissions. Usado por qa-emptyrole@safestop.local.
+
+insert into public.roles (
+  id,
+  organization_id,
+  name,
+  description,
+  is_system_role,
+  is_active
+)
+values (
+  'd0000000-0000-4000-8000-000000000001',
+  'b0000000-0000-4000-8000-000000000001',
+  'QA Papel Vazio',
+  'Papel de QA local sem permissões em role_permissions (cenário F2).',
+  false,
+  true
+)
+on conflict (id) do update set
+  name = excluded.name,
+  description = excluded.description,
   is_active = true;
 
 -- ----------------------------------------------------------------------------
@@ -156,6 +310,26 @@ declare
       'id', 'a0000000-0000-4000-8000-000000000003',
       'email', 'qa-noorg@safestop.local',
       'full_name', 'QA Sem Org SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000004',
+      'email', 'qa-noperm@safestop.local',
+      'full_name', 'QA Sem Permissões SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000005',
+      'email', 'qa-platform@safestop.local',
+      'full_name', 'QA Plataforma SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000006',
+      'email', 'qa-emptyrole@safestop.local',
+      'full_name', 'QA Papel Vazio SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000007',
+      'email', 'qa-dualrole@safestop.local',
+      'full_name', 'QA Papéis Duplos SafeStop'
     )
   );
   v_user jsonb;
@@ -246,6 +420,7 @@ $$;
 -- ----------------------------------------------------------------------------
 -- organization_members.id exposto como organizationMemberId nas queries de join.
 -- qa-noorg@safestop.local intencionalmente sem vínculos (cenário F7).
+-- qa-noperm@safestop.local com vínculo mas sem member_roles (cenário F9).
 
 insert into public.organization_members (
   id,
@@ -275,7 +450,102 @@ values
     'a0000000-0000-4000-8000-000000000002',
     'INTERNAL',
     true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000004',
+    'b0000000-0000-4000-8000-000000000001',
+    'a0000000-0000-4000-8000-000000000004',
+    'INTERNAL',
+    true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000005',
+    'b0000000-0000-4000-8000-000000000004',
+    'a0000000-0000-4000-8000-000000000005',
+    'PLATFORM_ADMIN',
+    true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000006',
+    'b0000000-0000-4000-8000-000000000001',
+    'a0000000-0000-4000-8000-000000000006',
+    'INTERNAL',
+    true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000007',
+    'b0000000-0000-4000-8000-000000000001',
+    'a0000000-0000-4000-8000-000000000007',
+    'INTERNAL',
+    true
   )
 on conflict (organization_id, profile_id) do update set
   membership_type = excluded.membership_type,
   is_active = true;
+
+-- ----------------------------------------------------------------------------
+-- member_roles de QA local (Sprint 1.9)
+-- ----------------------------------------------------------------------------
+-- Atribui papéis aos vínculos de QA para testar autorização efetiva.
+-- Matriz role_permissions: docs/decisions/RBAC-MATRIX-APPROVED.md
+--
+-- Cenários:
+--   qa-field     — HSE de Campo na Alpha (occurrence.create na própria org)
+--   qa-multi     — HSE de Campo na Beta + Gestor na Gamma (cross-tenant QA)
+--   qa-noperm    — sem member_roles (F9: hasNoPermissions)
+--   qa-emptyrole — QA Papel Vazio na Alpha (F2: papel sem role_permissions)
+--   qa-dualrole  — HSE + Gestor no mesmo vínculo Alpha (F10: união runtime)
+--   qa-noorg     — sem vínculos (F7)
+--   qa-platform  — Administrador da Plataforma na Delta (PLATFORM_ADMIN bypass)
+
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000001'
+  and r.name = 'HSE de Campo'
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
+
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+join public.roles r on r.id = 'd0000000-0000-4000-8000-000000000001'
+where om.id = 'c0000000-0000-4000-8000-000000000006'
+on conflict (organization_member_id, role_id) do nothing;
+
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000007'
+  and r.name in ('HSE de Campo', 'Gestor')
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
+
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000002'
+  and r.name = 'HSE de Campo'
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
+
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000003'
+  and r.name = 'Gestor'
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
+
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000005'
+  and r.name = 'Administrador da Plataforma'
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
