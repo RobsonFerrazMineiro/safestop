@@ -4,6 +4,9 @@ import type { Session, User } from "@supabase/supabase-js";
 import type { Href } from "expo-router";
 
 import { PROFILE_QUERY_KEY } from "@/features/profile/types";
+import { clearActiveOrganizationStorage } from "@/features/organization/services/active-organization-storage";
+import { clearTenantCache } from "@/features/organization/services/clear-tenant-cache";
+import { ORGANIZATION_QUERY_KEYS } from "@/features/organization/types";
 import * as authService from "@/lib/auth/auth.service";
 import { getSupabaseClient } from "@/lib/auth/client";
 import {
@@ -51,8 +54,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const handleInvalidSession = useCallback(async () => {
+    const userId = state.user?.id;
     const supabase = getSupabaseClient();
     await supabase.auth.signOut();
+
+    if (userId) {
+      queryClient.removeQueries({ queryKey: [PROFILE_QUERY_KEY, userId] });
+      queryClient.removeQueries({ queryKey: ORGANIZATION_QUERY_KEYS.list(userId) });
+      await clearActiveOrganizationStorage(userId);
+    } else {
+      queryClient.removeQueries({ queryKey: [PROFILE_QUERY_KEY] });
+      queryClient.removeQueries({ queryKey: ["organizations"] });
+    }
+
+    clearTenantCache(queryClient);
 
     setState((current) => ({
       ...current,
@@ -60,8 +75,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       user: null,
       isLoading: false,
       isRefreshing: false,
+      pendingRedirect: null,
     }));
-  }, []);
+
+    pendingRedirectRef.current = null;
+  }, [queryClient, state.user?.id]);
 
   const signIn = useCallback(async (credentials: SignInCredentials) => {
     await authService.signInWithPassword(credentials);
@@ -74,9 +92,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     if (userId) {
       queryClient.removeQueries({ queryKey: [PROFILE_QUERY_KEY, userId] });
+      queryClient.removeQueries({ queryKey: ORGANIZATION_QUERY_KEYS.list(userId) });
+      await clearActiveOrganizationStorage(userId);
     } else {
       queryClient.removeQueries({ queryKey: [PROFILE_QUERY_KEY] });
+      queryClient.removeQueries({ queryKey: ["organizations"] });
     }
+
+    clearTenantCache(queryClient);
 
     setState((current) => ({
       ...current,

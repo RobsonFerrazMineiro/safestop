@@ -1,24 +1,50 @@
-import { Stack } from "expo-router";
+import { Stack, useSegments } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
+import { OrganizationEmpty } from "@/features/organization/components/organization-empty";
+import { OrganizationLoading } from "@/features/organization/components/organization-loading";
+import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
+import { useOrganizationGate } from "@/features/organization/hooks/use-organization-gate";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 
 export default function AppLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isOrgLoading, isReady, hasNoOrganizations } = useActiveOrganization();
+  const segments = useSegments();
+
+  const currentSegment = segments[1] as string | undefined;
+  const isOrganizationsScreen = currentSegment === "organizations";
 
   useAuthGuard("authenticated");
+  useOrganizationGate({ enabled: !isOrganizationsScreen });
 
-  if (isLoading) {
+  if (isAuthLoading || (isAuthenticated && isOrgLoading)) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#F97316" />
+        <OrganizationLoading />
       </View>
     );
   }
 
   if (!isAuthenticated) {
     return null;
+  }
+
+  if (!isOrganizationsScreen && hasNoOrganizations) {
+    return (
+      <View style={styles.loading}>
+        <OrganizationEmpty />
+      </View>
+    );
+  }
+
+  if (!isOrganizationsScreen && !isReady) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color="#F97316" size="large" />
+      </View>
+    );
   }
 
   return <Stack screenOptions={{ headerShown: false }} />;

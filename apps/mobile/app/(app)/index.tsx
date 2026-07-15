@@ -3,11 +3,13 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "@/hooks/use-auth";
+import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { authRoutes } from "@/lib/auth/routes";
 
 export default function AuthenticatedHomeScreen() {
   const router = useRouter();
   const { user, signOut, isRefreshing } = useAuth();
+  const { activeOrganization, hasMultipleOrganizations } = useActiveOrganization();
 
   async function handleSignOut() {
     await signOut();
@@ -20,6 +22,29 @@ export default function AuthenticatedHomeScreen() {
         <Text style={styles.title}>SafeStop</Text>
         <Text style={styles.subtitle}>Sessão autenticada</Text>
         <Text style={styles.email}>{user?.email ?? "Usuário autenticado"}</Text>
+
+        {activeOrganization ? (
+          <View style={styles.organizationBadge}>
+            <Text style={styles.organizationLabel}>Organização ativa</Text>
+            <Text style={styles.organizationName}>{activeOrganization.name}</Text>
+            {activeOrganization.code ? (
+              <Text style={styles.organizationCode}>{activeOrganization.code}</Text>
+            ) : null}
+          </View>
+        ) : null}
+
+        {hasMultipleOrganizations ? (
+          <Pressable
+            accessibilityLabel="Trocar organização"
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.switchOrgButton, pressed && styles.buttonPressed]}
+            onPress={() => {
+              router.push(authRoutes.organizations);
+            }}
+          >
+            <Text style={styles.switchOrgButtonText}>Trocar organização</Text>
+          </Pressable>
+        ) : null}
 
         {isRefreshing ? (
           <View style={styles.refreshing}>
@@ -81,6 +106,50 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#9CA3AF",
     textAlign: "center",
+  },
+  organizationBadge: {
+    alignItems: "center",
+    backgroundColor: "#1F2937",
+    borderColor: "#374151",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 4,
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    width: "100%",
+  },
+  organizationLabel: {
+    color: "#9CA3AF",
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  organizationName: {
+    color: "#F9FAFB",
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  organizationCode: {
+    color: "#6B7280",
+    fontSize: 13,
+    textAlign: "center",
+  },
+  switchOrgButton: {
+    alignItems: "center",
+    backgroundColor: "#374151",
+    borderRadius: 8,
+    justifyContent: "center",
+    marginTop: 4,
+    minHeight: 44,
+    minWidth: 200,
+    paddingHorizontal: 20,
+  },
+  switchOrgButtonText: {
+    color: "#F9FAFB",
+    fontSize: 14,
+    fontWeight: "600",
   },
   refreshing: {
     alignItems: "center",
