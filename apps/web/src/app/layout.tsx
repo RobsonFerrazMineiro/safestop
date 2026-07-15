@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { AuthProvider, QueryProvider } from "@/providers";
+import { AuthorizationProvider } from "@/features/authorization";
 import { OrganizationProvider } from "@/features/organization/provider/organization-provider";
 import "./globals.css";
 
@@ -23,7 +24,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
       <body>
         <QueryProvider>
           <AuthProvider>
-            <OrganizationProvider>{children}</OrganizationProvider>
+            <OrganizationProvider>
+              <AuthorizationProvider>{children}</AuthorizationProvider>
+            </OrganizationProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

@@ -13,6 +13,7 @@ import {
   setStoredActiveOrganizationId,
 } from "../services/active-organization-storage";
 import { clearTenantCache } from "../services/clear-tenant-cache";
+import { clearAuthorizationCache } from "@/features/authorization/services/clear-authorization-cache";
 import { OrganizationContext } from "./organization-context";
 import type { OrganizationContextValue, UserOrganization } from "../types";
 
@@ -114,6 +115,7 @@ function OrganizationProviderInner({ children }: OrganizationProviderProps) {
       }
 
       clearTenantCache(queryClient);
+      clearAuthorizationCache(queryClient);
       setStoredActiveOrganizationId(userId, selectedOrganization.id);
       setSelection({ userId, organizationId: selectedOrganization.id });
     },

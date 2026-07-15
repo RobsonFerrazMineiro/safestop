@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 
+import { useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function HomePage() {
   const { user, isLoading, signOut } = useAuth();
   const { activeOrganization, hasMultipleOrganizations } = useActiveOrganization();
+  const { roles, permissions, isReady: isAuthzReady, can } = useAuthorization();
 
   if (isLoading) {
     return (
@@ -31,6 +33,17 @@ export default function HomePage() {
           <p className="text-sm text-gray-400">
             Organização ativa:{" "}
             <span className="font-medium text-gray-200">{activeOrganization.name}</span>
+          </p>
+        ) : null}
+        {isAuthzReady ? (
+          <p className="text-sm text-gray-400">
+            Papéis: {roles.map((role) => role.name).join(", ") || "nenhum"} · Permissões:{" "}
+            {permissions.size}
+          </p>
+        ) : null}
+        {isAuthzReady ? (
+          <p className="text-xs text-gray-500">
+            occurrence.create: {can("occurrence.create") ? "sim" : "não"}
           </p>
         ) : null}
       </div>

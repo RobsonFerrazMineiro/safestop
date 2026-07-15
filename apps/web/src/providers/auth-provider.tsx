@@ -11,6 +11,7 @@ import { createClient } from "@/lib/auth/client";
 import type { AuthContextValue } from "@/lib/auth/types";
 import { PROFILE_QUERY_KEY } from "@/features/profile/types";
 import { clearOrganizationSession } from "@/features/organization/provider/organization-provider";
+import { clearAuthorizationSession } from "@/features/authorization";
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     clearOrganizationSession(queryClient, userId);
+    clearAuthorizationSession(queryClient);
 
     setUser(null);
     router.refresh();

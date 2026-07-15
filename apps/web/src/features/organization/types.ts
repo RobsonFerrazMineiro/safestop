@@ -17,6 +17,7 @@ export type UserOrganization = {
   logoUrl: null;
   organizationType: string;
   organizationMemberId: string;
+  membershipType: string;
 };
 
 export type OrganizationContextValue = {

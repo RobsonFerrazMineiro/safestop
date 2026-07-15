@@ -21,6 +21,7 @@ export async function getUserOrganizations(): Promise<UserOrganization[]> {
       `
         id,
         organization_id,
+        membership_type,
         organizations (
           id,
           name,

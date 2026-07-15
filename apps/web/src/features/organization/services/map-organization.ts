@@ -11,6 +11,7 @@ type OrganizationRecord = {
 type OrganizationMemberJoinRow = {
   id: string;
   organization_id: string;
+  membership_type: string;
   organizations: OrganizationRecord | OrganizationRecord[] | null;
 };
 
@@ -29,6 +30,7 @@ export function mapOrganizationRow(row: OrganizationMemberJoinRow): UserOrganiza
     logoUrl: null,
     organizationType: organization.organization_type,
     organizationMemberId: row.id,
+    membershipType: row.membership_type,
   };
 }
 
