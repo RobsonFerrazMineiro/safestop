@@ -246,9 +246,15 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@safestop/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       '@supabase/supabase-js':
         specifier: 2.110.2
         version: 2.110.2
+      '@tanstack/react-query':
+        specifier: 5.84.1
+        version: 5.84.1(react@19.2.3)
       expo:
         specifier: ^57.0.4
         version: 57.0.4(@babel/core@7.29.7)(@expo/dom-webview@57.0.0)(@expo/metro-runtime@57.0.3)(expo-router@57.0.4)(react-dom@19.2.7(react@19.2.3))(react-native-worklets@0.10.2(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3))(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
@@ -270,6 +276,9 @@ importers:
       react:
         specifier: 19.2.3
         version: 19.2.3
+      react-hook-form:
+        specifier: 7.54.2
+        version: 7.54.2(react@19.2.3)
       react-native:
         specifier: 0.86.0
         version: 0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3)
@@ -282,6 +291,9 @@ importers:
       react-native-url-polyfill:
         specifier: 2.0.0
         version: 2.0.0(react-native@0.86.0(@babel/core@7.29.7)(@react-native/metro-config@0.86.0(@babel/core@7.29.7))(@types/react@19.2.17)(react@19.2.3))
+      zod:
+        specifier: 3.24.2
+        version: 3.24.2
     devDependencies:
       '@safestop/config':
         specifier: workspace:*
@@ -298,12 +310,18 @@ importers:
 
   apps/web:
     dependencies:
+      '@safestop/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
       '@supabase/ssr':
         specifier: 0.6.1
         version: 0.6.1(@supabase/supabase-js@2.110.2)
       '@supabase/supabase-js':
         specifier: 2.110.2
         version: 2.110.2
+      '@tanstack/react-query':
+        specifier: 5.84.1
+        version: 5.84.1(react@19.2.7)
       next:
         specifier: 16.2.10
         version: 16.2.10(@babel/core@7.29.7)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -313,6 +331,12 @@ importers:
       react-dom:
         specifier: 19.2.7
         version: 19.2.7(react@19.2.7)
+      react-hook-form:
+        specifier: 7.54.2
+        version: 7.54.2(react@19.2.7)
+      zod:
+        specifier: 3.24.2
+        version: 3.24.2
     devDependencies:
       '@safestop/config':
         specifier: workspace:*
@@ -365,6 +389,9 @@ importers:
       '@safestop/types':
         specifier: workspace:*
         version: link:../types
+      zod:
+        specifier: 3.24.2
+        version: 3.24.2
     devDependencies:
       '@safestop/config':
         specifier: workspace:*
@@ -1874,6 +1901,14 @@ packages:
 
   '@tailwindcss/postcss@4.3.2':
     resolution: {integrity: sha512-rjVWYCa7Ngbi5AarT6k8TkxUG3Wl1QKzHdIZVsjZSzf36Jmo2IKZt/NHRAwly8oDkbBOH0YTu+CHuf9jPxMc+g==}
+
+  '@tanstack/query-core@5.83.1':
+    resolution: {integrity: sha512-OG69LQgT7jSp+5pPuCfzltq/+7l2xoweggjme9vlbCPa/d7D7zaqv5vN/S82SzSYZ4EDLTxNO1PWrv49RAS64Q==}
+
+  '@tanstack/react-query@5.84.1':
+    resolution: {integrity: sha512-zo7EUygcWJMQfFNWDSG7CBhy8irje/XY0RDVKKV4IQJAysb+ZJkkJPcnQi+KboyGUgT+SQebRFoTqLuTtfoDLw==}
+    peerDependencies:
+      react: ^18 || ^19
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -4148,6 +4183,12 @@ packages:
     peerDependencies:
       react: '>=17.0.0'
 
+  react-hook-form@7.54.2:
+    resolution: {integrity: sha512-eHpAUgUjWbZocoQYUHposymRb4ZP6d0uwUnooL2uOybA9/3tPUvoAKqEWK1WaSiTxxOfTpffNZP7QwlnM3/gEg==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
+
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -4958,6 +4999,9 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
+
+  zod@3.24.2:
+    resolution: {integrity: sha512-lY7CDW43ECgW9u1TcT3IoXHflywfVqDYze4waEz812jR/bZ8FHDsl7pFQoSZTz5N+2NqRXs8GBwnAwo3ZNxqhQ==}
 
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
@@ -6718,6 +6762,18 @@ snapshots:
       '@tailwindcss/oxide': 4.3.2
       postcss: 8.5.17
       tailwindcss: 4.3.2
+
+  '@tanstack/query-core@5.83.1': {}
+
+  '@tanstack/react-query@5.84.1(react@19.2.3)':
+    dependencies:
+      '@tanstack/query-core': 5.83.1
+      react: 19.2.3
+
+  '@tanstack/react-query@5.84.1(react@19.2.7)':
+    dependencies:
+      '@tanstack/query-core': 5.83.1
+      react: 19.2.7
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -9289,6 +9345,14 @@ snapshots:
     dependencies:
       react: 19.2.3
 
+  react-hook-form@7.54.2(react@19.2.3):
+    dependencies:
+      react: 19.2.3
+
+  react-hook-form@7.54.2(react@19.2.7):
+    dependencies:
+      react: 19.2.7
+
   react-is@16.13.1: {}
 
   react-is@17.0.2: {}
@@ -10235,6 +10299,8 @@ snapshots:
   zod-validation-error@4.0.2(zod@4.4.3):
     dependencies:
       zod: 4.4.3
+
+  zod@3.24.2: {}
 
   zod@3.25.76: {}
 

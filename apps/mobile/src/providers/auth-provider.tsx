@@ -1,7 +1,9 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import type { Href } from "expo-router";
 
+import { PROFILE_QUERY_KEY } from "@/features/profile/types";
 import * as authService from "@/lib/auth/auth.service";
 import { getSupabaseClient } from "@/lib/auth/client";
 import {
@@ -25,6 +27,7 @@ type InternalAuthState = {
 };
 
 export function AuthProvider({ children }: AuthProviderProps) {
+  const queryClient = useQueryClient();
   const [state, setState] = useState<InternalAuthState>({
     session: null,
     user: null,
@@ -65,7 +68,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   const signOut = useCallback(async () => {
+    const userId = state.user?.id;
+
     await authService.signOut();
+
+    if (userId) {
+      queryClient.removeQueries({ queryKey: [PROFILE_QUERY_KEY, userId] });
+    } else {
+      queryClient.removeQueries({ queryKey: [PROFILE_QUERY_KEY] });
+    }
 
     setState((current) => ({
       ...current,
@@ -77,7 +88,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }));
 
     pendingRedirectRef.current = null;
-  }, []);
+  }, [queryClient, state.user?.id]);
 
   useEffect(() => {
     let isMounted = true;

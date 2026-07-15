@@ -29,6 +29,17 @@ export default function AuthenticatedHomeScreen() {
         ) : null}
 
         <Pressable
+          accessibilityLabel="Meu perfil"
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.profileButton, pressed && styles.buttonPressed]}
+          onPress={() => {
+            router.push(authRoutes.profile);
+          }}
+        >
+          <Text style={styles.profileButtonText}>Meu perfil</Text>
+        </Pressable>
+
+        <Pressable
           accessibilityLabel="Sair"
           accessibilityRole="button"
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
@@ -80,6 +91,21 @@ const styles = StyleSheet.create({
   refreshingText: {
     color: "#9CA3AF",
     fontSize: 13,
+  },
+  profileButton: {
+    alignItems: "center",
+    backgroundColor: "#F97316",
+    borderRadius: 8,
+    justifyContent: "center",
+    marginTop: 8,
+    minHeight: 48,
+    minWidth: 160,
+    paddingHorizontal: 24,
+  },
+  profileButtonText: {
+    color: "#0F1115",
+    fontSize: 16,
+    fontWeight: "700",
   },
   button: {
     alignItems: "center",

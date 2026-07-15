@@ -1,13 +1,12 @@
 -- ============================================================================
--- SafeStop — Seed estrutural (Sprint 1.5)
+-- SafeStop — Seed estrutural (Sprint 1.5 + usuário de teste local)
 -- ============================================================================
--- Contém apenas dados estruturais estáveis previstos na documentação oficial:
+-- Contém dados estruturais estáveis previstos na documentação oficial:
 --   - catálogo oficial de papéis (docs/database.md §6.1, docs/workflow.md §3);
---   - catálogo oficial de permissões (docs/database.md §6.2).
+--   - catálogo oficial de permissões (docs/database.md §6.2);
+--   - usuário Auth de QA local (Sprint 1.6) com perfil via trigger on_auth_user_created.
 --
--- Não contém: organizações, unidades, áreas, contratos, usuários ou qualquer
--- outro dado fictício de teste — nenhuma necessidade real foi identificada
--- para esta Sprint (fundação de banco, sem telas ou fluxos operacionais).
+-- Não contém: organizações, unidades, áreas, contratos ou vínculos fictícios.
 --
 -- Idempotente: seguro executar múltiplas vezes (supabase db reset).
 -- ============================================================================
@@ -82,3 +81,88 @@ do update set description = excluded.description;
 -- divergência/ambiguidade e não implementado (ver relatório final —
 -- "Decisões ou ambiguidades"). A estrutura (tabela role_permissions) está
 -- pronta para receber esses vínculos quando a matriz for aprovada.
+
+-- ----------------------------------------------------------------------------
+-- Usuário Auth de QA local (somente desenvolvimento — 127.0.0.1:54321)
+-- ----------------------------------------------------------------------------
+-- E-mail e nome alinhados a supabase/qa-credentials.local.example.
+-- Senha local documentada: SafeStop-QA-Local-2026
+-- (defina QA_TEST_USER_PASSWORD com o mesmo valor em qa-credentials.local).
+-- O perfil em public.profiles é criado automaticamente pelo trigger
+-- on_auth_user_created (migration 20260714210000_create_profile_on_auth_user).
+
+do $$
+declare
+  v_user_id uuid := 'a0000000-0000-4000-8000-000000000001';
+  v_email text := 'qa-field@safestop.local';
+  v_full_name text := 'QA Campo SafeStop';
+  v_password text := 'SafeStop-QA-Local-2026';
+begin
+  if not exists (select 1 from auth.users where id = v_user_id) then
+    insert into auth.users (
+      instance_id,
+      id,
+      aud,
+      role,
+      email,
+      encrypted_password,
+      email_confirmed_at,
+      recovery_sent_at,
+      last_sign_in_at,
+      raw_app_meta_data,
+      raw_user_meta_data,
+      created_at,
+      updated_at,
+      confirmation_token,
+      email_change,
+      email_change_token_new,
+      recovery_token
+    )
+    values (
+      '00000000-0000-0000-0000-000000000000',
+      v_user_id,
+      'authenticated',
+      'authenticated',
+      v_email,
+      extensions.crypt(v_password, extensions.gen_salt('bf')),
+      now(),
+      now(),
+      now(),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      jsonb_build_object('full_name', v_full_name),
+      now(),
+      now(),
+      '',
+      '',
+      '',
+      ''
+    );
+
+    insert into auth.identities (
+      id,
+      user_id,
+      provider_id,
+      identity_data,
+      provider,
+      last_sign_in_at,
+      created_at,
+      updated_at
+    )
+    values (
+      v_user_id,
+      v_user_id,
+      v_user_id::text,
+      jsonb_build_object(
+        'sub', v_user_id::text,
+        'email', v_email,
+        'email_verified', true,
+        'phone_verified', false
+      ),
+      'email',
+      now(),
+      now(),
+      now()
+    );
+  end if;
+end
+$$;

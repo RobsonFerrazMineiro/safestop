@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useAuth } from "@/hooks/use-auth";
 
 export default function HomePage() {
@@ -25,15 +27,24 @@ export default function HomePage() {
         ) : null}
       </div>
 
-      <button
-        className="rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-500 hover:text-white"
-        onClick={() => {
-          void signOut();
-        }}
-        type="button"
-      >
-        Sair
-      </button>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Link
+          className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-400"
+          href="/profile"
+        >
+          Meu perfil
+        </Link>
+
+        <button
+          className="rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-500 hover:text-white"
+          onClick={() => {
+            void signOut();
+          }}
+          type="button"
+        >
+          Sair
+        </button>
+      </div>
     </main>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { createContext, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
@@ -8,6 +9,7 @@ import type { User } from "@supabase/supabase-js";
 import * as authService from "@/lib/auth/auth.service";
 import { createClient } from "@/lib/auth/client";
 import type { AuthContextValue } from "@/lib/auth/types";
+import { PROFILE_QUERY_KEY } from "@/features/profile/types";
 
 export const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -17,6 +19,7 @@ type AuthProviderProps = {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -50,11 +53,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   );
 
   const signOut = useCallback(async () => {
+    const userId = user?.id;
+
     await authService.signOut();
+
+    if (userId) {
+      queryClient.removeQueries({ queryKey: [PROFILE_QUERY_KEY, userId] });
+    } else {
+      queryClient.removeQueries({ queryKey: [PROFILE_QUERY_KEY] });
+    }
+
     setUser(null);
     router.refresh();
     router.push("/login");
-  }, [router]);
+  }, [queryClient, router, user?.id]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

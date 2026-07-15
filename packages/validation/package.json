@@ -15,7 +15,8 @@
     "clean": "node -e \"const fs=require('fs');['dist','tsconfig.tsbuildinfo'].forEach((p)=>fs.rmSync(p,{recursive:true,force:true}))\""
   },
   "dependencies": {
-    "@safestop/types": "workspace:*"
+    "@safestop/types": "workspace:*",
+    "zod": "3.24.2"
   },
   "devDependencies": {
     "@safestop/config": "workspace:*"

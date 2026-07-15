@@ -10,8 +10,19 @@ pnpm-lock.yaml
 reference
 supabase/.temp
 
+# Scripts Supabase (Sprint auth) — formatação pendente; fora do escopo desta tarefa.
+supabase/scripts
+
+# Documentação histórica — fora do format:check até formatação dedicada (Sprint 1.1+).
+docs
+README.md
+CONTRIBUTING.md
+
+# Arquivos gerados automaticamente — não formatar manualmente.
+**/expo-env.d.ts
+packages/types/src/database.types.ts
+
 # Arquivos especiais do Cursor (rules/agents/prompts) podem usar formatação
-# própria não compatível com Prettier. Documentação oficial (docs/, README,
-# CONTRIBUTING) permanece no escopo do format:check.
+# própria não compatível com Prettier.
 .cursor
 
