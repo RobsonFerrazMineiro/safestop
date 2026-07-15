@@ -1,12 +1,16 @@
 -- ============================================================================
--- SafeStop — Seed estrutural (Sprint 1.5 + usuário de teste local)
+-- SafeStop — Seed estrutural (Sprint 1.5 + QA local multi-cenário)
 -- ============================================================================
 -- Contém dados estruturais estáveis previstos na documentação oficial:
 --   - catálogo oficial de papéis (docs/database.md §6.1, docs/workflow.md §3);
 --   - catálogo oficial de permissões (docs/database.md §6.2);
---   - usuário Auth de QA local (Sprint 1.6) com perfil via trigger on_auth_user_created.
+--   - usuários Auth de QA local com perfil via trigger on_auth_user_created;
+--   - organizações e vínculos organization_members para cenários F3/F4/F5/F7.
 --
--- Não contém: organizações, unidades, áreas, contratos ou vínculos fictícios.
+-- Cenários QA:
+--   qa-field@safestop.local  — 1 organização (auto-seleção F3)
+--   qa-multi@safestop.local  — 2 organizações (seletor/troca F4, F5)
+--   qa-noorg@safestop.local  — 0 organizações (OrganizationEmpty F7)
 --
 -- Idempotente: seguro executar múltiplas vezes (supabase db reset).
 -- ============================================================================
@@ -83,86 +87,195 @@ do update set description = excluded.description;
 -- pronta para receber esses vínculos quando a matriz for aprovada.
 
 -- ----------------------------------------------------------------------------
--- Usuário Auth de QA local (somente desenvolvimento — 127.0.0.1:54321)
+-- Organizações de QA local (somente desenvolvimento — 127.0.0.1:54321)
 -- ----------------------------------------------------------------------------
--- E-mail e nome alinhados a supabase/qa-credentials.local.example.
+-- UUIDs determinísticos para seed idempotente.
+
+insert into public.organizations (
+  id,
+  name,
+  legal_name,
+  document_number,
+  organization_type,
+  is_active
+)
+values
+  (
+    'b0000000-0000-4000-8000-000000000001',
+    'QA Alpha Contratante',
+    'QA Alpha Contratante Ltda',
+    '11.111.111/0001-01',
+    'CLIENT',
+    true
+  ),
+  (
+    'b0000000-0000-4000-8000-000000000002',
+    'QA Beta Contratada',
+    'QA Beta Contratada Ltda',
+    '22.222.222/0001-02',
+    'CONTRACTOR',
+    true
+  ),
+  (
+    'b0000000-0000-4000-8000-000000000003',
+    'QA Gamma Cliente',
+    'QA Gamma Cliente Ltda',
+    '33.333.333/0001-03',
+    'CLIENT',
+    true
+  )
+on conflict (id) do update set
+  name = excluded.name,
+  legal_name = excluded.legal_name,
+  document_number = excluded.document_number,
+  organization_type = excluded.organization_type,
+  is_active = true;
+
+-- ----------------------------------------------------------------------------
+-- Usuários Auth de QA local (somente desenvolvimento — 127.0.0.1:54321)
+-- ----------------------------------------------------------------------------
 -- Senha local documentada: SafeStop-QA-Local-2026
 -- (defina QA_TEST_USER_PASSWORD com o mesmo valor em qa-credentials.local).
--- O perfil em public.profiles é criado automaticamente pelo trigger
--- on_auth_user_created (migration 20260714210000_create_profile_on_auth_user).
+-- Perfis criados automaticamente pelo trigger on_auth_user_created.
 
 do $$
 declare
-  v_user_id uuid := 'a0000000-0000-4000-8000-000000000001';
-  v_email text := 'qa-field@safestop.local';
-  v_full_name text := 'QA Campo SafeStop';
   v_password text := 'SafeStop-QA-Local-2026';
+  v_users constant jsonb := jsonb_build_array(
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000001',
+      'email', 'qa-field@safestop.local',
+      'full_name', 'QA Campo SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000002',
+      'email', 'qa-multi@safestop.local',
+      'full_name', 'QA Multi Org SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000003',
+      'email', 'qa-noorg@safestop.local',
+      'full_name', 'QA Sem Org SafeStop'
+    )
+  );
+  v_user jsonb;
+  v_user_id uuid;
+  v_email text;
+  v_full_name text;
 begin
-  if not exists (select 1 from auth.users where id = v_user_id) then
-    insert into auth.users (
-      instance_id,
-      id,
-      aud,
-      role,
-      email,
-      encrypted_password,
-      email_confirmed_at,
-      recovery_sent_at,
-      last_sign_in_at,
-      raw_app_meta_data,
-      raw_user_meta_data,
-      created_at,
-      updated_at,
-      confirmation_token,
-      email_change,
-      email_change_token_new,
-      recovery_token
-    )
-    values (
-      '00000000-0000-0000-0000-000000000000',
-      v_user_id,
-      'authenticated',
-      'authenticated',
-      v_email,
-      extensions.crypt(v_password, extensions.gen_salt('bf')),
-      now(),
-      now(),
-      now(),
-      '{"provider":"email","providers":["email"]}'::jsonb,
-      jsonb_build_object('full_name', v_full_name),
-      now(),
-      now(),
-      '',
-      '',
-      '',
-      ''
-    );
+  for v_user in
+    select value
+    from jsonb_array_elements(v_users)
+  loop
+    v_user_id := (v_user ->> 'id')::uuid;
+    v_email := v_user ->> 'email';
+    v_full_name := v_user ->> 'full_name';
 
-    insert into auth.identities (
-      id,
-      user_id,
-      provider_id,
-      identity_data,
-      provider,
-      last_sign_in_at,
-      created_at,
-      updated_at
-    )
-    values (
-      v_user_id,
-      v_user_id,
-      v_user_id::text,
-      jsonb_build_object(
-        'sub', v_user_id::text,
-        'email', v_email,
-        'email_verified', true,
-        'phone_verified', false
-      ),
-      'email',
-      now(),
-      now(),
-      now()
-    );
-  end if;
+    if not exists (select 1 from auth.users where id = v_user_id) then
+      insert into auth.users (
+        instance_id,
+        id,
+        aud,
+        role,
+        email,
+        encrypted_password,
+        email_confirmed_at,
+        recovery_sent_at,
+        last_sign_in_at,
+        raw_app_meta_data,
+        raw_user_meta_data,
+        created_at,
+        updated_at,
+        confirmation_token,
+        email_change,
+        email_change_token_new,
+        recovery_token
+      )
+      values (
+        '00000000-0000-0000-0000-000000000000',
+        v_user_id,
+        'authenticated',
+        'authenticated',
+        v_email,
+        extensions.crypt(v_password, extensions.gen_salt('bf')),
+        now(),
+        now(),
+        now(),
+        '{"provider":"email","providers":["email"]}'::jsonb,
+        jsonb_build_object('full_name', v_full_name),
+        now(),
+        now(),
+        '',
+        '',
+        '',
+        ''
+      );
+
+      insert into auth.identities (
+        id,
+        user_id,
+        provider_id,
+        identity_data,
+        provider,
+        last_sign_in_at,
+        created_at,
+        updated_at
+      )
+      values (
+        v_user_id,
+        v_user_id,
+        v_user_id::text,
+        jsonb_build_object(
+          'sub', v_user_id::text,
+          'email', v_email,
+          'email_verified', true,
+          'phone_verified', false
+        ),
+        'email',
+        now(),
+        now(),
+        now()
+      );
+    end if;
+  end loop;
 end
 $$;
+
+-- ----------------------------------------------------------------------------
+-- Vínculos organization_members de QA local
+-- ----------------------------------------------------------------------------
+-- organization_members.id exposto como organizationMemberId nas queries de join.
+-- qa-noorg@safestop.local intencionalmente sem vínculos (cenário F7).
+
+insert into public.organization_members (
+  id,
+  organization_id,
+  profile_id,
+  membership_type,
+  is_active
+)
+values
+  (
+    'c0000000-0000-4000-8000-000000000001',
+    'b0000000-0000-4000-8000-000000000001',
+    'a0000000-0000-4000-8000-000000000001',
+    'INTERNAL',
+    true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000002',
+    'b0000000-0000-4000-8000-000000000002',
+    'a0000000-0000-4000-8000-000000000002',
+    'CONTRACTOR',
+    true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000003',
+    'b0000000-0000-4000-8000-000000000003',
+    'a0000000-0000-4000-8000-000000000002',
+    'INTERNAL',
+    true
+  )
+on conflict (organization_id, profile_id) do update set
+  membership_type = excluded.membership_type,
+  is_active = true;
