@@ -5,6 +5,7 @@ export type UserOrganization = {
   logoUrl: null;
   organizationType: string;
   organizationMemberId: string;
+  membershipType: string;
 };
 
 export const ORGANIZATION_QUERY_KEYS = {

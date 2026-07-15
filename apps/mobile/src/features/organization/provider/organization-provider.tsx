@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { useAuth } from "@/hooks/use-auth";
+import { clearAuthorizationCache } from "@/features/authorization/services/clear-authorization-cache";
 
 import { useOrganizations } from "../hooks/use-organizations";
 import {
@@ -138,6 +139,7 @@ function OrganizationProviderAuthenticated({
       await setStoredActiveOrganizationId(userId, organizationId);
       setActiveOrganizationId(organizationId);
       clearTenantCache(queryClient);
+      clearAuthorizationCache(queryClient);
     },
     [organizations, queryClient, userId],
   );

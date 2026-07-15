@@ -6,6 +6,7 @@ import type { UserOrganization } from "../types";
 const ORGANIZATION_MEMBERS_SELECT = `
   id,
   organization_id,
+  membership_type,
   organizations (
     id,
     name,

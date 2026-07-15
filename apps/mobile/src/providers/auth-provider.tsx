@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import type { Session, User } from "@supabase/supabase-js";
 import type { Href } from "expo-router";
 
+import { clearAuthorizationCache } from "@/features/authorization/services/clear-authorization-cache";
 import { PROFILE_QUERY_KEY } from "@/features/profile/types";
 import { clearActiveOrganizationStorage } from "@/features/organization/services/active-organization-storage";
 import { clearTenantCache } from "@/features/organization/services/clear-tenant-cache";
@@ -68,6 +69,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     clearTenantCache(queryClient);
+    clearAuthorizationCache(queryClient);
 
     setState((current) => ({
       ...current,
@@ -100,6 +102,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     clearTenantCache(queryClient);
+    clearAuthorizationCache(queryClient);
 
     setState((current) => ({
       ...current,

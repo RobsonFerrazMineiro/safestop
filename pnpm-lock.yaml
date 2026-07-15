@@ -246,6 +246,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@safestop/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@safestop/validation':
         specifier: workspace:*
         version: link:../../packages/validation
@@ -310,6 +313,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@safestop/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@safestop/validation':
         specifier: workspace:*
         version: link:../../packages/validation

@@ -1,6 +1,7 @@
 import { Stack, useSegments } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
 
+import { AuthorizationAppGate } from "@/features/authorization/components/authorization-app-gate";
 import { OrganizationEmpty } from "@/features/organization/components/organization-empty";
 import { OrganizationLoading } from "@/features/organization/components/organization-loading";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
@@ -47,7 +48,11 @@ export default function AppLayout() {
     );
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <AuthorizationAppGate>
+      <Stack screenOptions={{ headerShown: false }} />
+    </AuthorizationAppGate>
+  );
 }
 
 const styles = StyleSheet.create({

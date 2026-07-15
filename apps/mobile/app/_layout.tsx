@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { OrganizationProvider } from "@/features/organization/provider/organization-provider";
+import { AuthorizationProvider } from "@/features/authorization";
 import { AuthProvider, QueryProvider } from "@/providers";
 
 export default function RootLayout() {
@@ -11,8 +12,10 @@ export default function RootLayout() {
       <QueryProvider>
         <AuthProvider>
           <OrganizationProvider>
-            <StatusBar style="light" />
-            <Stack screenOptions={{ headerShown: false }} />
+            <AuthorizationProvider>
+              <StatusBar style="light" />
+              <Stack screenOptions={{ headerShown: false }} />
+            </AuthorizationProvider>
           </OrganizationProvider>
         </AuthProvider>
       </QueryProvider>
