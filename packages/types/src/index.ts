@@ -3,6 +3,8 @@
 // .cursor/rules/004-supabase.mdc. Re-exported here so apps consume the
 // database schema exclusively through this package.
 export type { Database, Json } from "./database.types";
+export { PERMISSION_CODES, isPermissionCode } from "./permission-codes";
+export type { PermissionCode } from "./permission-codes";
 
 // Domain-level types and DTOs (Occurrence, User, Organization, etc.) will be
 // added when the corresponding features are implemented, following the
