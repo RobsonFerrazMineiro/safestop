@@ -5,7 +5,7 @@
 --   - catálogo oficial de papéis (docs/database.md §6.1, docs/workflow.md §3);
 --   - catálogo oficial de permissões (docs/database.md §6.2);
 --   - usuários Auth de QA local com perfil via trigger on_auth_user_created;
---   - organizações e vínculos organization_members para cenários F3/F4/F5/F7.
+--   - organizações, unidades, áreas e vínculos organization_members para cenários QA;
 --
 -- Cenários QA:
 --   qa-field@safestop.local    — 1 org, HSE de Campo (F3/F8)
@@ -14,6 +14,7 @@
 --   qa-noperm@safestop.local   — 1 org, sem member_roles (hasNoPermissions F9)
 --   qa-emptyrole@safestop.local — 1 org, papel sem role_permissions (F2)
 --   qa-dualrole@safestop.local  — 1 org, HSE + Gestor no mesmo vínculo (F10)
+--   qa-gestor@safestop.local    — 1 org, Gestor (occurrence.read, sem occurrence.create)
 --   qa-platform@safestop.local  — PLATFORM_ADMIN + papel plataforma (bypass UI)
 --
 -- Idempotente: seguro executar múltiplas vezes (supabase db reset).
@@ -259,6 +260,69 @@ on conflict (id) do update set
   is_active = true;
 
 -- ----------------------------------------------------------------------------
+-- Unidades e áreas de QA local (necessário para O1 — create_occurrence)
+-- ----------------------------------------------------------------------------
+-- area_id obrigatório na criação (docs/decisions/OCCURRENCE-FOUNDATION-DECISIONS.md A2).
+
+insert into public.units (
+  id,
+  organization_id,
+  name,
+  code,
+  is_active
+)
+values
+  (
+    'e0000000-0000-4000-8000-000000000001',
+    'b0000000-0000-4000-8000-000000000001',
+    'QA Unidade Alpha',
+    'QA-ALPHA',
+    true
+  ),
+  (
+    'e0000000-0000-4000-8000-000000000002',
+    'b0000000-0000-4000-8000-000000000002',
+    'QA Unidade Beta',
+    'QA-BETA',
+    true
+  )
+on conflict (id) do update set
+  name = excluded.name,
+  code = excluded.code,
+  is_active = true;
+
+insert into public.areas (
+  id,
+  organization_id,
+  unit_id,
+  name,
+  code,
+  is_active
+)
+values
+  (
+    'f0000000-0000-4000-8000-000000000001',
+    'b0000000-0000-4000-8000-000000000001',
+    'e0000000-0000-4000-8000-000000000001',
+    'QA Área Alpha Operacional',
+    'QA-ALPHA-01',
+    true
+  ),
+  (
+    'f0000000-0000-4000-8000-000000000002',
+    'b0000000-0000-4000-8000-000000000002',
+    'e0000000-0000-4000-8000-000000000002',
+    'QA Área Beta Operacional',
+    'QA-BETA-01',
+    true
+  )
+on conflict (id) do update set
+  name = excluded.name,
+  code = excluded.code,
+  unit_id = excluded.unit_id,
+  is_active = true;
+
+-- ----------------------------------------------------------------------------
 -- Papel de QA sem permissões (cenário F2)
 -- ----------------------------------------------------------------------------
 -- Papel personalizado da organização Alpha, intencionalmente sem linhas em
@@ -330,6 +394,11 @@ declare
       'id', 'a0000000-0000-4000-8000-000000000007',
       'email', 'qa-dualrole@safestop.local',
       'full_name', 'QA Papéis Duplos SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000008',
+      'email', 'qa-gestor@safestop.local',
+      'full_name', 'QA Gestor SafeStop'
     )
   );
   v_user jsonb;
@@ -478,6 +547,13 @@ values
     'a0000000-0000-4000-8000-000000000007',
     'INTERNAL',
     true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000008',
+    'b0000000-0000-4000-8000-000000000001',
+    'a0000000-0000-4000-8000-000000000008',
+    'INTERNAL',
+    true
   )
 on conflict (organization_id, profile_id) do update set
   membership_type = excluded.membership_type,
@@ -495,6 +571,7 @@ on conflict (organization_id, profile_id) do update set
 --   qa-noperm    — sem member_roles (F9: hasNoPermissions)
 --   qa-emptyrole — QA Papel Vazio na Alpha (F2: papel sem role_permissions)
 --   qa-dualrole  — HSE + Gestor no mesmo vínculo Alpha (F10: união runtime)
+--   qa-gestor    — Gestor na Alpha (occurrence.read, sem occurrence.create)
 --   qa-noorg     — sem vínculos (F7)
 --   qa-platform  — Administrador da Plataforma na Delta (PLATFORM_ADMIN bypass)
 
@@ -537,6 +614,15 @@ select om.id, r.id
 from public.organization_members om
 cross join public.roles r
 where om.id = 'c0000000-0000-4000-8000-000000000003'
+  and r.name = 'Gestor'
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
+
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000008'
   and r.name = 'Gestor'
   and r.organization_id is null
 on conflict (organization_member_id, role_id) do nothing;

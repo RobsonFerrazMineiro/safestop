@@ -267,6 +267,406 @@ export type Database = {
           },
         ]
       }
+      occurrence_decisions: {
+        Row: {
+          created_at: string
+          decided_at: string
+          decided_by: string
+          decision_reason: string | null
+          decision_type: string
+          id: string
+          occurrence_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string
+          decided_by: string
+          decision_reason?: string | null
+          decision_type: string
+          id?: string
+          occurrence_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string
+          decided_by?: string
+          decision_reason?: string | null
+          decision_type?: string
+          id?: string
+          occurrence_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occurrence_decisions_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_decisions_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "occurrences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      occurrence_participants: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_primary: boolean
+          occurrence_id: string
+          organization_id: string
+          organization_member_id: string
+          participant_type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_primary?: boolean
+          occurrence_id: string
+          organization_id: string
+          organization_member_id: string
+          participant_type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_primary?: boolean
+          occurrence_id?: string
+          organization_id?: string
+          organization_member_id?: string
+          participant_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occurrence_participants_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_participants_member_org_consistency"
+            columns: ["organization_member_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "occurrence_participants_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_participants_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_participants_organization_member_id_fkey"
+            columns: ["organization_member_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      occurrence_public_code_counters: {
+        Row: {
+          created_at: string
+          last_value: number
+          organization_id: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          last_value?: number
+          organization_id: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          last_value?: number
+          organization_id?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occurrence_public_code_counters_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      occurrence_public_code_yearly_counters: {
+        Row: {
+          created_at: string
+          last_value: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          last_value?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          last_value?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      occurrence_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          from_status: string | null
+          id: string
+          metadata: Json
+          occurrence_id: string
+          reason: string | null
+          to_status: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          occurrence_id: string
+          reason?: string | null
+          to_status: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          occurrence_id?: string
+          reason?: string | null
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occurrence_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_status_history_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "occurrences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      occurrences: {
+        Row: {
+          area_id: string
+          assigned_evaluator_id: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          closed_at: string | null
+          condition_description: string
+          contract_id: string | null
+          contractor_organization_id: string | null
+          created_at: string
+          created_by: string
+          decision_type: string | null
+          evaluated_at: string | null
+          id: string
+          immediate_action_description: string | null
+          ims_reference_code: string | null
+          ims_reference_registered_at: string | null
+          ims_reference_registered_by: string | null
+          ims_reference_updated_at: string | null
+          ims_reference_updated_by: string | null
+          latitude: number | null
+          location_accuracy: number | null
+          location_description: string
+          longitude: number | null
+          management_department_id: string | null
+          occurred_at: string
+          organization_id: string
+          public_code: string
+          released_at: string | null
+          severity: string
+          status: string
+          stopped_at: string | null
+          task_description: string
+          title: string
+          unit_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          area_id: string
+          assigned_evaluator_id?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          closed_at?: string | null
+          condition_description: string
+          contract_id?: string | null
+          contractor_organization_id?: string | null
+          created_at?: string
+          created_by: string
+          decision_type?: string | null
+          evaluated_at?: string | null
+          id?: string
+          immediate_action_description?: string | null
+          ims_reference_code?: string | null
+          ims_reference_registered_at?: string | null
+          ims_reference_registered_by?: string | null
+          ims_reference_updated_at?: string | null
+          ims_reference_updated_by?: string | null
+          latitude?: number | null
+          location_accuracy?: number | null
+          location_description: string
+          longitude?: number | null
+          management_department_id?: string | null
+          occurred_at?: string
+          organization_id: string
+          public_code: string
+          released_at?: string | null
+          severity: string
+          status?: string
+          stopped_at?: string | null
+          task_description: string
+          title: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          area_id?: string
+          assigned_evaluator_id?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          closed_at?: string | null
+          condition_description?: string
+          contract_id?: string | null
+          contractor_organization_id?: string | null
+          created_at?: string
+          created_by?: string
+          decision_type?: string | null
+          evaluated_at?: string | null
+          id?: string
+          immediate_action_description?: string | null
+          ims_reference_code?: string | null
+          ims_reference_registered_at?: string | null
+          ims_reference_registered_by?: string | null
+          ims_reference_updated_at?: string | null
+          ims_reference_updated_by?: string | null
+          latitude?: number | null
+          location_accuracy?: number | null
+          location_description?: string
+          longitude?: number | null
+          management_department_id?: string | null
+          occurred_at?: string
+          organization_id?: string
+          public_code?: string
+          released_at?: string | null
+          severity?: string
+          status?: string
+          stopped_at?: string | null
+          task_description?: string
+          title?: string
+          unit_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occurrences_area_org_consistency"
+            columns: ["area_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "occurrences_assigned_evaluator_id_fkey"
+            columns: ["assigned_evaluator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrences_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrences_contractor_organization_id_fkey"
+            columns: ["contractor_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrences_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrences_ims_reference_registered_by_fkey"
+            columns: ["ims_reference_registered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrences_ims_reference_updated_by_fkey"
+            columns: ["ims_reference_updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrences_management_department_org_consistency"
+            columns: ["management_department_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "management_departments"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "occurrences_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrences_unit_org_consistency"
+            columns: ["unit_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id", "organization_id"]
+          },
+        ]
+      }
       organization_contacts: {
         Row: {
           area_id: string | null
@@ -665,6 +1065,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_occurrence: {
+        Args: { target_occurrence_id: string }
+        Returns: boolean
+      }
+      create_occurrence: { Args: { payload: Json }; Returns: Json }
       current_organization_ids: { Args: never; Returns: string[] }
       current_profile_id: { Args: never; Returns: string }
       has_permission: {
