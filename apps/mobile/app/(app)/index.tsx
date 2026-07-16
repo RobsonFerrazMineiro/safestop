@@ -54,6 +54,17 @@ export default function AuthenticatedHomeScreen() {
         ) : null}
 
         <Pressable
+          accessibilityLabel="Ocorrências"
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.occurrencesButton, pressed && styles.buttonPressed]}
+          onPress={() => {
+            router.push(authRoutes.occurrences);
+          }}
+        >
+          <Text style={styles.occurrencesButtonText}>Ocorrências</Text>
+        </Pressable>
+
+        <Pressable
           accessibilityLabel="Meu perfil"
           accessibilityRole="button"
           style={({ pressed }) => [styles.profileButton, pressed && styles.buttonPressed]}
@@ -161,9 +172,24 @@ const styles = StyleSheet.create({
     color: "#9CA3AF",
     fontSize: 13,
   },
-  profileButton: {
+  occurrencesButton: {
     alignItems: "center",
     backgroundColor: "#F97316",
+    borderRadius: 8,
+    justifyContent: "center",
+    marginTop: 8,
+    minHeight: 48,
+    minWidth: 200,
+    paddingHorizontal: 24,
+  },
+  occurrencesButtonText: {
+    color: "#0F1115",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  profileButton: {
+    alignItems: "center",
+    backgroundColor: "#374151",
     borderRadius: 8,
     justifyContent: "center",
     marginTop: 8,
@@ -172,9 +198,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   profileButtonText: {
-    color: "#0F1115",
+    color: "#F9FAFB",
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "600",
   },
   button: {
     alignItems: "center",

@@ -1,4 +1,4 @@
-import * as SecureStore from "expo-secure-store";
+import { deleteSecureItem, getSecureItem, setSecureItem } from "@/lib/secure-storage";
 
 const STORAGE_PREFIX = "safestop:activeOrganization:";
 
@@ -7,16 +7,16 @@ function getStorageKey(userId: string): string {
 }
 
 export async function getStoredActiveOrganizationId(userId: string): Promise<string | null> {
-  return SecureStore.getItemAsync(getStorageKey(userId));
+  return getSecureItem(getStorageKey(userId));
 }
 
 export async function setStoredActiveOrganizationId(
   userId: string,
   organizationId: string,
 ): Promise<void> {
-  await SecureStore.setItemAsync(getStorageKey(userId), organizationId);
+  await setSecureItem(getStorageKey(userId), organizationId);
 }
 
 export async function clearActiveOrganizationStorage(userId: string): Promise<void> {
-  await SecureStore.deleteItemAsync(getStorageKey(userId));
+  await deleteSecureItem(getStorageKey(userId));
 }
