@@ -6,7 +6,25 @@ export type { Database, Json } from "./database.types";
 export { PERMISSION_CODES, isPermissionCode } from "./permission-codes";
 export type { PermissionCode } from "./permission-codes";
 
-// Domain-level types and DTOs (Occurrence, User, Organization, etc.) will be
-// added when the corresponding features are implemented, following the
-// SafeStop roadmap. They must be defined separately from the generated
-// database types above, never by editing database.types.ts.
+export {
+  OCCURRENCE_DECISION_TYPES,
+  OCCURRENCE_SEVERITIES,
+  OCCURRENCE_STATUSES,
+  OCCURRENCE_SYNC_STATES,
+  isOccurrenceDecisionType,
+  isOccurrenceSeverity,
+  isOccurrenceStatus,
+} from "./occurrence-status";
+export type {
+  OccurrenceDecisionType,
+  OccurrenceSeverity,
+  OccurrenceStatus,
+  OccurrenceSyncState,
+} from "./occurrence-status";
+
+export type {
+  OccurrenceDetails,
+  OccurrenceListFilters,
+  OccurrenceStatusHistoryEntry,
+  OccurrenceSummary,
+} from "./occurrence";
