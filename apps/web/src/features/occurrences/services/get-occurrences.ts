@@ -12,7 +12,8 @@ const LIST_SELECT = `
   severity,
   created_at,
   areas ( name ),
-  profiles!occurrences_created_by_fkey ( full_name )
+  profiles!occurrences_created_by_fkey ( full_name ),
+  contractor_organizations:organizations!occurrences_contractor_organization_id_fkey ( name )
 `;
 
 const DETAIL_SELECT = `
@@ -43,7 +44,8 @@ const DETAIL_SELECT = `
   closed_at,
   cancelled_at,
   areas ( name ),
-  profiles!occurrences_created_by_fkey ( full_name )
+  profiles!occurrences_created_by_fkey ( full_name ),
+  contractor_organizations:organizations!occurrences_contractor_organization_id_fkey ( name )
 `;
 
 type ListRow = Parameters<typeof mapOccurrenceSummaryRows>[0][number];
@@ -67,8 +69,8 @@ export async function getOccurrences(organizationId: string, filters: Occurrence
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: false });
 
-  if (filters.status) {
-    query = query.eq("status", filters.status);
+  if (filters.status && filters.status.length > 0) {
+    query = query.in("status", filters.status);
   }
 
   if (filters.severity) {

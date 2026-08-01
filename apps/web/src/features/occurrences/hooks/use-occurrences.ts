@@ -8,11 +8,14 @@ import { useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
 import { createOccurrence } from "../services/create-occurrence";
+import { getContractorOrganizations } from "../services/get-contractor-organizations";
 import { getOccurrence, getOccurrences } from "../services/get-occurrences";
+import { getOccurrenceStatusHistory } from "../services/get-occurrence-status-history";
 import { getOrganizationAreas } from "../services/get-organization-areas";
 import {
   OCCURRENCE_DETAIL_STALE_TIME_MS,
   OCCURRENCE_LIST_STALE_TIME_MS,
+  OCCURRENCE_STATUS_HISTORY_STALE_TIME_MS,
   occurrenceQueryKeys,
 } from "../types";
 
@@ -125,5 +128,58 @@ export function useCreateOccurrence() {
     isCreating: mutation.isPending,
     error: mutation.error,
     reset: mutation.reset,
+  };
+}
+
+export function useContractorOrganizations() {
+  const { can, isReady: isAuthzReady } = useAuthorization();
+  const { activeOrganization, isReady: isOrgReady } = useActiveOrganization();
+
+  const organizationId = activeOrganization?.id;
+  const canCreate = can("occurrence.create");
+  const enabled = isOrgReady && isAuthzReady && organizationId !== undefined && canCreate;
+
+  const query = useQuery({
+    queryKey: occurrenceQueryKeys(organizationId ?? "").contractors(),
+    queryFn: () => getContractorOrganizations(organizationId!),
+    enabled,
+    staleTime: OCCURRENCE_LIST_STALE_TIME_MS,
+  });
+
+  return {
+    contractors: query.data ?? [],
+    isLoading: enabled && query.isLoading,
+    isError: query.isError,
+    error: query.error,
+  };
+}
+
+export function useOccurrenceStatusHistory(occurrenceId: string | undefined) {
+  const { can, isReady: isAuthzReady } = useAuthorization();
+  const { activeOrganization, isReady: isOrgReady } = useActiveOrganization();
+
+  const organizationId = activeOrganization?.id;
+  const canRead = can("occurrence.read");
+  const enabled =
+    isOrgReady &&
+    isAuthzReady &&
+    organizationId !== undefined &&
+    occurrenceId !== undefined &&
+    occurrenceId.length > 0 &&
+    canRead;
+
+  const query = useQuery({
+    queryKey: occurrenceQueryKeys(organizationId ?? "").statusHistory(occurrenceId ?? ""),
+    queryFn: () => getOccurrenceStatusHistory(organizationId!, occurrenceId!),
+    enabled,
+    staleTime: OCCURRENCE_STATUS_HISTORY_STALE_TIME_MS,
+  });
+
+  return {
+    history: query.data ?? [],
+    isLoading: enabled && query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    isReady: enabled && query.isSuccess,
   };
 }

@@ -2,15 +2,19 @@ import {
   isOccurrenceDecisionType,
   isOccurrenceSeverity,
   isOccurrenceStatus,
-  type OccurrenceDetails,
-  type OccurrenceSummary,
 } from "@safestop/types";
+
+import type { OccurrenceDetailsEnriched, OccurrenceSummaryEnriched } from "../types";
 
 type ProfileJoin = {
   full_name: string | null;
 };
 
 type AreaJoin = {
+  name: string;
+};
+
+type OrganizationJoin = {
   name: string;
 };
 
@@ -23,6 +27,7 @@ type OccurrenceListRow = {
   created_at: string;
   areas: AreaJoin | AreaJoin[] | null;
   profiles: ProfileJoin | ProfileJoin[] | null;
+  contractor_organizations: OrganizationJoin | OrganizationJoin[] | null;
 };
 
 type OccurrenceDetailRow = OccurrenceListRow & {
@@ -56,7 +61,12 @@ function normalizeJoin<T>(value: T | T[] | null): T | null {
   return value;
 }
 
-function mapSummaryFields(row: OccurrenceListRow): OccurrenceSummary | null {
+function mapContractorOrganizationName(row: OccurrenceListRow): string | null {
+  const contractor = normalizeJoin(row.contractor_organizations);
+  return contractor?.name ?? null;
+}
+
+function mapSummaryFields(row: OccurrenceListRow): OccurrenceSummaryEnriched | null {
   if (!isOccurrenceStatus(row.status) || !isOccurrenceSeverity(row.severity)) {
     return null;
   }
@@ -73,20 +83,21 @@ function mapSummaryFields(row: OccurrenceListRow): OccurrenceSummary | null {
     areaName: area?.name ?? null,
     createdAt: row.created_at,
     createdByName: profile?.full_name ?? null,
+    contractorOrganizationName: mapContractorOrganizationName(row),
   };
 }
 
-export function mapOccurrenceSummaryRow(row: OccurrenceListRow): OccurrenceSummary | null {
+export function mapOccurrenceSummaryRow(row: OccurrenceListRow): OccurrenceSummaryEnriched | null {
   return mapSummaryFields(row);
 }
 
-export function mapOccurrenceSummaryRows(rows: OccurrenceListRow[]): OccurrenceSummary[] {
+export function mapOccurrenceSummaryRows(rows: OccurrenceListRow[]): OccurrenceSummaryEnriched[] {
   return rows
     .map(mapOccurrenceSummaryRow)
-    .filter((occurrence): occurrence is OccurrenceSummary => occurrence !== null);
+    .filter((occurrence): occurrence is OccurrenceSummaryEnriched => occurrence !== null);
 }
 
-export function mapOccurrenceDetailRow(row: OccurrenceDetailRow): OccurrenceDetails | null {
+export function mapOccurrenceDetailRow(row: OccurrenceDetailRow): OccurrenceDetailsEnriched | null {
   const summary = mapSummaryFields(row);
 
   if (!summary) {
@@ -134,3 +145,5 @@ export function mapCreatedOccurrence(data: CreatedOccurrenceRpcData) {
     status: data.status,
   };
 }
+
+export type { OccurrenceListRow, OccurrenceDetailRow };
