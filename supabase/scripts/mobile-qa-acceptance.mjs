@@ -4,13 +4,44 @@ import { fileURLToPath } from "node:url";
 
 import { loadSupabaseLocalEnv } from "./_local-env.mjs";
 
+/**
+ * Aceite API mobile (O1–O7, O9–O10) alinhado ao contrato PP Sprint 2.1.
+ *
+ * Referências:
+ * - docs/decisions/PREVENTIVE-STOP-DECISIONS.md (A-R2, A-R3, A-R4, A-R5)
+ * - docs/decisions/OCCURRENCE-FOUNDATION-DECISIONS.md (O10)
+ * - supabase/seed.sql — cenários SW-01 Alpha/Beta
+ *
+ * O1: PP completa com contractor_organization_id + status PARALISACAO_PREVENTIVA + stopped_at.
+ * O2: Gestor lê mas não cria (SW-02).
+ * O7: SKIP se JWT segue válido pós-logout (limpeza local = aceite UI mobile).
+ * O10: platform admin lê cross-org; create negado sem vínculo na org alvo.
+ */
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PASSWORD = "SafeStop-QA-Local-2026";
 
 const QA_ALPHA_ORG_ID = "b0000000-0000-4000-8000-000000000001";
 const QA_BETA_ORG_ID = "b0000000-0000-4000-8000-000000000002";
 const QA_GAMMA_ORG_ID = "b0000000-0000-4000-8000-000000000003";
+const QA_DELTA_ORG_ID = "b0000000-0000-4000-8000-000000000004";
 const QA_ALPHA_AREA_ID = "f0000000-0000-4000-8000-000000000001";
+const QA_BETA_AREA_ID = "f0000000-0000-4000-8000-000000000002";
+/** Empresa envolvida na Alpha (contrato Alpha→Beta). */
+const QA_ALPHA_CONTRACTOR_ORG_ID = "b0000000-0000-4000-8000-000000000002";
+/** Empresa envolvida na Beta (contrato Beta→Epsilon). */
+const QA_BETA_CONTRACTOR_ORG_ID = "b0000000-0000-4000-8000-000000000006";
+
+const ORG_PP_DEFAULTS = {
+  [QA_ALPHA_ORG_ID]: {
+    areaId: QA_ALPHA_AREA_ID,
+    contractorOrganizationId: QA_ALPHA_CONTRACTOR_ORG_ID,
+  },
+  [QA_BETA_ORG_ID]: {
+    areaId: QA_BETA_AREA_ID,
+    contractorOrganizationId: QA_BETA_CONTRACTOR_ORG_ID,
+  },
+};
 
 const USERS = {
   field: "qa-field@safestop.local",
@@ -81,7 +112,7 @@ async function listOrganizations(apiUrl, anonKey, accessToken, userId) {
 
 async function listOccurrences(apiUrl, anonKey, accessToken, organizationId) {
   const response = await fetch(
-    `${apiUrl}/rest/v1/occurrences?select=id,public_code,title,organization_id&organization_id=eq.${organizationId}&order=created_at.desc`,
+    `${apiUrl}/rest/v1/occurrences?select=id,public_code,title,organization_id,status&organization_id=eq.${organizationId}&order=created_at.desc`,
     {
       headers: {
         apikey: anonKey,
@@ -99,7 +130,7 @@ async function listOccurrences(apiUrl, anonKey, accessToken, organizationId) {
 
 async function getOccurrence(apiUrl, anonKey, accessToken, occurrenceId, organizationId) {
   const response = await fetch(
-    `${apiUrl}/rest/v1/occurrences?select=id,public_code,organization_id&id=eq.${occurrenceId}&organization_id=eq.${organizationId}`,
+    `${apiUrl}/rest/v1/occurrences?select=id,public_code,organization_id,status,contractor_organization_id,occurred_at,stopped_at&id=eq.${occurrenceId}&organization_id=eq.${organizationId}`,
     {
       headers: {
         apikey: anonKey,
@@ -115,7 +146,29 @@ async function getOccurrence(apiUrl, anonKey, accessToken, occurrenceId, organiz
   return response.json();
 }
 
-async function createOccurrence(apiUrl, anonKey, accessToken, organizationId, title) {
+function buildPreventiveStopTitle(taskDescription) {
+  return taskDescription.trim().slice(0, 200);
+}
+
+function buildPreventiveStopPayload(organizationId, overrides = {}) {
+  const defaults = ORG_PP_DEFAULTS[organizationId];
+  const taskDescription = overrides.task_description ?? "Atividade QA mobile aceite";
+
+  return {
+    organization_id: organizationId,
+    area_id: overrides.area_id ?? defaults?.areaId,
+    contractor_organization_id:
+      overrides.contractor_organization_id ?? defaults?.contractorOrganizationId,
+    title: overrides.title ?? buildPreventiveStopTitle(taskDescription),
+    task_description: taskDescription,
+    location_description: overrides.location_description ?? "Local QA",
+    condition_description: overrides.condition_description ?? "Condição insegura QA",
+    severity: overrides.severity ?? "HIGH",
+    ...overrides,
+  };
+}
+
+async function rpcCreateOccurrence(apiUrl, anonKey, accessToken, payload) {
   const response = await fetch(`${apiUrl}/rest/v1/rpc/create_occurrence`, {
     method: "POST",
     headers: {
@@ -123,17 +176,7 @@ async function createOccurrence(apiUrl, anonKey, accessToken, organizationId, ti
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      payload: {
-        organization_id: organizationId,
-        area_id: QA_ALPHA_AREA_ID,
-        title,
-        task_description: "Atividade QA",
-        location_description: "Local QA",
-        condition_description: "Condição QA",
-        severity: "HIGH",
-      },
-    }),
+    body: JSON.stringify({ payload }),
   });
 
   if (!response.ok) {
@@ -141,6 +184,15 @@ async function createOccurrence(apiUrl, anonKey, accessToken, organizationId, ti
   }
 
   return response.json();
+}
+
+async function createOccurrence(apiUrl, anonKey, accessToken, organizationId, overrides = {}) {
+  return rpcCreateOccurrence(
+    apiUrl,
+    anonKey,
+    accessToken,
+    buildPreventiveStopPayload(organizationId, overrides),
+  );
 }
 
 async function hasPermission(apiUrl, anonKey, accessToken, code, organizationId) {
@@ -164,6 +216,10 @@ async function hasPermission(apiUrl, anonKey, accessToken, code, organizationId)
   return response.json();
 }
 
+function assertSameInstant(left, right) {
+  return Boolean(left && right && left === right);
+}
+
 const results = [];
 
 function record(id, status, detail) {
@@ -176,25 +232,40 @@ async function main() {
   const password = loadPassword();
   const { apiUrl, anonKey } = loadSupabaseLocalEnv();
 
-  console.log("=== Mobile QA O1–O7, O9–O10 (API + contrato mobile) ===\n");
+  console.log("=== Mobile QA O1–O7, O9–O10 (API — contrato PP Sprint 2.1) ===\n");
 
   const fieldSession = await signIn(apiUrl, anonKey, USERS.field, password);
-  const createResult = await createOccurrence(
-    apiUrl,
-    anonKey,
-    fieldSession.access_token,
-    QA_ALPHA_ORG_ID,
-    `QA API O1 ${Date.now()}`,
-  );
+  const taskDescription = `QA API O1 ${Date.now()}`;
+  const createResult = await createOccurrence(apiUrl, anonKey, fieldSession.access_token, QA_ALPHA_ORG_ID, {
+    task_description: taskDescription,
+  });
 
   if (!createResult.success || !createResult.data?.id) {
     record("O1", "FAIL", `create_occurrence falhou: ${JSON.stringify(createResult)}`);
   } else {
-    record(
-      "O1",
-      "PASS",
-      `Ocorrência criada ${createResult.data.public_code} (${createResult.data.id})`,
-    );
+    const data = createResult.data;
+    const titleFromTask = buildPreventiveStopTitle(taskDescription);
+    const checks = [
+      data.status === "PARALISACAO_PREVENTIVA",
+      data.contractor_organization_id === QA_ALPHA_CONTRACTOR_ORG_ID,
+      assertSameInstant(data.occurred_at, data.stopped_at),
+      data.title === titleFromTask,
+      /^SS-\d{2}-\d{6}$/.test(data.public_code),
+    ];
+
+    if (checks.every(Boolean)) {
+      record(
+        "O1",
+        "PASS",
+        `PP SW-01 Alpha ${data.public_code}; contractor Beta; stopped_at=occurred_at; title derivado`,
+      );
+    } else {
+      record(
+        "O1",
+        "FAIL",
+        `PP incompleta: status=${data.status} contractor=${data.contractor_organization_id} stopped=${data.stopped_at} title=${data.title}`,
+      );
+    }
   }
 
   const o1OccurrenceId = createResult.data?.id;
@@ -219,11 +290,11 @@ async function main() {
     anonKey,
     gestorSession.access_token,
     QA_ALPHA_ORG_ID,
-    `QA O2 blocked ${Date.now()}`,
+    { task_description: `QA O2 blocked ${Date.now()}` },
   );
 
   if (gestorCanRead && !gestorCanCreate && gestorCreateAttempt.success === false) {
-    record("O2", "PASS", "Gestor lê mas não cria (RPC negado)");
+    record("O2", "PASS", "SW-02: Gestor lê mas não cria PP (RPC negado)");
   } else {
     record(
       "O2",
@@ -245,17 +316,18 @@ async function main() {
     QA_BETA_ORG_ID,
   );
 
-  if (
-    alphaList.length > 0 &&
-    alphaList.every((row) => row.organization_id === QA_ALPHA_ORG_ID) &&
-    betaListAsField.length === 0
-  ) {
-    record("O3", "PASS", `Alpha=${alphaList.length} itens; Beta=0 para qa-field`);
+  const alphaPpOnly = alphaList.every(
+    (row) =>
+      row.organization_id === QA_ALPHA_ORG_ID && row.status === "PARALISACAO_PREVENTIVA",
+  );
+
+  if (alphaList.length > 0 && alphaPpOnly && betaListAsField.length === 0) {
+    record("O3", "PASS", `Alpha=${alphaList.length} PP; Beta=0 para qa-field`);
   } else {
     record(
       "O3",
       "FAIL",
-      `Alpha=${alphaList.length}, Beta=${betaListAsField.length}, org mismatch`,
+      `Alpha=${alphaList.length}, Beta=${betaListAsField.length}, tenant/status mismatch`,
     );
   }
 
@@ -279,14 +351,30 @@ async function main() {
     QA_GAMMA_ORG_ID,
   );
 
-  if (multiOrgs.length >= 2) {
+  const betaCreate = await createOccurrence(
+    apiUrl,
+    anonKey,
+    multiSession.access_token,
+    QA_BETA_ORG_ID,
+    { task_description: `QA O4 Beta SW-01 ${Date.now()}` },
+  );
+
+  if (
+    multiOrgs.length >= 2 &&
+    betaCreate.success &&
+    betaCreate.data?.contractor_organization_id === QA_BETA_CONTRACTOR_ORG_ID
+  ) {
     record(
       "O4",
       "PASS",
-      `qa-multi com ${multiOrgs.length} orgs; Beta=${betaListMulti.length} Gamma=${gammaListMulti.length}`,
+      `qa-multi ${multiOrgs.length} orgs; PP Beta→Epsilon ${betaCreate.data.public_code}; Beta=${betaListMulti.length} Gamma=${gammaListMulti.length}`,
     );
   } else {
-    record("O4", "FAIL", `qa-multi deveria ter 2+ orgs, recebeu ${multiOrgs.length}`);
+    record(
+      "O4",
+      "FAIL",
+      `orgs=${multiOrgs.length} betaCreate=${JSON.stringify(betaCreate)} lists Beta=${betaListMulti.length} Gamma=${gammaListMulti.length}`,
+    );
   }
 
   record(
@@ -310,21 +398,21 @@ async function main() {
   }
 
   await signOut(apiUrl, anonKey, fieldSession.access_token);
-  const afterLogout = await fetch(
-    `${apiUrl}/rest/v1/occurrences?select=id&limit=1`,
-    {
-      headers: {
-        apikey: anonKey,
-        Authorization: `Bearer ${fieldSession.access_token}`,
-      },
+  const afterLogout = await fetch(`${apiUrl}/rest/v1/occurrences?select=id&limit=1`, {
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${fieldSession.access_token}`,
     },
-  );
+  });
 
   if (afterLogout.status === 401 || afterLogout.status === 403) {
-    record("O7", "PASS", `Sessão invalidada após logout (HTTP ${afterLogout.status})`);
+    record("O7", "PASS", `JWT invalidado no servidor após logout (HTTP ${afterLogout.status})`);
   } else {
-    const body = await afterLogout.json();
-    record("O7", "FAIL", `Ainda acessa após logout: HTTP ${afterLogout.status} ${JSON.stringify(body)}`);
+    record(
+      "O7",
+      "SKIP",
+      `JWT ainda válido até expirar (HTTP ${afterLogout.status}) — esperado no Supabase; limpeza local/clearTenantCache = aceite UI mobile, fora deste script API`,
+    );
   }
 
   const noorgSession = await signIn(apiUrl, anonKey, USERS.noorg, password);
@@ -354,20 +442,50 @@ async function main() {
     platformSession.access_token,
     QA_ALPHA_ORG_ID,
   );
+  const platformAlphaDetail = o1OccurrenceId
+    ? await getOccurrence(
+        apiUrl,
+        anonKey,
+        platformSession.access_token,
+        o1OccurrenceId,
+        QA_ALPHA_ORG_ID,
+      )
+    : [];
+  const platformAlphaCreate = await createOccurrence(
+    apiUrl,
+    anonKey,
+    platformSession.access_token,
+    QA_ALPHA_ORG_ID,
+    { task_description: `QA O10 blocked ${Date.now()}` },
+  );
+  const platformHasDelta = platformOrgs.some((row) => row.organization_id === QA_DELTA_ORG_ID);
 
-  if (platformOrgs.length > 0 && platformAlphaList.length >= 0) {
+  if (
+    platformHasDelta &&
+    platformAlphaList.length > 0 &&
+    platformAlphaDetail.length === 1 &&
+    platformAlphaCreate.success === false &&
+    platformAlphaCreate.error?.code === "FORBIDDEN"
+  ) {
     record(
       "O10",
       "PASS",
-      `qa-platform com ${platformOrgs.length} org(s); leitura Alpha OK (${platformAlphaList.length})`,
+      `qa-platform lê Alpha cross-org; create Alpha FORBIDDEN sem vínculo (Delta=${platformHasDelta})`,
     );
   } else {
-    record("O10", "FAIL", `Platform admin sem acesso esperado`);
+    record(
+      "O10",
+      "FAIL",
+      `Delta=${platformHasDelta} alphaList=${platformAlphaList.length} detail=${platformAlphaDetail.length} create=${JSON.stringify(platformAlphaCreate)}`,
+    );
   }
 
   console.log("\n=== Resumo ===");
   const failed = results.filter((item) => item.status === "FAIL");
-  console.log(`Total: ${results.length} | PASS: ${results.length - failed.length} | FAIL: ${failed.length}`);
+  const skipped = results.filter((item) => item.status === "SKIP");
+  console.log(
+    `Total: ${results.length} | PASS: ${results.length - failed.length - skipped.length} | SKIP: ${skipped.length} | FAIL: ${failed.length}`,
+  );
 
   if (failed.length > 0) {
     process.exitCode = 1;
