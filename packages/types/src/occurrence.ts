@@ -14,6 +14,7 @@ export type OccurrenceSummary = {
   status: OccurrenceStatus;
   severity: OccurrenceSeverity;
   areaName: string | null;
+  contractorOrganizationName: string | null;
   createdAt: string;
   createdByName: string | null;
 };
@@ -60,6 +61,6 @@ export type OccurrenceStatusHistoryEntry = {
  * Filtros opcionais da listagem tenant-scoped.
  */
 export type OccurrenceListFilters = {
-  status?: OccurrenceStatus;
+  status?: OccurrenceStatus[];
   severity?: OccurrenceSeverity;
 };
