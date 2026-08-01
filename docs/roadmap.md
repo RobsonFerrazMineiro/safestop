@@ -155,6 +155,13 @@ Critério
 
 Ocorrência registrada.
 
+### Nota — Sub-sprint 2.1 (Stop Work / PP operacional)
+
+A Sprint 2 é entregue de forma incremental. A **sub-sprint 2.1** cobre o fluxo operacional mínimo de Paralisação Preventiva (formulário < 60s, listagem PP, detalhe read-only, cascata contratada→contrato, geolocalização opt-in, rascunho local mobile), **sem** fotos/evidências nem notificações automáticas (estas permanecem nas entregas posteriores da Sprint 2 e na Sprint 3).
+
+Decisões oficiais: `docs/decisions/PREVENTIVE-STOP-DECISIONS.md` (A-R1…A-R10).  
+Especificação UI: `docs/decisions/PREVENTIVE-STOP-UI-SPEC.md`.
+
 ---
 
 # Sprint 3

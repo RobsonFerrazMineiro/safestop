@@ -749,6 +749,29 @@ pnpm format
 
 ---
 
+## Supabase local e smokes operacionais
+
+Com o Supabase local ativo e o seed aplicado:
+
+```bash
+pnpm supabase:start
+pnpm supabase:db:reset
+```
+
+Configure as credenciais de QA a partir de `supabase/qa-credentials.local.example` e execute, nesta ordem:
+
+```bash
+pnpm supabase:smoke-auth
+pnpm supabase:smoke-create-occurrence
+pnpm supabase:mobile-qa-acceptance
+```
+
+`pnpm supabase:smoke-create-occurrence` valida o RPC `create_occurrence` (Paralisação Preventiva / Sprint 2.1): status inicial `PARALISACAO_PREVENTIVA`, RLS de leitura, `contractor_organization_id` obrigatório, `FORBIDDEN` sem `occurrence.create` e sequência global de `public_code`.
+
+Detalhes do fluxo de credenciais: `supabase/qa-credentials.local.example`.
+
+---
+
 # Estrutura das Aplicações
 
 ## apps/mobile
