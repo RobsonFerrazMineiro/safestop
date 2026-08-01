@@ -29,8 +29,10 @@
     "supabase:provision-qa-user": "node supabase/scripts/provision-qa-user.mjs",
     "supabase:smoke-auth": "node supabase/scripts/smoke-auth.mjs",
     "supabase:smoke-create-occurrence": "node supabase/scripts/smoke-create-occurrence.mjs",
+    "supabase:smoke-upload-evidence": "node supabase/scripts/smoke-upload-evidence.mjs",
     "supabase:mobile-qa-acceptance": "node supabase/scripts/mobile-qa-acceptance.mjs",
-    "supabase:validate-ar2-seed": "node supabase/scripts/validate-ar2-seed.mjs"
+    "supabase:validate-ar2-seed": "node supabase/scripts/validate-ar2-seed.mjs",
+    "supabase:validate-occurrence-attachments": "node supabase/scripts/validate-occurrence-attachments.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.1",
