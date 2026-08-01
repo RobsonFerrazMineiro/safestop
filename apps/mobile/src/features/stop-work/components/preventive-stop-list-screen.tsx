@@ -4,19 +4,20 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Can } from "@/features/authorization/components/can";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
+import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
+import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
 import { authRoutes, stopWorkNewRoute } from "@/lib/auth/routes";
 
-import { OccurrenceCard } from "./occurrence-card";
-import { OccurrenceEmpty } from "./occurrence-empty";
-import { OccurrenceError } from "./occurrence-error";
-import { OccurrenceLoading } from "./occurrence-loading";
-import { useOccurrences } from "../hooks/use-occurrences";
+import { PreventiveStopCard } from "./preventive-stop-card";
+import { PreventiveStopEmpty } from "./preventive-stop-empty";
+import { usePreventiveStops } from "../hooks/use-preventive-stops";
 
-export function OccurrencesListScreen() {
+export function PreventiveStopListScreen() {
   const router = useRouter();
   useRequirePermission("occurrence.read");
 
-  const { occurrences, isLoading, isFetching, isError, refetch, canRead } = useOccurrences();
+  const { preventiveStops, isLoading, isFetching, isError, refetch, canRead } =
+    usePreventiveStops();
 
   if (!canRead) {
     return null;
@@ -33,7 +34,7 @@ export function OccurrencesListScreen() {
   if (isError) {
     return (
       <SafeAreaView style={styles.container}>
-        <OccurrenceError />
+        <OccurrenceError message="Não foi possível carregar as ocorrências." />
       </SafeAreaView>
     );
   }
@@ -51,15 +52,21 @@ export function OccurrencesListScreen() {
           <Text style={styles.backLink}>Voltar</Text>
         </Pressable>
 
-        <Text style={styles.title}>Ocorrências</Text>
-        <Text style={styles.subtitle}>Organização ativa</Text>
+        <Text style={styles.title}>Paralisação Preventiva</Text>
       </View>
 
       <FlatList
         contentContainerStyle={styles.listContent}
-        data={occurrences}
+        data={preventiveStops}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<OccurrenceEmpty />}
+        ListEmptyComponent={
+          <PreventiveStopEmpty
+            actionLabel="Registrar Paralisação"
+            onAction={() => {
+              router.push(stopWorkNewRoute);
+            }}
+          />
+        }
         refreshControl={
           <RefreshControl
             colors={["#F97316"]}
@@ -70,13 +77,13 @@ export function OccurrencesListScreen() {
             }}
           />
         }
-        renderItem={({ item }) => <OccurrenceCard occurrence={item} />}
+        renderItem={({ item }) => <PreventiveStopCard preventiveStop={item} />}
       />
 
       <Can permission="occurrence.create">
         <View style={styles.footer}>
           <Pressable
-            accessibilityLabel="Nova ocorrência"
+            accessibilityLabel="Nova Paralisação"
             accessibilityRole="button"
             style={({ pressed }) => [styles.createButton, pressed && styles.buttonPressed]}
             onPress={() => {
@@ -123,18 +130,14 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: 4,
+    paddingBottom: 12,
     paddingHorizontal: 16,
     paddingTop: 8,
-    paddingBottom: 12,
   },
   listContent: {
     gap: 12,
     paddingBottom: 16,
     paddingHorizontal: 16,
-  },
-  subtitle: {
-    color: "#6B7280",
-    fontSize: 13,
   },
   title: {
     color: "#F9FAFB",

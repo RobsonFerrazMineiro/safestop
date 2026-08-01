@@ -1,5 +1,7 @@
-import { OccurrenceCreateScreen } from "@/features/occurrences/components/occurrence-create-screen";
+import { Redirect } from "expo-router";
 
-export default function NewOccurrenceRoute() {
-  return <OccurrenceCreateScreen />;
+import { stopWorkNewRoute } from "@/lib/auth/routes";
+
+export default function NewOccurrenceRedirectRoute() {
+  return <Redirect href={stopWorkNewRoute} />;
 }

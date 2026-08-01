@@ -12,7 +12,8 @@ const OCCURRENCE_LIST_SELECT = `
   severity,
   created_at,
   areas (name),
-  profiles:created_by (full_name)
+  profiles:created_by (full_name),
+  contractor_organizations:contractor_organization_id (name)
 `;
 
 type GetOccurrencesParams = {
@@ -38,8 +39,8 @@ export async function getOccurrences(params: GetOccurrencesParams) {
     .eq("organization_id", params.organizationId)
     .order("created_at", { ascending: false });
 
-  if (params.filters?.status) {
-    query = query.eq("status", params.filters.status);
+  if (params.filters?.status && params.filters.status.length > 0) {
+    query = query.in("status", params.filters.status);
   }
 
   if (params.filters?.severity) {

@@ -16,12 +16,27 @@ export const occurrenceQueryKeys = {
     [...occurrenceQueryKeys.details(organizationId), occurrenceId] as const,
   areas: (organizationId: string) =>
     [TENANT_QUERY_KEY_PREFIX, organizationId, "areas", "list"] as const,
+  contractors: (organizationId: string) =>
+    [TENANT_QUERY_KEY_PREFIX, organizationId, "contractors", "list"] as const,
+  contracts: (organizationId: string, contractorOrganizationId: string) =>
+    [TENANT_QUERY_KEY_PREFIX, organizationId, "contracts", contractorOrganizationId] as const,
 };
 
 export type OccurrenceAreaOption = {
   id: string;
   name: string;
   code: string | null;
+};
+
+export type OccurrenceContractorOption = {
+  id: string;
+  name: string;
+};
+
+export type OccurrenceContractOption = {
+  id: string;
+  contractNumber: string | null;
+  name: string;
 };
 
 export type OccurrenceSyncStatus = "saved_locally" | "registered_on_server";

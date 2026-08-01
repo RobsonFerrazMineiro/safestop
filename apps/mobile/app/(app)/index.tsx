@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
-import { authRoutes } from "@/lib/auth/routes";
+import { authRoutes, stopWorkNewRoute } from "@/lib/auth/routes";
 
 export default function AuthenticatedHomeScreen() {
   const router = useRouter();
@@ -54,14 +54,14 @@ export default function AuthenticatedHomeScreen() {
         ) : null}
 
         <Pressable
-          accessibilityLabel="Ocorrências"
+          accessibilityLabel="Paralisação Preventiva"
           accessibilityRole="button"
           style={({ pressed }) => [styles.occurrencesButton, pressed && styles.buttonPressed]}
           onPress={() => {
-            router.push(authRoutes.occurrences);
+            router.push(stopWorkNewRoute);
           }}
         >
-          <Text style={styles.occurrencesButtonText}>Ocorrências</Text>
+          <Text style={styles.occurrencesButtonText}>Paralisação Preventiva</Text>
         </Pressable>
 
         <Pressable

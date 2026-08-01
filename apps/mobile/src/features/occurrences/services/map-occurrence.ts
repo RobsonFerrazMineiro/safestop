@@ -8,6 +8,7 @@ import {
 
 type AreaJoin = { name: string } | { name: string }[] | null;
 type ProfileJoin = { full_name: string | null } | { full_name: string | null }[] | null;
+type OrganizationJoin = { name: string } | { name: string }[] | null;
 
 function resolveJoinName<T extends { name?: string; full_name?: string | null }>(
   value: T | T[] | null,
@@ -36,6 +37,7 @@ export type OccurrenceSummaryRow = {
   created_at: string;
   areas: AreaJoin;
   profiles: ProfileJoin;
+  contractor_organizations: OrganizationJoin;
 };
 
 export type OccurrenceDetailsRow = OccurrenceSummaryRow & {
@@ -73,6 +75,7 @@ export function mapOccurrenceSummaryRow(row: OccurrenceSummaryRow): OccurrenceSu
     status: row.status,
     severity: row.severity,
     areaName: resolveJoinName(row.areas, "name"),
+    contractorOrganizationName: resolveJoinName(row.contractor_organizations, "name"),
     createdAt: row.created_at,
     createdByName: resolveJoinName(row.profiles, "full_name"),
   };

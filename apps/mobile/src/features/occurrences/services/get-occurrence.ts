@@ -30,7 +30,8 @@ const OCCURRENCE_DETAIL_SELECT = `
   closed_at,
   cancelled_at,
   areas (name),
-  profiles:created_by (full_name)
+  profiles:created_by (full_name),
+  contractor_organizations:contractor_organization_id (name)
 `;
 
 type GetOccurrenceParams = {
