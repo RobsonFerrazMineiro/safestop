@@ -5,7 +5,9 @@
 --   - catálogo oficial de papéis (docs/database.md §6.1, docs/workflow.md §3);
 --   - catálogo oficial de permissões (docs/database.md §6.2);
 --   - usuários Auth de QA local com perfil via trigger on_auth_user_created;
---   - organizações, unidades, áreas e vínculos organization_members para cenários QA;
+--   - organizações, unidades, áreas, contratos e vínculos organization_members para cenários QA;
+--
+-- Stop Work / PP (Sprint 2.1 — A-R2): IDs de teste documentados ao final deste arquivo.
 --
 -- Cenários QA:
 --   qa-field@safestop.local    — 1 org, HSE de Campo (F3/F8)
@@ -251,6 +253,14 @@ values
     '44.444.444/0001-04',
     'PLATFORM',
     true
+  ),
+  (
+    'b0000000-0000-4000-8000-000000000006',
+    'QA Epsilon Serviços',
+    'QA Epsilon Serviços Ltda',
+    '66.666.666/0001-06',
+    'CONTRACTOR',
+    true
   )
 on conflict (id) do update set
   name = excluded.name,
@@ -320,6 +330,72 @@ on conflict (id) do update set
   name = excluded.name,
   code = excluded.code,
   unit_id = excluded.unit_id,
+  is_active = true;
+
+-- ----------------------------------------------------------------------------
+-- Contratos QA — empresa envolvida / Stop Work (Sprint 2.1 — A-R2)
+-- ----------------------------------------------------------------------------
+-- Parecer DATABASE (A-R2):
+--   - contractor_organization_id: OBRIGATÓRIO na PP (via contrato ativo com a org ativa).
+--   - contract_id: OPCIONAL no formulário; quando informado, RPC/trigger valida consistência
+--     (client_organization_id, contractor_organization_id, unit_id).
+--   - Fonte do select de contratada: contracts.is_active = true AND client_organization_id = org ativa.
+--   - Sem tabela stop_work — PP persiste em public.occurrences (facade stop-work no mobile).
+--
+-- Validação manual (após db reset):
+--   select ctr.name, c.contract_number, c.is_active
+--   from public.contracts c
+--   join public.organizations ctr on ctr.id = c.contractor_organization_id
+--   where c.client_organization_id = 'b0000000-0000-4000-8000-000000000001' and c.is_active;
+--   -- Alpha: Beta (QA-AB-001)
+--   select ctr.name, c.contract_number, c.is_active
+--   from public.contracts c
+--   join public.organizations ctr on ctr.id = c.contractor_organization_id
+--   where c.client_organization_id = 'b0000000-0000-4000-8000-000000000002' and c.is_active;
+--   -- Beta: Epsilon (QA-BE-001)
+
+insert into public.contracts (
+  id,
+  client_organization_id,
+  contractor_organization_id,
+  unit_id,
+  contract_number,
+  name,
+  description,
+  starts_at,
+  is_active
+)
+values
+  (
+    '01000000-0000-4000-8000-000000000001',
+    'b0000000-0000-4000-8000-000000000001',
+    'b0000000-0000-4000-8000-000000000002',
+    'e0000000-0000-4000-8000-000000000001',
+    'QA-AB-001',
+    'QA Contrato Alpha → Beta',
+    'Contrato QA: Alpha contratante, Beta empresa envolvida (SW-01 qa-field).',
+    '2026-01-01 00:00:00+00',
+    true
+  ),
+  (
+    '01000000-0000-4000-8000-000000000002',
+    'b0000000-0000-4000-8000-000000000002',
+    'b0000000-0000-4000-8000-000000000006',
+    'e0000000-0000-4000-8000-000000000002',
+    'QA-BE-001',
+    'QA Contrato Beta → Epsilon',
+    'Contrato QA: Beta contratante, Epsilon empresa envolvida (SW-01 qa-multi Beta).',
+    '2026-01-01 00:00:00+00',
+    true
+  )
+on conflict (id) do update set
+  client_organization_id = excluded.client_organization_id,
+  contractor_organization_id = excluded.contractor_organization_id,
+  unit_id = excluded.unit_id,
+  contract_number = excluded.contract_number,
+  name = excluded.name,
+  description = excluded.description,
+  starts_at = excluded.starts_at,
   is_active = true;
 
 -- ----------------------------------------------------------------------------
@@ -635,3 +711,30 @@ where om.id = 'c0000000-0000-4000-8000-000000000005'
   and r.name = 'Administrador da Plataforma'
   and r.organization_id is null
 on conflict (organization_member_id, role_id) do nothing;
+
+-- ============================================================================
+-- Referência QA — IDs determinísticos (Stop Work / PP — Sprint 2.1)
+-- ============================================================================
+-- Senha local (todos os usuários Auth): SafeStop-QA-Local-2026
+--
+-- Organizações:
+--   b0000000-0000-4000-8000-000000000001  QA Alpha Contratante (CLIENT)
+--   b0000000-0000-4000-8000-000000000002  QA Beta Contratada (CONTRACTOR)
+--   b0000000-0000-4000-8000-000000000006  QA Epsilon Serviços (CONTRACTOR)
+--
+-- Unidades / áreas (A2 — intactas):
+--   e0000000-0000-4000-8000-000000000001  QA Unidade Alpha
+--   f0000000-0000-4000-8000-000000000001  QA Área Alpha Operacional
+--   e0000000-0000-4000-8000-000000000002  QA Unidade Beta
+--   f0000000-0000-4000-8000-000000000002  QA Área Beta Operacional
+--
+-- Contratos (A-R2 — empresa envolvida):
+--   01000000-0000-4000-8000-000000000001  Alpha → Beta (contractor_organization_id Beta)
+--   01000000-0000-4000-8000-000000000002  Beta → Epsilon (contractor_organization_id Epsilon)
+--
+-- Cenários SW sugeridos:
+--   SW-01 Alpha + qa-field: org Alpha, area f...001, contractor b...002, contract 0100...001 (opcional)
+--   SW-01 Beta + qa-multi:  org Beta,  area f...002, contractor b...006, contract 0100...002 (opcional)
+--   SW-02 qa-gestor: occurrence.read sem occurrence.create (Alpha)
+--
+-- docs/decisions/PREVENTIVE-STOP-DECISIONS.md (A-R2)
