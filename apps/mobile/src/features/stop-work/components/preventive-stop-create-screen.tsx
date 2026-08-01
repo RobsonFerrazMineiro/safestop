@@ -179,6 +179,7 @@ export function PreventiveStopCreateScreen() {
   if (successResult) {
     return (
       <PreventiveStopSuccessView
+        occurrenceId={successResult.id}
         publicCode={successResult.publicCode}
         onCreateAnother={() => {
           setSuccessResult(null);

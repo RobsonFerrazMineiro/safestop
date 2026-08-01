@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
+import { EvidenceSection } from "@/features/evidence";
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
 import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
@@ -106,6 +107,8 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
         {preventiveStop.immediateActionDescription ? (
           <DetailField label="Medida imediata" value={preventiveStop.immediateActionDescription} />
         ) : null}
+
+        <EvidenceSection occurrenceId={occurrenceId} />
 
         <Text style={styles.sectionTitle}>Histórico</Text>
         <DetailField

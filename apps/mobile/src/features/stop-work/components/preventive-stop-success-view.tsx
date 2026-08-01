@@ -1,35 +1,44 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { EvidenceSection } from "@/features/evidence";
 import { getOccurrenceStatusLabel } from "@/features/occurrences/utils/occurrence-labels";
 
 type PreventiveStopSuccessViewProps = {
+  occurrenceId: string;
   publicCode: string;
   onViewDetail: () => void;
   onCreateAnother: () => void;
 };
 
 export function PreventiveStopSuccessView({
+  occurrenceId,
   publicCode,
   onViewDetail,
   onCreateAnother,
 }: PreventiveStopSuccessViewProps) {
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.iconCircle}>
-          <Text style={styles.icon}>✓</Text>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.hero}>
+          <View style={styles.iconCircle}>
+            <Text style={styles.icon}>✓</Text>
+          </View>
+
+          <Text style={styles.title}>Atividade paralisada</Text>
+
+          <Text style={styles.code}>{publicCode}</Text>
+
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>
+              {getOccurrenceStatusLabel("PARALISACAO_PREVENTIVA")}
+            </Text>
+          </View>
+
+          <Text style={styles.body}>A ocorrência foi registrada no servidor.</Text>
         </View>
 
-        <Text style={styles.title}>Atividade paralisada</Text>
-
-        <Text style={styles.code}>{publicCode}</Text>
-
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>{getOccurrenceStatusLabel("PARALISACAO_PREVENTIVA")}</Text>
-        </View>
-
-        <Text style={styles.body}>A ocorrência foi registrada no servidor.</Text>
+        <EvidenceSection occurrenceId={occurrenceId} showOfflineBanner={false} />
 
         <Pressable
           accessibilityLabel="Ver ocorrência"
@@ -48,7 +57,7 @@ export function PreventiveStopSuccessView({
         >
           <Text style={styles.secondaryButtonText}>Nova paralisação</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -87,11 +96,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    alignItems: "center",
-    flex: 1,
     gap: 16,
-    justifyContent: "center",
     paddingHorizontal: 24,
+    paddingVertical: 24,
+  },
+  hero: {
+    alignItems: "center",
+    gap: 16,
+    paddingTop: 24,
   },
   icon: {
     color: "#16A34A",
