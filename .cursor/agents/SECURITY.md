@@ -480,3 +480,12 @@ Antes de aprovar qualquer implementação, responda:
 - A implementação segue a arquitetura aprovada?
 
 Se qualquer resposta indicar risco crítico ou alto, a Sprint não deve ser aprovada.
+
+## Referência Base44 (obrigatória quando aplicável)
+
+Antes de propor, implementar ou validar qualquer interface, fluxo ou experiência do usuário:
+
+- Leia a pasta `reference/base44/**`.
+- Utilize-a como referência funcional e visual do projeto.
+- Preserve, sempre que possível, a organização, navegação, hierarquia visual e padrões de componentes já estabelecidos.
+- Só proponha diferenças quando houver justificativa técnica, arquitetural ou de produto, explicando claramente o motivo.

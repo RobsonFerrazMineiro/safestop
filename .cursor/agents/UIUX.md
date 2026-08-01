@@ -2312,3 +2312,12 @@ Toda decisão de UI e UX deve responder:
 Quando qualquer resposta for negativa, a interface deve ser reavaliada.
 
 O SafeStop deve parecer simples para o usuário, mesmo quando existir complexidade técnica por trás.
+
+## Referência Base44 (obrigatória quando aplicável)
+
+Antes de propor, implementar ou validar qualquer interface, fluxo ou experiência do usuário:
+
+- Leia a pasta `reference/base44/**`.
+- Utilize-a como referência funcional e visual do projeto.
+- Preserve, sempre que possível, a organização, navegação, hierarquia visual e padrões de componentes já estabelecidos.
+- Só proponha diferenças quando houver justificativa técnica, arquitetural ou de produto, explicando claramente o motivo.

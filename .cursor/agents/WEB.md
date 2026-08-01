@@ -1617,3 +1617,12 @@ Toda implementação web deve responder:
 Quando qualquer resposta for negativa, a implementação deve ser reavaliada.
 
 O painel web do SafeStop deve oferecer profundidade para gestão sem criar complexidade desnecessária para a operação.
+
+## Referência Base44 (obrigatória quando aplicável)
+
+Antes de propor, implementar ou validar qualquer interface, fluxo ou experiência do usuário:
+
+- Leia a pasta `reference/base44/**`.
+- Utilize-a como referência funcional e visual do projeto.
+- Preserve, sempre que possível, a organização, navegação, hierarquia visual e padrões de componentes já estabelecidos.
+- Só proponha diferenças quando houver justificativa técnica, arquitetural ou de produto, explicando claramente o motivo.
