@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { useRequirePermission } from "@/features/authorization";
+import { EvidenceSection } from "@/features/evidence";
 import {
   formatOccurrenceSeverity,
   formatOccurrenceStatus,
@@ -103,6 +104,8 @@ export function StopWorkDetailContainer() {
           <DetailField label="Ação imediata" value={stopWork.immediateActionDescription} />
         ) : null}
       </section>
+
+      <EvidenceSection occurrenceId={stopWork.id} />
 
       <section className="flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/40 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Registro</h2>
