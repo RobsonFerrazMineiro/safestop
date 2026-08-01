@@ -267,6 +267,101 @@ export type Database = {
           },
         ]
       }
+      occurrence_attachments: {
+        Row: {
+          attachment_type: string
+          caption: string | null
+          captured_at: string | null
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          file_size: number
+          id: string
+          latitude: number | null
+          longitude: number | null
+          mime_type: string
+          occurrence_id: string
+          organization_id: string
+          original_file_name: string
+          storage_bucket: string
+          storage_path: string
+          updated_at: string
+          upload_status: string
+          uploaded_by: string
+        }
+        Insert: {
+          attachment_type: string
+          caption?: string | null
+          captured_at?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_size: number
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          mime_type: string
+          occurrence_id: string
+          organization_id: string
+          original_file_name: string
+          storage_bucket?: string
+          storage_path: string
+          updated_at?: string
+          upload_status?: string
+          uploaded_by: string
+        }
+        Update: {
+          attachment_type?: string
+          caption?: string | null
+          captured_at?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_size?: number
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          mime_type?: string
+          occurrence_id?: string
+          organization_id?: string
+          original_file_name?: string
+          storage_bucket?: string
+          storage_path?: string
+          updated_at?: string
+          upload_status?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occurrence_attachments_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_attachments_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_attachments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       occurrence_decisions: {
         Row: {
           created_at: string
@@ -1069,14 +1164,45 @@ export type Database = {
         Args: { target_occurrence_id: string }
         Returns: boolean
       }
+      complete_occurrence_attachment_upload: {
+        Args: { target_attachment_id: string }
+        Returns: Json
+      }
       create_occurrence: { Args: { payload: Json }; Returns: Json }
       current_organization_ids: { Args: never; Returns: string[] }
       current_profile_id: { Args: never; Returns: string }
+      delete_occurrence_attachment: {
+        Args: { target_attachment_id: string }
+        Returns: Json
+      }
+      fail_occurrence_attachment_upload: {
+        Args: { failure_reason?: string; target_attachment_id: string }
+        Returns: Json
+      }
+      get_occurrence_attachment_signed_url: {
+        Args: { target_attachment_id: string }
+        Returns: Json
+      }
       has_permission: {
         Args: { permission_code: string; target_organization_id: string }
         Returns: boolean
       }
       is_platform_admin: { Args: never; Returns: boolean }
+      list_organization_contractors: {
+        Args: { target_organization_id: string }
+        Returns: Json
+      }
+      list_organization_contracts: {
+        Args: {
+          filter_contractor_organization_id?: string
+          target_organization_id: string
+        }
+        Returns: Json
+      }
+      prepare_occurrence_attachment_upload: {
+        Args: { payload: Json }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
