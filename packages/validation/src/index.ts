@@ -13,3 +13,12 @@ export {
   type CreatePreventiveStopPayload,
   type PreventiveStopDraftInput,
 } from "./preventive-stop";
+export {
+  OCCURRENCE_ATTACHMENT_CAPTION_MAX_LENGTH,
+  OCCURRENCE_ATTACHMENT_MAX_COUNT_PER_OCCURRENCE,
+  OCCURRENCE_ATTACHMENT_MAX_FILE_SIZE_BYTES,
+  OCCURRENCE_ATTACHMENT_MIME_TYPES,
+  OCCURRENCE_ATTACHMENT_TYPES,
+  prepareAttachmentUploadSchema,
+  type PrepareAttachmentUploadInput,
+} from "./occurrence-attachment";

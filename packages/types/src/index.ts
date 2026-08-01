@@ -30,6 +30,28 @@ export type {
 } from "./occurrence";
 
 export {
+  OCCURRENCE_ATTACHMENT_BUCKET,
+  OCCURRENCE_ATTACHMENT_CAPTION_MAX_LENGTH,
+  OCCURRENCE_ATTACHMENT_MAX_COUNT_PER_OCCURRENCE,
+  OCCURRENCE_ATTACHMENT_MAX_FILE_SIZE_BYTES,
+  OCCURRENCE_ATTACHMENT_MIME_TYPES,
+  OCCURRENCE_ATTACHMENT_SIGNED_URL_TTL_SECONDS,
+  OCCURRENCE_ATTACHMENT_TYPES,
+  OCCURRENCE_ATTACHMENT_UPLOAD_STATUSES,
+  isOccurrenceAttachmentMimeType,
+  isOccurrenceAttachmentType,
+  isOccurrenceAttachmentUploadStatus,
+} from "./occurrence-attachment";
+export type {
+  OccurrenceAttachmentMimeType,
+  OccurrenceAttachmentSignedUrlResult,
+  OccurrenceAttachmentSummary,
+  OccurrenceAttachmentType,
+  OccurrenceAttachmentUploadStatus,
+  PrepareOccurrenceAttachmentUploadResult,
+} from "./occurrence-attachment";
+
+export {
   PREVENTIVE_STOP_DEFAULT_STATUS,
   PREVENTIVE_STOP_LIST_FILTER_STATUSES,
   PREVENTIVE_STOP_STATUSES,
