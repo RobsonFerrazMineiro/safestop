@@ -3,7 +3,7 @@ import { recordVerEAgirDecisionSchema } from "@safestop/validation";
 
 import { createClient } from "@/lib/auth/client";
 
-import { assertRpcDataOrThrow, mapRecordVerEAgirDecisionResult } from "./map-decision-result";
+import { assertRpcDataOrThrow, mapRecordOccurrenceDecisionResult } from "./map-decision-result";
 
 type RecordDecisionRpcData = {
   decision: {
@@ -47,5 +47,5 @@ export async function recordOccurrenceDecision(input: {
     "Não foi possível registrar a decisão.",
   );
 
-  return mapRecordVerEAgirDecisionResult(payload);
+  return mapRecordOccurrenceDecisionResult(payload);
 }

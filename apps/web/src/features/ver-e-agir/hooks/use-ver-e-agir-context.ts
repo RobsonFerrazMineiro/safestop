@@ -1,15 +1,11 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
+import { hasOccurrenceDecision, isVerEAgirDecisionBranch } from "@safestop/types";
 
 import { useAuthorization } from "@/features/authorization";
 
-import {
-  hasVerEAgirDecision,
-  shouldShowVerEAgirSummary,
-  type VerEAgirContext,
-  type VerEAgirOccurrence,
-} from "../types";
+import type { VerEAgirContext, VerEAgirOccurrence } from "../types";
 
 function subscribeOnlineStatus(onStoreChange: () => void): () => void {
   window.addEventListener("online", onStoreChange);
@@ -41,17 +37,17 @@ export function useVerEAgirContext(occurrence: VerEAgirOccurrence | null): VerEA
     const canEvaluate = can("occurrence.evaluate") && !isPlatformAdmin;
     const canViewEvaluationContext = can("occurrence.read");
     const status = occurrence?.status ?? null;
-    const hasDecision = occurrence ? hasVerEAgirDecision(occurrence) : false;
+    const hasDecision = occurrence ? hasOccurrenceDecision(occurrence) : false;
 
     const canStartEvaluation = canEvaluate && status === "PARALISACAO_PREVENTIVA";
     const canRecordVerEAgir = canEvaluate && status === "EM_AVALIACAO" && !hasDecision;
-    const showSummary = occurrence ? shouldShowVerEAgirSummary(status!, occurrence) : false;
+    const showSummary = occurrence ? isVerEAgirDecisionBranch(occurrence) : false;
     const showPendingEvaluation = canStartEvaluation;
     const showEvaluationForm = canRecordVerEAgir;
     const shouldRenderSection =
       showSummary ||
       showPendingEvaluation ||
-      (status === "EM_AVALIACAO" && canViewEvaluationContext && !showSummary);
+      (status === "EM_AVALIACAO" && canViewEvaluationContext && !hasDecision);
 
     return {
       canStartEvaluation,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { isOccurrenceRpcConflictError } from "../types";
+import { isOccurrenceRpcConflictError } from "@/features/occurrences/utils/occurrence-decision-rpc";
 import { useStartEvaluation } from "../hooks/use-start-evaluation";
 import { StartEvaluationConfirmDialog } from "./start-evaluation-confirm-dialog";
 

@@ -7,7 +7,10 @@ import {
 } from "@safestop/types";
 import { recordVerEAgirDecisionSchema } from "@safestop/validation";
 
-import { isOccurrenceRpcConflictError, isOccurrenceRpcValidationError } from "../types";
+import {
+  isOccurrenceRpcConflictError,
+  isOccurrenceRpcValidationError,
+} from "@/features/occurrences/utils/occurrence-decision-rpc";
 
 type VerEAgirDecisionFormProps = {
   occurrenceId: string;

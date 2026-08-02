@@ -1,5 +1,9 @@
 import type { OccurrenceDecision, OccurrenceStatus } from "@safestop/types";
 
+import { hasOccurrenceDecision } from "./has-occurrence-decision";
+
+export { hasOccurrenceDecision };
+
 export function canStartEvaluation(params: {
   canEvaluate: boolean;
   isPlatformAdmin: boolean;
@@ -14,13 +18,16 @@ export function canRecordVerEAgir(params: {
   canEvaluate: boolean;
   isPlatformAdmin: boolean;
   status: OccurrenceStatus;
-  hasDecision: boolean;
+  occurrence: {
+    decision: OccurrenceDecision | null;
+    decisionType: OccurrenceDecision["decisionType"] | null;
+  };
 }): boolean {
   return (
     params.canEvaluate &&
     !params.isPlatformAdmin &&
     params.status === "EM_AVALIACAO" &&
-    !params.hasDecision
+    !hasOccurrenceDecision(params.occurrence)
   );
 }
 

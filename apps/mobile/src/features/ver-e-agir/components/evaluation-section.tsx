@@ -65,7 +65,7 @@ export function EvaluationSection({
     canEvaluate,
     isPlatformAdmin,
     status: occurrence.status,
-    hasDecision: occurrence.decision !== null,
+    occurrence,
   });
   const showContext = canViewEvaluationContext(canRead) && occurrence.status === "EM_AVALIACAO";
 
@@ -116,6 +116,10 @@ export function EvaluationSection({
   }
 
   if (!canRead) {
+    return null;
+  }
+
+  if (occurrence.status === "INTERDICAO_CONFIRMADA") {
     return null;
   }
 

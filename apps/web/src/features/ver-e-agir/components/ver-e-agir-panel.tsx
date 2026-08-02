@@ -6,7 +6,6 @@ import { useOccurrenceTimeline } from "@/features/timeline/hooks/use-occurrence-
 
 import { useRecordVerEAgirDecision } from "../hooks/use-record-ver-e-agir-decision";
 import type { VerEAgirOccurrence } from "../types";
-import { EvaluationContextCard } from "./evaluation-context-card";
 import { OfflineNotice } from "./ver-e-agir-states";
 import { VerEAgirDecisionForm } from "./ver-e-agir-decision-form";
 
@@ -40,31 +39,27 @@ export function VerEAgirPanel({
   }, [items]);
 
   return (
-    <div className="flex flex-col gap-4">
-      <EvaluationContextCard occurrence={occurrence} />
-
-      <div className="flex flex-col gap-4 rounded-lg border border-amber-700/40 bg-amber-950/20 p-4">
-        <div className="flex flex-col gap-1">
-          <h3 className="text-base font-semibold text-amber-100">Ver e Agir</h3>
-          <p className="text-sm text-amber-200/80">Resolução imediata no campo</p>
-        </div>
-
-        {isOffline ? (
-          <OfflineNotice message="Você está offline. Conecte-se para registrar a decisão." />
-        ) : null}
-
-        <VerEAgirDecisionForm
-          commentDraft={commentDraft}
-          isOffline={isOffline}
-          isPending={isPending}
-          occurrenceId={occurrence.id}
-          onAlreadyDecided={onAlreadyDecided}
-          onConflict={onConflict}
-          onSubmit={async (decisionReason) => {
-            await mutateAsync({ decisionReason });
-          }}
-        />
+    <div className="flex h-full flex-col gap-4 rounded-lg border border-amber-700/40 bg-amber-950/20 p-4">
+      <div className="flex flex-col gap-1">
+        <h3 className="text-base font-semibold text-amber-100">Ver e Agir</h3>
+        <p className="text-sm text-amber-200/80">Resolução imediata no campo</p>
       </div>
+
+      {isOffline ? (
+        <OfflineNotice message="Você está offline. Conecte-se para registrar a decisão." />
+      ) : null}
+
+      <VerEAgirDecisionForm
+        commentDraft={commentDraft}
+        isOffline={isOffline}
+        isPending={isPending}
+        occurrenceId={occurrence.id}
+        onAlreadyDecided={onAlreadyDecided}
+        onConflict={onConflict}
+        onSubmit={async (decisionReason) => {
+          await mutateAsync({ decisionReason });
+        }}
+      />
     </div>
   );
 }
