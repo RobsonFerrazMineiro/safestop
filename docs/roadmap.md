@@ -162,6 +162,20 @@ A Sprint 2 é entregue de forma incremental. A **sub-sprint 2.1** cobre o fluxo 
 Decisões oficiais: `docs/decisions/PREVENTIVE-STOP-DECISIONS.md` (A-R1…A-R10).  
 Especificação UI: `docs/decisions/PREVENTIVE-STOP-UI-SPEC.md`.
 
+### Nota — Sub-sprint 2.2 (Evidências de Ocorrência)
+
+A **sub-sprint 2.2** entrega evidências fotográficas **pós-create** (`INITIAL_EVIDENCE` em `occurrence_attachments`), sem obrigar foto na abertura PP e sem notificações. Gate **G0** (PO-1…PO-15) desbloqueia DATABASE/BACKEND.
+
+Decisões oficiais: `docs/decisions/EVIDENCE-DECISIONS.md`.  
+Especificação UI: `docs/decisions/EVIDENCE-UI-SPEC.md`.
+
+### Nota — Sub-sprint 2.3 (Comentários e Timeline)
+
+A **sub-sprint 2.3** entrega timeline unificada via RPC (`get_occurrence_timeline`) e comentários `GENERAL` — **sem** tabela `occurrence_timeline`, **sem** notificações/ciência (Sprint 3) e **sem** Realtime. Ordem UI: Evidências → Timeline → Composer.
+
+Decisões oficiais: `docs/decisions/TIMELINE-DECISIONS.md` (PO-1…PO-15).  
+Especificação UI: `docs/decisions/TIMELINE-UI-SPEC.md`.
+
 ---
 
 # Sprint 3

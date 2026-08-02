@@ -1,15 +1,18 @@
 # Spec UI/UX — Evidências fotográficas (pós-create)
 
 **Status:** `PRONTO PARA IMPLEMENTAÇÃO`  
-**Sprint:** entrega incremental pós-2.1 (roadmap Sprint 2 — fotos)  
+**Sprint:** 2.2 — Evidências de Ocorrência (pós-2.1; roadmap Sprint 2 — fotos)  
 **Agente:** UIUX  
 **Data:** 2026-08-01  
 **Entregável:** `docs/decisions/EVIDENCE-UI-SPEC.md`
+
+**Decisões PO (fonte oficial):** [`EVIDENCE-DECISIONS.md`](./EVIDENCE-DECISIONS.md) — PO-1…PO-15; Gate G0.
 
 **Referências obrigatórias:**
 
 | Fonte | Uso |
 |---|---|
+| `docs/decisions/EVIDENCE-DECISIONS.md` | MIME, limites, remoção, status bloqueados, UX pós-create |
 | `reference/base44/src/pages/NewInterdiction.jsx` | Tile 80×80, botão Adicionar, estados de upload |
 | `reference/base44/src/pages/InterdictionDatail.jsx` | Bloco “Evidências”, galeria horizontal scroll |
 | `docs/design-system.md` | Card de evidência, Bottom Sheet, Progress, Dialog, Empty |
@@ -17,7 +20,7 @@
 | `docs/database.md` §13.1 | `occurrence_attachments`, `attachment_type` |
 | `docs/decisions/PREVENTIVE-STOP-UI-SPEC.md` | Detalhe PP — ponto de inserção do bloco |
 
-Base44 é referência visual. Documentação SafeStop prevalece em segurança e workflow.
+Base44 é referência visual. Documentação SafeStop prevalece em segurança e workflow. Decisões PO prevalecem sobre este spec em caso de conflito.
 
 ---
 
@@ -43,13 +46,14 @@ Permitir anexar, visualizar e acompanhar **evidências fotográficas iniciais** 
 
 | Incluído | Fora |
 |---|---|
-| Bloco Evidências em `PP-DETAIL` | Fotos no formulário de criação |
-| Galeria horizontal 80×80 | `CORRECTION_EVIDENCE` / `RELEASE_EVIDENCE` (sprints futuras) |
-| Sheet mobile: Câmera / Galeria | URLs públicas permanentes |
-| Modal / fullscreen preview | PDF / documentos (só `image/jpeg|png|webp` nesta entrega) |
-| Fila de upload com progresso % | Fila offline completa (engineering §18.11 — futuro) |
+| Bloco Evidências em `PP-DETAIL` (após descrição, antes da Timeline) | Fotos no formulário de criação (`PP-NEW`) |
+| Mesmo bloco na **tela de sucesso PP** pós-create (**PO-14**) | `CORRECTION_EVIDENCE` / `RELEASE_EVIDENCE` (sprints futuras) |
+| Galeria horizontal 80×80 | URLs públicas permanentes |
+| Sheet mobile: Câmera / Galeria | PDF / documentos (só `image/jpeg|png|webp` nesta entrega) |
+| Modal / fullscreen preview (**PO-15** — sem download mobile) | Fila offline completa (engineering §18.11 — futuro) |
+| Fila de upload com progresso % | Comentários, decisão, liberação |
 | Empty / error / offline copy | Comentários, decisão, liberação |
-| Remoção autorizada (soft-delete) | Apagar evidência após encerramento |
+| Remoção autorizada (soft-delete) | Upload/remoção em `LIBERADA` / `ENCERRADA` / `CANCELADA` (**PO-13**) |
 
 **Tipo de anexo nesta entrega:** `INITIAL_EVIDENCE`.
 
@@ -61,13 +65,15 @@ Permitir anexar, visualizar e acompanhar **evidências fotográficas iniciais** 
 
 ## Usuário e permissão
 
-| Ação | Quem (orientação UI) |
-|---|---|
-| Ver evidências | Quem tem `occurrence.read` no escopo |
-| Adicionar evidência | Quem pode complementar a ocorrência (mín.: criador / papéis com create+read; alinhar RBAC na implementação BACKEND) |
-| Remover evidência | Autorizado + ocorrência não encerrada; soft-delete |
+Alinhado a **PO-7** — sem permissão nova:
 
-UI nunca assume Service Role. Signed URL gerada no backend/Edge para o usuário autenticado.
+| Ação | Quem |
+|---|---|
+| Ver evidências / preview / signed URL | `occurrence.read` + escopo da ocorrência |
+| Adicionar evidência | `occurrence.create` + escopo |
+| Remover evidência | Autor do upload (`uploaded_by`) + `occurrence.create` + status permitido (PO-9 / PO-13) |
+
+UI esconde **Adicionar** / **Remover** quando `canUpload` / `canDelete` for false. Nunca assume Service Role. Signed URL gerada no backend para o usuário autenticado.
 
 ---
 
@@ -160,7 +166,7 @@ Ao tocar em **Adicionar**:
 | Ação | Comportamento |
 |---|---|
 | Tirar foto | Câmera traseira (`capture: environment`); 1 foto por captura; volta à fila |
-| Escolher da galeria | Picker imagem; **múltiplas** permitidas (máx. configurável — default **10** por lote / limite org) |
+| Escolher da galeria | Picker imagem; **múltiplas** permitidas — default **10 por lote**; teto oficial **20 ativas** por ocorrência (**PO-4**) |
 | Cancelar | Fecha sheet |
 
 Permissões do SO: se câmera/galeria negada → toast/banner:
@@ -179,10 +185,11 @@ Abra as configurações do dispositivo para habilitar.
 
 | Regra | Valor |
 |---|---|
-| MIME | `image/jpeg`, `image/png`, `image/webp` |
-| Tamanho máx. | Configurável; rejeitar acima do limite com copy clara |
-| Compactação | Mobile: compactar antes do upload (engineering §18.7) |
-| Geo EXIF | Opcional: preencher `latitude`/`longitude`/`captured_at` se disponíveis; nunca bloquear |
+| MIME | `image/jpeg`, `image/png`, `image/webp` (**PO-2**) |
+| Tamanho máx. | **10 MiB** (**PO-3**) — rejeitar acima do limite com copy clara |
+| Compactação | Mobile: compactar antes do upload (**PO-10**; engineering §18.7 / §32.4) |
+| Strip EXIF | Esperado no pipeline mobile (**PO-11**) |
+| Geo EXIF | Opcional: payload `latitude`/`longitude`/`captured_at` se capturados pelo app; nunca bloquear |
 
 Mensagem tipo inválido:
 
@@ -300,7 +307,7 @@ Esta ação será registrada na auditoria.
 [ Cancelar ]   [ Remover ]
 ```
 
-Só soft-delete. Bloqueado se ocorrência `ENCERRADA` / `CANCELADA` (ou política BACKEND).
+Só soft-delete (**PO-8**). Bloqueado se ocorrência `LIBERADA`, `ENCERRADA` ou `CANCELADA` (**PO-13**) — validação server-side.
 
 ---
 
@@ -381,6 +388,10 @@ Evidência enviada
 
 Duração ~3s (DS). Não usar toast como única confirmação se o tile já mostra `synced`.
 
+## Tela de sucesso PP (PO-14)
+
+Após create bem-sucedido da Paralisação Preventiva, a tela de sucesso **pode** embutir o mesmo `EvidenceSection` (EV-BLOCK), permitindo upload imediato sem voltar ao formulário. CTA “Ver ocorrência” navega ao detalhe com o bloco Evidências na posição oficial (após descrição, antes da Timeline).
+
 ---
 
 # Wireframes resumo
@@ -447,14 +458,17 @@ Galeria: [thumb 12%] [thumb synced] [thumb falhou] [+]
 2. Galeria horizontal com tiles **80×80** + tile Adicionar.
 3. Mobile: sheet com **Tirar foto** e **Escolher da galeria**.
 4. Web: file picker `accept` imagens; multiple.
-5. Preview modal/fullscreen com autor e data; fechar previsível.
+5. Preview modal/fullscreen com autor e data; fechar previsível; **sem** download nativo no mobile (**PO-15**).
 6. Fila: estados Preparando / Enviando n% / Falha / synced; progresso real.
 7. Thumbnails e preview via **signed URL**; sem URL pública persistida.
 8. Copy empty, error e offline conforme esta spec.
-9. Remoção só com confirmação + soft-delete; bloqueada quando política impedir.
-10. **Não** há upload de fotos em `PP-NEW`.
+9. Remoção só com confirmação + soft-delete; bloqueada em `LIBERADA` / `ENCERRADA` / `CANCELADA` (**PO-13**).
+10. **Não** há upload de fotos em `PP-NEW` (**PO-5**, **PO-14**).
 11. Tipo gravado: `INITIAL_EVIDENCE`.
 12. Falha de um arquivo não marca os outros como erro.
+13. Limites: MIME JPG/PNG/WebP; **10 MiB**/arquivo; **20** ativas/ocorrência (**PO-2…PO-4**).
+14. Permissões UI: apenas `occurrence.read` / `occurrence.create` (**PO-7**).
+15. Sucesso PP pode embutir `EvidenceSection` (**PO-14**).
 
 ---
 
