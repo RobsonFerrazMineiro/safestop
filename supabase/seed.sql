@@ -737,4 +737,13 @@ on conflict (organization_member_id, role_id) do nothing;
 --   SW-01 Beta + qa-multi:  org Beta,  area f...002, contractor b...006, contract 0100...002 (opcional)
 --   SW-02 qa-gestor: occurrence.read sem occurrence.create (Alpha)
 --
+-- Cenários Timeline QA (Sprint 2.3 — TL-*; fixtures via RPC/scripts, não seed estático):
+--   TL-01 qa-field + org Alpha: timeline com OCCURRENCE_CREATED após create_occurrence
+--   TL-02 qa-field: COMMENT_ADDED via create_occurrence_comment (BACKEND)
+--   TL-03 qa-gestor: leitura timeline sem composer (read only)
+--   TL-04 qa-multi cross-org: get_occurrence_timeline → FORBIDDEN ou 0 itens visíveis
+--   TL-05 paginação: >30 eventos → nextCursor preenchido (validate script)
+--   TL-06 evidência COMPLETED → EVIDENCE_ADDED na timeline (Sprint 2.2 retroativo)
+--
+-- docs/decisions/TIMELINE-DECISIONS.md (PO-1…PO-15)
 -- docs/decisions/PREVENTIVE-STOP-DECISIONS.md (A-R2)
