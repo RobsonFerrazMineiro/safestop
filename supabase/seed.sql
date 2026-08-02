@@ -18,6 +18,7 @@
 --   qa-dualrole@safestop.local  — 1 org, HSE + Gestor no mesmo vínculo (F10)
 --   qa-gestor@safestop.local    — 1 org, Gestor (occurrence.read, sem occurrence.create)
 --   qa-platform@safestop.local  — PLATFORM_ADMIN + papel plataforma (bypass UI)
+--   qa-supervisor@safestop.local — 1 org, Supervisor HSE (occurrence.evaluate — VA-*)
 --
 -- Idempotente: seguro executar múltiplas vezes (supabase db reset).
 -- ============================================================================
@@ -475,6 +476,11 @@ declare
       'id', 'a0000000-0000-4000-8000-000000000008',
       'email', 'qa-gestor@safestop.local',
       'full_name', 'QA Gestor SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000009',
+      'email', 'qa-supervisor@safestop.local',
+      'full_name', 'QA Supervisor HSE SafeStop'
     )
   );
   v_user jsonb;
@@ -630,6 +636,13 @@ values
     'a0000000-0000-4000-8000-000000000008',
     'INTERNAL',
     true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000009',
+    'b0000000-0000-4000-8000-000000000001',
+    'a0000000-0000-4000-8000-000000000009',
+    'INTERNAL',
+    true
   )
 on conflict (organization_id, profile_id) do update set
   membership_type = excluded.membership_type,
@@ -650,6 +663,7 @@ on conflict (organization_id, profile_id) do update set
 --   qa-gestor    — Gestor na Alpha (occurrence.read, sem occurrence.create)
 --   qa-noorg     — sem vínculos (F7)
 --   qa-platform  — Administrador da Plataforma na Delta (PLATFORM_ADMIN bypass)
+--   qa-supervisor — Supervisor HSE na Alpha (occurrence.evaluate — Sprint 2.4 VA-*)
 
 insert into public.member_roles (organization_member_id, role_id)
 select om.id, r.id
@@ -712,6 +726,15 @@ where om.id = 'c0000000-0000-4000-8000-000000000005'
   and r.organization_id is null
 on conflict (organization_member_id, role_id) do nothing;
 
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000009'
+  and r.name = 'Supervisor HSE'
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
+
 -- ============================================================================
 -- Referência QA — IDs determinísticos (Stop Work / PP — Sprint 2.1)
 -- ============================================================================
@@ -747,3 +770,13 @@ on conflict (organization_member_id, role_id) do nothing;
 --
 -- docs/decisions/TIMELINE-DECISIONS.md (PO-1…PO-15)
 -- docs/decisions/PREVENTIVE-STOP-DECISIONS.md (A-R2)
+--
+-- Cenários Ver e Agir QA (Sprint 2.4 — VA-*):
+--   VA-01 qa-supervisor: start_occurrence_evaluation PP → EM_AVALIACAO (org Alpha)
+--   VA-03 qa-supervisor: record_occurrence_decision → VER_E_AGIR
+--   VA-07 qa-field: start → FORBIDDEN (sem occurrence.evaluate)
+--   VA-10 qa-gestor: leitura sem CTAs evaluate
+--   a0000000-0000-4000-8000-000000000009  qa-supervisor (Supervisor HSE Alpha)
+--   c0000000-0000-4000-8000-000000000009  vínculo org Alpha
+--
+-- docs/decisions/VER-E-AGIR-DECISIONS.md (PO-1…PO-20)
