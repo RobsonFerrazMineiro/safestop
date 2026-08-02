@@ -221,6 +221,259 @@ export type Database = {
           },
         ]
       }
+      mdho_assessments: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          complement: string | null
+          created_at: string
+          id: string
+          occurrence_id: string
+          organization_id: string
+          return_reason: string | null
+          returned_at: string | null
+          returned_by: string | null
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          complement?: string | null
+          created_at?: string
+          id?: string
+          occurrence_id: string
+          organization_id: string
+          return_reason?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          complement?: string | null
+          created_at?: string
+          id?: string
+          occurrence_id?: string
+          organization_id?: string
+          return_reason?: string | null
+          returned_at?: string | null
+          returned_by?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mdho_assessments_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mdho_assessments_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: true
+            referencedRelation: "occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mdho_assessments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mdho_assessments_returned_by_fkey"
+            columns: ["returned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mdho_assessments_submitted_by_fkey"
+            columns: ["submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mdho_categories: {
+        Row: {
+          allows_multiple: boolean
+          code: string
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          organization_id: string | null
+          requires_selection: boolean
+          updated_at: string
+        }
+        Insert: {
+          allows_multiple?: boolean
+          code: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          organization_id?: string | null
+          requires_selection?: boolean
+          updated_at?: string
+        }
+        Update: {
+          allows_multiple?: boolean
+          code?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          organization_id?: string | null
+          requires_selection?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mdho_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mdho_options: {
+        Row: {
+          allows_detail: boolean
+          category_id: string
+          code: string
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          label: string
+          organization_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          allows_detail?: boolean
+          category_id: string
+          code: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          allows_detail?: boolean
+          category_id?: string
+          code?: string
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          organization_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mdho_options_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "mdho_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mdho_options_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mdho_selections: {
+        Row: {
+          assessment_id: string
+          category_id: string
+          created_at: string
+          created_by: string
+          detail: string | null
+          id: string
+          option_id: string
+        }
+        Insert: {
+          assessment_id: string
+          category_id: string
+          created_at?: string
+          created_by: string
+          detail?: string | null
+          id?: string
+          option_id: string
+        }
+        Update: {
+          assessment_id?: string
+          category_id?: string
+          created_at?: string
+          created_by?: string
+          detail?: string | null
+          id?: string
+          option_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mdho_selections_assessment_id_fkey"
+            columns: ["assessment_id"]
+            isOneToOne: false
+            referencedRelation: "mdho_assessments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mdho_selections_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "mdho_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mdho_selections_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mdho_selections_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "mdho_options"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       member_roles: {
         Row: {
           created_at: string
@@ -1244,6 +1497,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_mdho_assessment: {
+        Args: { p_assessment_id: string }
+        Returns: Json
+      }
       can_access_occurrence: {
         Args: { target_occurrence_id: string }
         Returns: boolean
@@ -1308,8 +1565,18 @@ export type Database = {
         Returns: Json
       }
       record_occurrence_decision: { Args: { p_payload: Json }; Returns: Json }
+      return_mdho_assessment: { Args: { p_payload: Json }; Returns: Json }
+      save_mdho_draft: { Args: { p_payload: Json }; Returns: Json }
+      start_mdho_assessment: {
+        Args: { p_occurrence_id: string }
+        Returns: Json
+      }
       start_occurrence_evaluation: {
         Args: { p_occurrence_id: string }
+        Returns: Json
+      }
+      submit_mdho_assessment: {
+        Args: { p_assessment_id: string }
         Returns: Json
       }
       update_occurrence_comment: {
