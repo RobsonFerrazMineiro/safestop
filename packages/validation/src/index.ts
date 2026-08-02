@@ -32,8 +32,12 @@ export {
 export {
   startEvaluationSchema,
   recordVerEAgirDecisionSchema,
+  recordInterdicaoDecisionSchema,
+  recordOccurrenceDecisionSchema,
   OCCURRENCE_DECISION_REASON_MAX_LENGTH,
   OCCURRENCE_DECISION_REASON_MIN_LENGTH,
   type StartEvaluationInput,
   type RecordVerEAgirDecisionInput,
+  type RecordInterdicaoDecisionInput,
+  type RecordOccurrenceDecisionInput,
 } from "./occurrence-decision";

@@ -25,7 +25,23 @@ export const recordVerEAgirDecisionSchema = z.object({
   decisionReason: decisionReasonSchema,
 });
 
+export const recordInterdicaoDecisionSchema = z.object({
+  occurrenceId: z.string().uuid("Ocorrência é obrigatória."),
+  decisionReason: decisionReasonSchema,
+});
+
+/** Payload RPC completo — apps injetam decision_type ao chamar record_occurrence_decision. */
+export const recordOccurrenceDecisionSchema = z.object({
+  occurrenceId: z.string().uuid("Ocorrência é obrigatória."),
+  decisionType: z.enum(["VER_E_AGIR", "INTERDICAO_OFICIAL"], {
+    errorMap: () => ({ message: "Tipo de decisão inválido." }),
+  }),
+  decisionReason: decisionReasonSchema,
+});
+
 export type StartEvaluationInput = z.infer<typeof startEvaluationSchema>;
 export type RecordVerEAgirDecisionInput = z.infer<typeof recordVerEAgirDecisionSchema>;
+export type RecordInterdicaoDecisionInput = z.infer<typeof recordInterdicaoDecisionSchema>;
+export type RecordOccurrenceDecisionInput = z.infer<typeof recordOccurrenceDecisionSchema>;
 
 export { OCCURRENCE_DECISION_REASON_MIN_LENGTH, OCCURRENCE_DECISION_REASON_MAX_LENGTH };
