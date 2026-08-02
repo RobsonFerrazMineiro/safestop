@@ -8,7 +8,7 @@
 
 **PO (fonte oficial):** [`TIMELINE-DECISIONS.md`](./TIMELINE-DECISIONS.md) — PO-1…PO-15; Gate G0.  
 **Evidências (acima):** [`EVIDENCE-UI-SPEC.md`](./EVIDENCE-UI-SPEC.md) — **não redesenhar**.  
-**Ver e Agir (entre Evidências e Timeline):** [`VER-E-AGIR-UI-SPEC.md`](./VER-E-AGIR-UI-SPEC.md) — Sprint 2.4.
+**Decisão da Liderança (entre Evidências e Timeline):** [`VER-E-AGIR-UI-SPEC.md`](./VER-E-AGIR-UI-SPEC.md) (2.4) + [`INTERDICAO-OFICIAL-UI-SPEC.md`](./INTERDICAO-OFICIAL-UI-SPEC.md) (2.5).
 
 **Referências:**
 
@@ -83,7 +83,7 @@ Atualizada pela Sprint **2.4** (bloco Ver e Agir). Spec: [`VER-E-AGIR-UI-SPEC.md
 2. Grid info — área, local, atividade, autor, datas
 3. Condição insegura (+ medida imediata se houver)
 4. Evidências — EvidenceSection 2.2 (galeria 80×80) — NÃO redesenhar
-5. Ver e Agir — Sprint 2.4 (start / form / summary) — NÃO fundir com timeline
+5. Decisão da Liderança — 2.4 VA + 2.5 IO (start / forms / summary) — NÃO fundir com timeline
 6. Título seção — "LINHA DO TEMPO" (uppercase pequena)
 7. OccurrenceTimeline — lista de itens
 8. "Carregar mais" — se hasNextPage / nextCursor
@@ -114,7 +114,7 @@ Atualizada pela Sprint **2.4** (bloco Ver e Agir). Spec: [`VER-E-AGIR-UI-SPEC.md
 │ EVIDÊNCIAS                     2     │  (4) EvidenceSection 2.2
 │ [80][80][+] →                        │
 │                                      │
-│ AVALIAÇÃO / VER E AGIR               │  (5) Sprint 2.4 — ver VER-E-AGIR-UI-SPEC
+│ DECISÃO DA LIDERANÇA                 │  (5) 2.4 VA + 2.5 IO
 │                                      │
 │ LINHA DO TEMPO                       │  (6)
 │                                      │
@@ -151,7 +151,7 @@ Composer mobile: **barra fixa inferior** + `KeyboardAvoidingView` (PO-11).
 │           │ [Grid info 2 cols]                         │
 │           │ [Condição insegura]                        │
 │           │ [Evidências — galeria 2.2]                 │
-│           │ [Ver e Agir — Sprint 2.4]                  │
+│           │ [Decisão da Liderança — 2.4 VA + 2.5 IO]   │
 │           │                                            │
 │           │ LINHA DO TEMPO              [Atualizar]    │
 │           │ ● … itens DESC …                           │

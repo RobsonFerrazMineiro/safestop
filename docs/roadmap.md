@@ -183,6 +183,13 @@ A **sub-sprint 2.4** antecipa o caminho **Ver e Agir** até o status `VER_E_AGIR
 Decisões oficiais: `docs/decisions/VER-E-AGIR-DECISIONS.md` (PO-1…PO-20).  
 Especificação UI: `docs/decisions/VER-E-AGIR-UI-SPEC.md`.
 
+### Nota — Sub-sprint 2.5 (Interdição Oficial)
+
+A **sub-sprint 2.5** habilita o ramo paralelo **Interdição Oficial** a partir de `EM_AVALIACAO` → `INTERDICAO_CONFIRMADA` via extensão de `record_occurrence_decision` (`decision_type = INTERDICAO_OFICIAL`), permissão `occurrence.confirm_interdiction` — **sem** MDHO, IMS, notificações nem correção/liberação. IO **não** parte de `VER_E_AGIR`. Ordem UI: Evidências → Decisão da Liderança (VA+IO) → Summary → Timeline → Composer. Sprint 6 permanece MDHO/fluxo IO completo no roadmap.
+
+Decisões oficiais: `docs/decisions/INTERDICAO-OFICIAL-DECISIONS.md` (PO-IO-1…PO-IO-12).  
+Especificação UI: `docs/decisions/INTERDICAO-OFICIAL-UI-SPEC.md`.
+
 ---
 
 # Sprint 3

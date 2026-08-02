@@ -226,6 +226,51 @@ Utilizar quando existir:
 - cálculos;
 - validações próximas ao banco.
 
+### `record_occurrence_decision(p_payload jsonb)`
+
+RPC de domínio para registrar a decisão formal da liderança. Clientes **não** atualizam `occurrences.status` diretamente.
+
+**Payload — Ver e Agir (Sprint 2.4):**
+
+```json
+{
+  "occurrence_id": "uuid",
+  "decision_type": "VER_E_AGIR",
+  "decision_reason": "string 10-4000"
+}
+```
+
+- Permissão: `occurrence.evaluate`
+- Status exigido: `EM_AVALIACAO`
+- Status resultante: `VER_E_AGIR`
+
+**Payload — Interdição Oficial (Sprint 2.5):**
+
+```json
+{
+  "occurrence_id": "uuid",
+  "decision_type": "INTERDICAO_OFICIAL",
+  "decision_reason": "string 10-4000"
+}
+```
+
+- Permissão: `occurrence.confirm_interdiction`
+- Status exigido: `EM_AVALIACAO` (ramo **paralelo** a Ver e Agir — **não** a partir de `VER_E_AGIR`)
+- Status resultante: `INTERDICAO_CONFIRMADA`
+
+**Erros padronizados:** `UNAUTHORIZED` | `FORBIDDEN` | `NOT_FOUND` | `STATUS_MISMATCH` | `ALREADY_DECIDED` | `VALIDATION_ERROR` | `CONFLICT`.
+
+**Schemas client (`@safestop/validation`) — o cliente envia apenas `occurrenceId` + `decisionReason`; o service injeta `decision_type` no payload RPC:**
+
+| Ramo | Schema Zod | `decision_type` (service) |
+|---|---|---|
+| Ver e Agir | `recordVerEAgirDecisionSchema` | `VER_E_AGIR` |
+| Interdição Oficial | `recordInterdicaoDecisionSchema` | `INTERDICAO_OFICIAL` |
+
+Tipos: `RecordVerEAgirDecisionInput`, `RecordInterdicaoDecisionInput` em `@safestop/types`. Resposta: `RecordOccurrenceDecisionResult` (`decision` + `occurrence`).
+
+Contrato completo: `docs/decisions/VER-E-AGIR-DECISIONS.md`, `docs/decisions/INTERDICAO-OFICIAL-DECISIONS.md`.
+
 ---
 
 # Comunicação Mobile

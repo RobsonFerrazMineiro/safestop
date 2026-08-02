@@ -242,7 +242,7 @@ Atualizada pela Sprint **2.4** — ver `VER-E-AGIR-DECISIONS.md` / `VER-E-AGIR-U
 [Header código + status]
 [Info / descrição]
 [Evidências — EvidenceSection Sprint 2.2]
-[Ver e Agir — Sprint 2.4]
+[Decisão da Liderança — Sprint 2.4 VA + 2.5 IO]
 [OccurrenceTimeline — Sprint 2.3]
 [CommentComposer — Sprint 2.3]
 ```

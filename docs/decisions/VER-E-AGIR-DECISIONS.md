@@ -292,19 +292,21 @@ canViewEvaluationContext =
 
 ---
 
-## Integração UI (ordem oficial — atualiza 2.3)
+## Integração UI (ordem oficial — atualiza 2.3; estendida na 2.5)
 
 ```text
 [Header código + status]
 [Info / descrição operacional]
 [Evidências — EvidenceSection Sprint 2.2]
-[Ver e Agir — Sprint 2.4]          ← NOVO bloco
+[Decisão da Liderança — Sprint 2.4 VA + 2.5 IO]
   PP: StartEvaluationButton
-  EM_AVALIACAO: VerEAgirPanel (form)
-  VER_E_AGIR+: VerEAgirSummary (read-only)
+  EM_AVALIACAO: VerEAgirPanel (+ InterdicaoDecisionCard na 2.5)
+  VER_E_AGIR / INTERDICAO_CONFIRMADA: summary do ramo
 [OccurrenceTimeline — Sprint 2.3]
 [CommentComposer — Sprint 2.3]
 ```
+
+IO: `docs/decisions/INTERDICAO-OFICIAL-DECISIONS.md` / `INTERDICAO-OFICIAL-UI-SPEC.md`.
 
 ---
 

@@ -17,10 +17,13 @@
 | `docs/decisions/TIMELINE-UI-SPEC.md` | Ordem seções (atualizada 2.4) |
 | `docs/decisions/EVIDENCE-UI-SPEC.md` | Bloco evidências acima — não redesenhar |
 | `docs/design-system.md` | Banner, Button, Dialog, Textarea, Badge, Card |
-| `reference/base44/.../InterdictionDatail.jsx` (L244–278) | Cards decisão — adaptar **1 coluna**, só Ver e Agir |
+| `reference/base44/.../InterdictionDatail.jsx` (L244–278) | Cards decisão — 2.4: só VA; **2.5** habilita IO (ver abaixo) |
 | `apps/web/.../stop-work-detail-container.tsx` | Ponto de inserção inline |
+| `docs/decisions/INTERDICAO-OFICIAL-UI-SPEC.md` | Sprint 2.5 — grid dual VA+IO; supersede “Sem IO” em EM_AVALIACAO |
 
 Base44 = composição. PO prevalece. Conflito PO vs UI → **PO vence**.
+
+**Nota Sprint 2.5:** Em `EM_AVALIACAO`, a seção passa a chamar-se **Decisão da Liderança** e pode exibir **ambos** cards (VA + IO) conforme permissões. PO-5/PO-15 da 2.4 (“ocultar IO”) aplicam-se apenas enquanto a 2.5 não estiver entregue; após 2.5, Fiscal continua **sem** card IO (oculto). Spec IO: [`INTERDICAO-OFICIAL-UI-SPEC.md`](./INTERDICAO-OFICIAL-UI-SPEC.md).
 
 ---
 
@@ -64,23 +67,24 @@ Permissão: **`occurrence.evaluate`** — nunca inventar `occurrence.evaluation`
 
 ---
 
-## Ordem vertical do detalhe (atualiza 2.3)
+## Ordem vertical do detalhe (atualiza 2.3; estendida na 2.5)
 
 ```text
 1. Header — código SS-* + status badge (+ criticidade)
 2. Grid info — área, local, atividade, autor, datas
 3. Condição insegura (+ medida imediata se no bloco descrição)
 4. Evidências — EvidenceSection 2.2
-5. Ver e Agir — Sprint 2.4          ← este spec
-     PP:           StartEvaluationButton (+ banner)
-     EM_AVALIACAO: evaluation-context-card + VerEAgirPanel
-     VER_E_AGIR+:  VerEAgirSummary
+5. Decisão da Liderança — 2.4 + 2.5
+     PP:                    StartEvaluationButton (+ banner) — este spec
+     EM_AVALIACAO:          context + VerEAgirPanel (+ InterdicaoDecisionCard na 2.5)
+     VER_E_AGIR:            VerEAgirSummary
+     INTERDICAO_CONFIRMADA: InterdicaoSummary (2.5)
 6. Linha do Tempo — OccurrenceTimeline
 7. Carregar mais (se houver)
 8. CommentComposer
 ```
 
-**Não** fundir Ver e Agir com Timeline.
+**Não** fundir decisão com Timeline. Detalhe IO: [`INTERDICAO-OFICIAL-UI-SPEC.md`](./INTERDICAO-OFICIAL-UI-SPEC.md).
 
 ---
 
@@ -435,7 +439,8 @@ Justificativa integral no Summary; timeline pode truncar em `body`/metadata.
 | VA-C34 | Forbidden a11y | `Você não tem permissão para avaliar esta ocorrência.` |
 | VA-C35 | Empty imediata | `—` |
 
-**Proibido:** “Responsáveis notificados”, “alertas enviados”, “ciência”, CTAs “Corrigir” / “Liberar” / “Interdição Oficial”.
+**Proibido (2.4):** “Responsáveis notificados”, “alertas enviados”, “ciência”, CTAs “Corrigir” / “Liberar”.  
+**Interdição Oficial:** fora da 2.4; habilitada na **2.5** conforme `INTERDICAO-OFICIAL-UI-SPEC.md` (não disabled para quem não tem permissão — ocultar).
 
 ---
 
