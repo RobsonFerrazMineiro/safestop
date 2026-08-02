@@ -35,7 +35,8 @@
     "supabase:validate-ar2-seed": "node supabase/scripts/validate-ar2-seed.mjs",
     "supabase:validate-occurrence-attachments": "node supabase/scripts/validate-occurrence-attachments.mjs",
     "supabase:validate-occurrence-comments": "node supabase/scripts/validate-occurrence-comments.mjs",
-    "supabase:smoke-ver-e-agir": "node supabase/scripts/smoke-ver-e-agir.mjs"
+    "supabase:smoke-ver-e-agir": "node supabase/scripts/smoke-ver-e-agir.mjs",
+    "supabase:smoke-interdicao-oficial": "node supabase/scripts/smoke-interdicao-oficial.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.1",
