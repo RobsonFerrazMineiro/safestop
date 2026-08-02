@@ -12,7 +12,7 @@ type EvidencePreviewModalProps = {
   evidence: EvidenceListItem | null;
   isOpen: boolean;
   onClose: () => void;
-  onDelete: (item: EvidenceListItem) => void;
+  onDelete?: (item: EvidenceListItem) => void;
 };
 
 function formatEvidenceDate(value: string): string {
@@ -109,17 +109,19 @@ export function EvidencePreviewModal({
           )}
         </div>
 
-        <Can permission="occurrence.create">
-          <div className="flex justify-end">
-            <button
-              className="rounded-md border border-red-900/60 px-4 py-2 text-sm text-red-300 hover:bg-red-950/40"
-              type="button"
-              onClick={() => onDelete(evidence)}
-            >
-              Remover
-            </button>
-          </div>
-        </Can>
+        {onDelete ? (
+          <Can permission="occurrence.create">
+            <div className="flex justify-end">
+              <button
+                className="rounded-md border border-red-900/60 px-4 py-2 text-sm text-red-300 hover:bg-red-950/40"
+                type="button"
+                onClick={() => onDelete(evidence)}
+              >
+                Remover
+              </button>
+            </div>
+          </Can>
+        ) : null}
       </div>
     </dialog>
   );

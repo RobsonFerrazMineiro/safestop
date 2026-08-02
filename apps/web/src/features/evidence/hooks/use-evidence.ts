@@ -9,6 +9,7 @@ import {
 
 import { useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
+import { useInvalidateOccurrenceTimeline } from "@/features/timeline";
 
 import { getOccurrenceAttachmentSignedUrl } from "../services/get-attachment-signed-url";
 import { deleteOccurrenceAttachment } from "../services/delete-occurrence-evidence";
@@ -104,6 +105,7 @@ export function useUploadEvidence(occurrenceId: string) {
   const { can } = useAuthorization();
   const { activeOrganization } = useActiveOrganization();
   const organizationId = activeOrganization?.id;
+  const invalidateTimeline = useInvalidateOccurrenceTimeline();
   const { evidence } = useOccurrenceEvidence(occurrenceId);
 
   const [queue, setQueue] = useState<EvidenceUploadQueueItem[]>([]);
@@ -147,6 +149,7 @@ export function useUploadEvidence(occurrenceId: string) {
         await queryClient.invalidateQueries({
           queryKey: evidenceQueryKeys(organizationId, occurrenceId).list(),
         });
+        await invalidateTimeline(organizationId, occurrenceId);
       }
     },
     onError: (error, item) => {
@@ -264,6 +267,7 @@ export function useDeleteEvidence(occurrenceId: string) {
   const queryClient = useQueryClient();
   const { activeOrganization } = useActiveOrganization();
   const organizationId = activeOrganization?.id;
+  const invalidateTimeline = useInvalidateOccurrenceTimeline();
 
   const mutation = useMutation({
     mutationFn: (attachmentId: string) => deleteOccurrenceAttachment(attachmentId),
@@ -275,6 +279,7 @@ export function useDeleteEvidence(occurrenceId: string) {
         await queryClient.removeQueries({
           queryKey: evidenceQueryKeys(organizationId, occurrenceId).signedUrl(attachmentId),
         });
+        await invalidateTimeline(organizationId, occurrenceId);
       }
     },
   });

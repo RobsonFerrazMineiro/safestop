@@ -9,9 +9,10 @@ import {
   formatOccurrenceSeverity,
   formatOccurrenceStatus,
 } from "@/features/occurrences/utils/format-labels";
+import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
+import { OccurrenceTimeline } from "@/features/timeline";
 
-import { usePreventiveStop, usePreventiveStopHistory } from "../hooks/use-stop-work";
-import { StopWorkTimeline } from "./stop-work-timeline";
+import { usePreventiveStop } from "../hooks/use-stop-work";
 import { StopWorkError, StopWorkLoading } from "./stop-work-states";
 
 function formatDateTime(value: string | null): string {
@@ -36,12 +37,8 @@ export function StopWorkDetailContainer() {
 
   const params = useParams<{ id: string }>();
   const stopWorkId = params.id;
+  const { activeOrganization } = useActiveOrganization();
   const { stopWork, isLoading, isError, error, isNotFound } = usePreventiveStop(stopWorkId);
-  const {
-    history,
-    isLoading: isHistoryLoading,
-    isError: isHistoryError,
-  } = usePreventiveStopHistory(stopWorkId);
 
   if (isLoading) {
     return <StopWorkLoading message="Carregando paralisação..." />;
@@ -61,6 +58,8 @@ export function StopWorkDetailContainer() {
       </main>
     );
   }
+
+  const organizationId = activeOrganization?.id;
 
   const coordinates =
     stopWork.latitude !== null && stopWork.longitude !== null
@@ -105,8 +104,6 @@ export function StopWorkDetailContainer() {
         ) : null}
       </section>
 
-      <EvidenceSection occurrenceId={stopWork.id} />
-
       <section className="flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/40 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Registro</h2>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -116,16 +113,15 @@ export function StopWorkDetailContainer() {
         </div>
       </section>
 
-      <section className="flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/40 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Histórico</h2>
-        {isHistoryLoading ? (
-          <p className="text-sm text-gray-500">Carregando histórico...</p>
-        ) : isHistoryError ? (
-          <p className="text-sm text-gray-500">Não foi possível carregar o histórico.</p>
-        ) : (
-          <StopWorkTimeline entries={history} />
-        )}
-      </section>
+      <EvidenceSection occurrenceId={stopWork.id} />
+
+      {organizationId ? (
+        <OccurrenceTimeline
+          occurrenceId={stopWork.id}
+          occurrenceStatus={stopWork.status}
+          organizationId={organizationId}
+        />
+      ) : null}
     </main>
   );
 }
