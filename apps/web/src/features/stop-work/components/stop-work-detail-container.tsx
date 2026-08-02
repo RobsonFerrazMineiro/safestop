@@ -11,9 +11,10 @@ import {
 } from "@/features/occurrences/utils/format-labels";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { OccurrenceTimeline } from "@/features/timeline";
-import { VerEAgirDetailSection } from "@/features/ver-e-agir";
+import { InterdicaoBanner } from "@/features/interdicao-oficial";
 
 import { usePreventiveStop } from "../hooks/use-stop-work";
+import { LeadershipDecisionSection } from "./leadership-decision-section";
 import { StopWorkError, StopWorkLoading } from "./stop-work-states";
 
 function formatDateTime(value: string | null): string {
@@ -80,12 +81,19 @@ export function StopWorkDetailContainer() {
 
       <header className="flex flex-col gap-2">
         <span className="font-mono text-sm text-orange-400">{stopWork.publicCode}</span>
-        <div className="flex flex-wrap gap-2 text-xs uppercase tracking-wide text-gray-500">
+        <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-gray-500">
           <span>{formatOccurrenceStatus(stopWork.status)}</span>
+          {stopWork.status === "INTERDICAO_CONFIRMADA" ? (
+            <span className="rounded-full border border-red-600/60 bg-red-950/40 px-2 py-0.5 text-red-300">
+              Interdição Oficial
+            </span>
+          ) : null}
           <span>{formatOccurrenceSeverity(stopWork.severity)}</span>
         </div>
         <h1 className="text-3xl font-bold text-gray-100">{stopWork.title}</h1>
       </header>
+
+      {stopWork.status === "INTERDICAO_CONFIRMADA" ? <InterdicaoBanner /> : null}
 
       <section className="flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/40 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Localização</h2>
@@ -118,7 +126,7 @@ export function StopWorkDetailContainer() {
       <EvidenceSection occurrenceId={stopWork.id} />
 
       {organizationId ? (
-        <VerEAgirDetailSection
+        <LeadershipDecisionSection
           isRefreshing={isFetching}
           occurrence={stopWork}
           organizationId={organizationId}
