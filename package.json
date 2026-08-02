@@ -34,7 +34,8 @@
     "supabase:mobile-qa-acceptance": "node supabase/scripts/mobile-qa-acceptance.mjs",
     "supabase:validate-ar2-seed": "node supabase/scripts/validate-ar2-seed.mjs",
     "supabase:validate-occurrence-attachments": "node supabase/scripts/validate-occurrence-attachments.mjs",
-    "supabase:validate-occurrence-comments": "node supabase/scripts/validate-occurrence-comments.mjs"
+    "supabase:validate-occurrence-comments": "node supabase/scripts/validate-occurrence-comments.mjs",
+    "supabase:smoke-ver-e-agir": "node supabase/scripts/smoke-ver-e-agir.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.1",
