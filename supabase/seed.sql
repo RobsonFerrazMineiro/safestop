@@ -19,6 +19,7 @@
 --   qa-gestor@safestop.local    — 1 org, Gestor (occurrence.read, sem occurrence.create)
 --   qa-platform@safestop.local  — PLATFORM_ADMIN + papel plataforma (bypass UI)
 --   qa-supervisor@safestop.local — 1 org, Supervisor HSE (occurrence.evaluate — VA-*)
+--   qa-fiscal@safestop.local    — 1 org, Fiscal do Contrato (evaluate, sem confirm_interdiction — IO-*)
 --
 -- Idempotente: seguro executar múltiplas vezes (supabase db reset).
 -- ============================================================================
@@ -481,6 +482,11 @@ declare
       'id', 'a0000000-0000-4000-8000-000000000009',
       'email', 'qa-supervisor@safestop.local',
       'full_name', 'QA Supervisor HSE SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000010',
+      'email', 'qa-fiscal@safestop.local',
+      'full_name', 'QA Fiscal SafeStop'
     )
   );
   v_user jsonb;
@@ -643,6 +649,13 @@ values
     'a0000000-0000-4000-8000-000000000009',
     'INTERNAL',
     true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000010',
+    'b0000000-0000-4000-8000-000000000001',
+    'a0000000-0000-4000-8000-000000000010',
+    'INTERNAL',
+    true
   )
 on conflict (organization_id, profile_id) do update set
   membership_type = excluded.membership_type,
@@ -664,6 +677,7 @@ on conflict (organization_id, profile_id) do update set
 --   qa-noorg     — sem vínculos (F7)
 --   qa-platform  — Administrador da Plataforma na Delta (PLATFORM_ADMIN bypass)
 --   qa-supervisor — Supervisor HSE na Alpha (occurrence.evaluate — Sprint 2.4 VA-*)
+--   qa-fiscal     — Fiscal do Contrato na Alpha (evaluate, sem confirm_interdiction — Sprint 2.5 IO-*)
 
 insert into public.member_roles (organization_member_id, role_id)
 select om.id, r.id
@@ -735,6 +749,15 @@ where om.id = 'c0000000-0000-4000-8000-000000000009'
   and r.organization_id is null
 on conflict (organization_member_id, role_id) do nothing;
 
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000010'
+  and r.name = 'Fiscal do Contrato'
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
+
 -- ============================================================================
 -- Referência QA — IDs determinísticos (Stop Work / PP — Sprint 2.1)
 -- ============================================================================
@@ -780,3 +803,13 @@ on conflict (organization_member_id, role_id) do nothing;
 --   c0000000-0000-4000-8000-000000000009  vínculo org Alpha
 --
 -- docs/decisions/VER-E-AGIR-DECISIONS.md (PO-1…PO-20)
+--
+-- Cenários Interdição Oficial QA (Sprint 2.5 — IO-*):
+--   IO-01 qa-supervisor: record_occurrence_decision INTERDICAO_OFICIAL → INTERDICAO_CONFIRMADA
+--   IO-02 qa-fiscal: INTERDICAO_OFICIAL → FORBIDDEN (sem confirm_interdiction)
+--   IO-05 segunda decisão → ALREADY_DECIDED
+--   IO-07 timeline "Interdição Oficial confirmada"
+--   a0000000-0000-4000-8000-000000000010  qa-fiscal (Fiscal do Contrato Alpha)
+--   c0000000-0000-4000-8000-000000000010  vínculo org Alpha
+--
+-- docs/decisions/INTERDICAO-OFICIAL-DECISIONS.md (PO-IO-1…PO-IO-12)
