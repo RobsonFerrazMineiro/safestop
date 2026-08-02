@@ -41,3 +41,17 @@ export {
   type RecordInterdicaoDecisionInput,
   type RecordOccurrenceDecisionInput,
 } from "./occurrence-decision";
+export {
+  saveMdhoDraftSchema,
+  submitMdhoSchema,
+  returnMdhoSchema,
+  createSubmitMdhoSchema,
+  validateMdhoSubmitSelections,
+  MDHO_COMPLEMENT_MAX_LENGTH,
+  MDHO_OTHER_DETAIL_MIN_LENGTH,
+  MDHO_RETURN_REASON_MAX_LENGTH,
+  MDHO_RETURN_REASON_MIN_LENGTH,
+  type SaveMdhoDraftInput,
+  type SubmitMdhoInput,
+  type ReturnMdhoInput,
+} from "./mdho-assessment";
