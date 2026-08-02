@@ -17,16 +17,13 @@ export function usePreventiveStops() {
 export function usePreventiveStop(occurrenceId: string | undefined) {
   const result = useOccurrence(occurrenceId);
 
-  const isPreventiveStop =
-    result.occurrence !== null && result.occurrence !== undefined
-      ? result.occurrence.status === PREVENTIVE_STOP_STATUS
-      : false;
+  const isPreventiveStop = result.occurrence?.status === PREVENTIVE_STOP_STATUS;
 
   return {
     ...result,
-    stopWork: isPreventiveStop ? result.occurrence : null,
+    stopWork: result.occurrence ?? null,
     isPreventiveStop,
-    isNotFound: result.isNotFound || (result.isReady && !isPreventiveStop),
+    isNotFound: result.isNotFound,
   };
 }
 

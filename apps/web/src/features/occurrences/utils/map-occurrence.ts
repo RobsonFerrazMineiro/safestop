@@ -2,6 +2,7 @@ import {
   isOccurrenceDecisionType,
   isOccurrenceSeverity,
   isOccurrenceStatus,
+  type OccurrenceDecision,
 } from "@safestop/types";
 
 import type { OccurrenceDetailsEnriched, OccurrenceSummaryEnriched } from "../types";
@@ -30,6 +31,16 @@ type OccurrenceListRow = {
   contractor_organizations: OrganizationJoin | OrganizationJoin[] | null;
 };
 
+type OccurrenceDecisionJoin = {
+  id: string;
+  decision_type: string;
+  decision_reason: string | null;
+  decided_by: string;
+  decided_at: string;
+  created_at: string;
+  profiles: ProfileJoin | ProfileJoin[] | null;
+};
+
 type OccurrenceDetailRow = OccurrenceListRow & {
   task_description: string;
   location_description: string;
@@ -51,6 +62,9 @@ type OccurrenceDetailRow = OccurrenceListRow & {
   released_at: string | null;
   closed_at: string | null;
   cancelled_at: string | null;
+  assigned_evaluator_id: string | null;
+  evaluator: ProfileJoin | ProfileJoin[] | null;
+  occurrence_decisions: OccurrenceDecisionJoin | OccurrenceDecisionJoin[] | null;
 };
 
 function normalizeJoin<T>(value: T | T[] | null): T | null {
@@ -64,6 +78,34 @@ function normalizeJoin<T>(value: T | T[] | null): T | null {
 function mapContractorOrganizationName(row: OccurrenceListRow): string | null {
   const contractor = normalizeJoin(row.contractor_organizations);
   return contractor?.name ?? null;
+}
+
+function mapOccurrenceDecisionEmbed(
+  occurrenceId: string,
+  value: OccurrenceDecisionJoin | OccurrenceDecisionJoin[] | null,
+): OccurrenceDecision | null {
+  const row = normalizeJoin(value);
+
+  if (!row?.decision_type || !isOccurrenceDecisionType(row.decision_type)) {
+    return null;
+  }
+
+  if (!row.decision_reason) {
+    return null;
+  }
+
+  const profile = normalizeJoin(row.profiles);
+
+  return {
+    id: row.id,
+    occurrenceId,
+    decisionType: row.decision_type,
+    decisionReason: row.decision_reason,
+    decidedBy: row.decided_by,
+    decidedByName: profile?.full_name ?? null,
+    decidedAt: row.decided_at,
+    createdAt: row.created_at,
+  };
 }
 
 function mapSummaryFields(row: OccurrenceListRow): OccurrenceSummaryEnriched | null {
@@ -107,6 +149,8 @@ export function mapOccurrenceDetailRow(row: OccurrenceDetailRow): OccurrenceDeta
   const decisionType =
     row.decision_type && isOccurrenceDecisionType(row.decision_type) ? row.decision_type : null;
 
+  const evaluator = normalizeJoin(row.evaluator);
+
   return {
     ...summary,
     taskDescription: row.task_description,
@@ -129,6 +173,9 @@ export function mapOccurrenceDetailRow(row: OccurrenceDetailRow): OccurrenceDeta
     releasedAt: row.released_at,
     closedAt: row.closed_at,
     cancelledAt: row.cancelled_at,
+    assignedEvaluatorId: row.assigned_evaluator_id,
+    assignedEvaluatorName: evaluator?.full_name ?? null,
+    decision: mapOccurrenceDecisionEmbed(row.id, row.occurrence_decisions),
   };
 }
 

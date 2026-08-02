@@ -69,10 +69,12 @@ export function useOccurrence(occurrenceId: string | undefined) {
   return {
     occurrence: query.data,
     isLoading: enabled && query.isLoading,
+    isFetching: query.isFetching,
     isError: query.isError,
     error: query.error,
     isNotFound: enabled && query.isSuccess && query.data === null,
     isReady: enabled && query.isSuccess,
+    refetch: query.refetch,
   };
 }
 

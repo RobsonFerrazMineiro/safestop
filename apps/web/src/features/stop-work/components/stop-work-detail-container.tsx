@@ -11,6 +11,7 @@ import {
 } from "@/features/occurrences/utils/format-labels";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { OccurrenceTimeline } from "@/features/timeline";
+import { VerEAgirDetailSection } from "@/features/ver-e-agir";
 
 import { usePreventiveStop } from "../hooks/use-stop-work";
 import { StopWorkError, StopWorkLoading } from "./stop-work-states";
@@ -38,7 +39,8 @@ export function StopWorkDetailContainer() {
   const params = useParams<{ id: string }>();
   const stopWorkId = params.id;
   const { activeOrganization } = useActiveOrganization();
-  const { stopWork, isLoading, isError, error, isNotFound } = usePreventiveStop(stopWorkId);
+  const { stopWork, isLoading, isError, error, isNotFound, refetch, isFetching } =
+    usePreventiveStop(stopWorkId);
 
   if (isLoading) {
     return <StopWorkLoading message="Carregando paralisação..." />;
@@ -114,6 +116,15 @@ export function StopWorkDetailContainer() {
       </section>
 
       <EvidenceSection occurrenceId={stopWork.id} />
+
+      {organizationId ? (
+        <VerEAgirDetailSection
+          isRefreshing={isFetching}
+          occurrence={stopWork}
+          organizationId={organizationId}
+          onRefresh={refetch}
+        />
+      ) : null}
 
       {organizationId ? (
         <OccurrenceTimeline

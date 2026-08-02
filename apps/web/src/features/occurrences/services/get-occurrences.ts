@@ -43,6 +43,17 @@ const DETAIL_SELECT = `
   released_at,
   closed_at,
   cancelled_at,
+  assigned_evaluator_id,
+  evaluator:profiles!occurrences_assigned_evaluator_id_fkey ( full_name ),
+  occurrence_decisions (
+    id,
+    decision_type,
+    decision_reason,
+    decided_by,
+    decided_at,
+    created_at,
+    profiles!occurrence_decisions_decided_by_fkey ( full_name )
+  ),
   areas ( name ),
   profiles!occurrences_created_by_fkey ( full_name ),
   contractor_organizations:organizations!occurrences_contractor_organization_id_fkey ( name )
