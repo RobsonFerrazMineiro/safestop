@@ -260,8 +260,7 @@ Cada card mantém **seu próprio** textarea (não compartilhar estado entre VA e
 │ Decidido por   Nome                  │
 │ Em             dd/mm/aaaa HH:mm      │
 │                                      │
-│ Próximas etapas (MDHO) em versão     │  hint — SEM CTA
-│ futura.                              │
+│ (hint MDHO — ver nota Sprint 2.6)    │
 └──────────────────────────────────────┘
 ```
 
@@ -270,7 +269,8 @@ Cada card mantém **seu próprio** textarea (não compartilhar estado entre VA e
 | Modo | Read-only |
 | Badge | `Interdição Oficial` — **red-600** persistente |
 | Header status | Label oficial `Interdição Oficial` / `INTERDICAO_CONFIRMADA` formatada |
-| Hint MDHO | IO-C08 — informativo; **zero** botão MDHO/IMS |
+| Hint MDHO (só 2.5) | IO-C08 — informativo; **zero** botão MDHO/IMS |
+| Hint MDHO (com 2.6) | **Remover** hint futuro; seção [`MDHO-UI-SPEC.md`](./MDHO-UI-SPEC.md) assume o fluxo |
 | Forms VA/IO | Ocultos |
 | VerEAgirSummary | Não exibir |
 
@@ -342,7 +342,7 @@ Kind: `STATUS_CHANGED` enriquecido. Metadata: `decisionType`, `decisionReason` (
 | **IO-C05** | Label campo | `Justificativa técnica` |
 | **IO-C06** | CTA card / dialog action | `Confirmar interdição` |
 | **IO-C07** | Dialog título | `Confirmar Interdição Oficial?` |
-| **IO-C08** | Hint MDHO | `Próximas etapas (MDHO) em versão futura.` |
+| **IO-C08** | Hint MDHO (pré-2.6) | `Próximas etapas (MDHO) em versão futura.` — omitir quando seção MDHO 2.6 existir |
 | **IO-C09** | Conflict | `Esta ocorrência já foi atualizada` |
 | **IO-C10** | Already decided | `Esta ocorrência já possui uma decisão registrada.` |
 | **IO-C11** | Offline | `Você está offline. Conecte-se para continuar.` |

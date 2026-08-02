@@ -190,6 +190,13 @@ A **sub-sprint 2.5** habilita o ramo paralelo **Interdição Oficial** a partir 
 Decisões oficiais: `docs/decisions/INTERDICAO-OFICIAL-DECISIONS.md` (PO-IO-1…PO-IO-12).  
 Especificação UI: `docs/decisions/INTERDICAO-OFICIAL-UI-SPEC.md`.
 
+### Nota — Sub-sprint 2.6 (Avaliação Técnica MDHO)
+
+A **sub-sprint 2.6** entrega MDHO operacional **somente no ramo IO**: `start_mdho_assessment` → rascunho → submit (Supervisor) → approve/return (Liderança) até `AGUARDANDO_REGISTRO_IMS` — **sem** IMS, plano de ação nem notificações. MDHO **proibido** em Ver e Agir. Ordem UI: Evidências → Decisão VA/IO → InterdicaoSummary → MDHO → Timeline → Composer. Sprint 6/7 do roadmap permanecem IMS e plano de ação.
+
+Decisões oficiais: `docs/decisions/MDHO-DECISIONS.md` (PO-MDHO-1…PO-MDHO-28).  
+Especificação UI: `docs/decisions/MDHO-UI-SPEC.md`.
+
 ---
 
 # Sprint 3

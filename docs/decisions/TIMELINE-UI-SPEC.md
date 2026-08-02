@@ -8,7 +8,7 @@
 
 **PO (fonte oficial):** [`TIMELINE-DECISIONS.md`](./TIMELINE-DECISIONS.md) — PO-1…PO-15; Gate G0.  
 **Evidências (acima):** [`EVIDENCE-UI-SPEC.md`](./EVIDENCE-UI-SPEC.md) — **não redesenhar**.  
-**Decisão da Liderança (entre Evidências e Timeline):** [`VER-E-AGIR-UI-SPEC.md`](./VER-E-AGIR-UI-SPEC.md) (2.4) + [`INTERDICAO-OFICIAL-UI-SPEC.md`](./INTERDICAO-OFICIAL-UI-SPEC.md) (2.5).
+**Decisão / MDHO (entre Evidências e Timeline):** [`VER-E-AGIR-UI-SPEC.md`](./VER-E-AGIR-UI-SPEC.md) (2.4) + [`INTERDICAO-OFICIAL-UI-SPEC.md`](./INTERDICAO-OFICIAL-UI-SPEC.md) (2.5) + [`MDHO-UI-SPEC.md`](./MDHO-UI-SPEC.md) (2.6).
 
 **Referências:**
 
@@ -76,7 +76,7 @@ staleTime query: **30s** (PO-15).
 
 ## Ordem vertical do detalhe (PO-11) — obrigatória
 
-Atualizada pela Sprint **2.4** (bloco Ver e Agir). Spec: [`VER-E-AGIR-UI-SPEC.md`](./VER-E-AGIR-UI-SPEC.md).
+Atualizada pelas Sprints **2.4–2.6** (Decisão da Liderança + MDHO). Specs: [`VER-E-AGIR-UI-SPEC.md`](./VER-E-AGIR-UI-SPEC.md), [`INTERDICAO-OFICIAL-UI-SPEC.md`](./INTERDICAO-OFICIAL-UI-SPEC.md), [`MDHO-UI-SPEC.md`](./MDHO-UI-SPEC.md).
 
 ```text
 1. Header — código SS-* + status badge (+ criticidade)
@@ -84,10 +84,11 @@ Atualizada pela Sprint **2.4** (bloco Ver e Agir). Spec: [`VER-E-AGIR-UI-SPEC.md
 3. Condição insegura (+ medida imediata se houver)
 4. Evidências — EvidenceSection 2.2 (galeria 80×80) — NÃO redesenhar
 5. Decisão da Liderança — 2.4 VA + 2.5 IO (start / forms / summary) — NÃO fundir com timeline
-6. Título seção — "LINHA DO TEMPO" (uppercase pequena)
-7. OccurrenceTimeline — lista de itens
-8. "Carregar mais" — se hasNextPage / nextCursor
-9. CommentComposer — textarea + botão Enviar
+6. Avaliação Técnica (MDHO) — Sprint 2.6 (somente ramo IO) — NÃO fundir com timeline
+7. Título seção — "LINHA DO TEMPO" (uppercase pequena)
+8. OccurrenceTimeline — lista de itens
+9. "Carregar mais" — se hasNextPage / nextCursor
+10. CommentComposer — textarea + botão Enviar
 ```
 
 **Web e mobile:** mesma ordem stack. Composer **não** fica em painel lateral sticky como fluxo primário.
@@ -116,9 +117,11 @@ Atualizada pela Sprint **2.4** (bloco Ver e Agir). Spec: [`VER-E-AGIR-UI-SPEC.md
 │                                      │
 │ DECISÃO DA LIDERANÇA                 │  (5) 2.4 VA + 2.5 IO
 │                                      │
-│ LINHA DO TEMPO                       │  (6)
+│ AVALIAÇÃO TÉCNICA (MDHO)             │  (6) Sprint 2.6 — só ramo IO
 │                                      │
-│ ● Paralisação registrada      18:40  │  (7) DESC
+│ LINHA DO TEMPO                       │  (7–8)
+│                                      │
+│ ● Paralisação registrada      18:40  │  DESC
 │   Ana Souza                          │
 │                                      │
 │ 💬 Ana Souza                   18:35 │
@@ -128,11 +131,11 @@ Atualizada pela Sprint **2.4** (bloco Ver e Agir). Spec: [`VER-E-AGIR-UI-SPEC.md
 │ 📷 foto-01.jpg                18:20 │
 │   tap → preview 2.2                  │
 │                                      │
-│ [ Carregar mais ]                    │  (8)
+│ [ Carregar mais ]                    │  (9)
 │                                      │
 │ (padding para composer fixo)         │
 ├──────────────────────────────────────┤
-│ ┌─────────────────────────┐ ┌──────┐ │  (9) sticky + KAV
+│ ┌─────────────────────────┐ ┌──────┐ │  (10) sticky + KAV
 │ │ Adicionar comentário... │ │Enviar│ │
 │ └─────────────────────────┘ └──────┘ │
 │         Safe Area                    │
@@ -152,6 +155,7 @@ Composer mobile: **barra fixa inferior** + `KeyboardAvoidingView` (PO-11).
 │           │ [Condição insegura]                        │
 │           │ [Evidências — galeria 2.2]                 │
 │           │ [Decisão da Liderança — 2.4 VA + 2.5 IO]   │
+│           │ [Avaliação Técnica (MDHO) — 2.6 / só IO]   │
 │           │                                            │
 │           │ LINHA DO TEMPO              [Atualizar]    │
 │           │ ● … itens DESC …                           │

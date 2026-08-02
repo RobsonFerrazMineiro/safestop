@@ -238,6 +238,7 @@ canRecordVerEAgir =
    │    └─ InterdicaoDecisionCard (se canConfirmInterdiction)
    ├─ VerEAgirSummary (se VER_E_AGIR)
    └─ InterdicaoSummary (se INTERDICAO_CONFIRMADA)
+[Avaliação Técnica (MDHO) — Sprint 2.6 — se ramo IO]
 [OccurrenceTimeline — 2.3]
 [CommentComposer — 2.3]
 ```

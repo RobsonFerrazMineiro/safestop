@@ -271,6 +271,74 @@ Tipos: `RecordVerEAgirDecisionInput`, `RecordInterdicaoDecisionInput` em `@safes
 
 Contrato completo: `docs/decisions/VER-E-AGIR-DECISIONS.md`, `docs/decisions/INTERDICAO-OFICIAL-DECISIONS.md`.
 
+### RPCs — Avaliação Técnica MDHO (Sprint 2.6)
+
+MDHO **somente** no ramo Interdição Oficial. Clientes **não** atualizam status via UPDATE direto. Contrato: `docs/decisions/MDHO-DECISIONS.md`.
+
+#### `start_mdho_assessment(p_occurrence_id uuid)`
+
+- Permissão: `mdho.fill`
+- Status exigido: `INTERDICAO_CONFIRMADA` + `decision_type = INTERDICAO_OFICIAL`
+- Efeitos: assessment `DRAFT`; ocorrência → `MDHO_EM_PREENCHIMENTO`
+
+#### `save_mdho_draft(p_payload jsonb)`
+
+```json
+{
+  "assessment_id": "uuid",
+  "selections": [
+    { "category_id": "uuid", "option_id": "uuid", "detail": "string?" }
+  ],
+  "complement": "string?",
+  "expected_updated_at": "timestamptz?"
+}
+```
+
+- Permissão: `mdho.fill`
+- Assessment: `DRAFT` ou `RETURNED`
+- Status ocorrência: permanece `MDHO_EM_PREENCHIMENTO`
+- **Não** gera evento de timeline
+
+#### `submit_mdho_assessment(p_assessment_id uuid)`
+
+- Permissão: `mdho.submit` (Supervisor HSE — Liderança **não** possui)
+- Assessment → `SUBMITTED`; ocorrência → `AGUARDANDO_APROVACAO_HSE`
+- Validação: categorias `requires_selection` ≥ 1; `DEVIATION_TYPE` exatamente 1; `OTHER.detail` ≥ 10 chars
+
+#### `approve_mdho_assessment(p_assessment_id uuid)`
+
+- Permissão: `mdho.approve` (Liderança HSE)
+- Assessment → `APPROVED`; ocorrência → `AGUARDANDO_REGISTRO_IMS`
+- IMS **fora** da 2.6
+
+#### `return_mdho_assessment(p_payload jsonb)`
+
+```json
+{
+  "assessment_id": "uuid",
+  "return_reason": "string 10-4000"
+}
+```
+
+- Permissão: `mdho.return` (Liderança HSE)
+- Assessment → `RETURNED`; ocorrência → `MDHO_EM_PREENCHIMENTO`
+
+**Erros MDHO:** `UNAUTHORIZED` | `FORBIDDEN` | `NOT_FOUND` | `STATUS_MISMATCH` | `ALREADY_EXISTS` | `ALREADY_SUBMITTED` | `VALIDATION_ERROR` | `CONFLICT` | `INTERNAL_ERROR`.
+
+**Schemas client (`@safestop/validation`):**
+
+| Operação | Schema | Campos client (camelCase) |
+|---|---|---|
+| Rascunho | `saveMdhoDraftSchema` | `assessmentId`, `selections?`, `complement?`, `expectedUpdatedAt?` |
+| Enviar | `createSubmitMdhoSchema(catalog)` / `submitMdhoSchema` + `validateMdhoSubmitSelections` | `assessmentId`, `selections`, `complement?` |
+| Devolver | `returnMdhoSchema` | `assessmentId`, `returnReason` (10–4000) |
+
+Tipos: `@safestop/types` — `MdhoAssessment`, `MdhoCatalog`, `StartMdhoAssessmentResult`, etc. Helper: `isMdhoEligible(occurrence)`.
+
+**Query keys:** `occurrenceQueryKeys.mdho(occurrenceId)`, `occurrenceQueryKeys.mdhoCatalog()`.
+
+**Categorias do catálogo (seed):** `BEHAVIOR` · `DEVIATION_TYPE` · `PRECONDITIONS` · `ORGANIZATIONAL_ISSUES` · `SUPERVISION_INSPECTION`.
+
 ---
 
 # Comunicação Mobile
