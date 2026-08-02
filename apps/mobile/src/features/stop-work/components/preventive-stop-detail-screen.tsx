@@ -1,11 +1,14 @@
-import { useRouter } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import type { OccurrenceTimelineItem } from "@safestop/types";
 
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
-import { EvidenceSection } from "@/features/evidence";
+import { EvidencePreviewModal, EvidenceSection, type EvidenceListItem } from "@/features/evidence";
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
+import { CommentComposerBar, OccurrenceTimelineList, useCreateComment } from "@/features/timeline";
 import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
 
 import { PreventiveStopEmpty } from "./preventive-stop-empty";
@@ -29,6 +32,14 @@ function DetailField({ label, value }: { label: string; value: string }) {
   );
 }
 
+function readIsOnline(): boolean {
+  const browserGlobal = globalThis as typeof globalThis & {
+    navigator?: { onLine?: boolean };
+  };
+
+  return browserGlobal.navigator?.onLine !== false;
+}
+
 export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetailScreenProps) {
   const router = useRouter();
   useRequirePermission("occurrence.read");
@@ -36,45 +47,22 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
   const { preventiveStop, isLoading, isError, isNotFound, canRead } =
     usePreventiveStop(occurrenceId);
 
-  if (!canRead) {
-    return null;
-  }
+  const { createComment, isCreating } = useCreateComment(occurrenceId);
+  const [previewEvidence, setPreviewEvidence] = useState<EvidenceListItem | null>(null);
+  const [isOnline] = useState(readIsOnline);
 
-  if (isLoading) {
+  const headerComponent = useMemo(() => {
+    if (!preventiveStop) {
+      return <View />;
+    }
+
+    const coordinates =
+      preventiveStop.latitude !== null && preventiveStop.longitude !== null
+        ? `${preventiveStop.latitude.toFixed(5)}, ${preventiveStop.longitude.toFixed(5)}`
+        : null;
+
     return (
-      <SafeAreaView style={styles.container}>
-        <OccurrenceLoading />
-      </SafeAreaView>
-    );
-  }
-
-  if (isError) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <OccurrenceError message="Não foi possível carregar a ocorrência." />
-      </SafeAreaView>
-    );
-  }
-
-  if (isNotFound || !preventiveStop) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <PreventiveStopEmpty
-          description="A ocorrência não existe ou você não possui acesso na organização ativa."
-          title="Ocorrência não encontrada"
-        />
-      </SafeAreaView>
-    );
-  }
-
-  const coordinates =
-    preventiveStop.latitude !== null && preventiveStop.longitude !== null
-      ? `${preventiveStop.latitude.toFixed(5)}, ${preventiveStop.longitude.toFixed(5)}`
-      : null;
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <View style={styles.headerContent}>
         <Pressable
           accessibilityLabel="Voltar para listagem"
           accessibilityRole="button"
@@ -108,16 +96,6 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
           <DetailField label="Medida imediata" value={preventiveStop.immediateActionDescription} />
         ) : null}
 
-        <EvidenceSection occurrenceId={occurrenceId} />
-
-        <Text style={styles.sectionTitle}>Histórico</Text>
-        <DetailField
-          label="Evento"
-          value={`${getOccurrenceStatusLabel("PARALISACAO_PREVENTIVA")} registrada${
-            preventiveStop.createdByName ? ` por ${preventiveStop.createdByName}` : ""
-          } · ${formatOccurrenceDate(preventiveStop.createdAt)}`}
-        />
-
         <Text style={styles.sectionTitle}>Registro</Text>
         {preventiveStop.createdByName ? (
           <DetailField label="Registrado por" value={preventiveStop.createdByName} />
@@ -130,17 +108,110 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
           />
         ) : null}
 
-        <Pressable
-          accessibilityLabel="Voltar ao início"
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.homeButton, pressed && styles.buttonPressed]}
-          onPress={() => {
-            router.replace(authRoutes.app);
+        <EvidenceSection occurrenceId={occurrenceId} />
+      </View>
+    );
+  }, [occurrenceId, preventiveStop, router]);
+
+  function handlePreviewEvidence(attachmentId: string, item: OccurrenceTimelineItem) {
+    const fileName =
+      typeof item.metadata.originalFileName === "string"
+        ? item.metadata.originalFileName
+        : item.title;
+
+    setPreviewEvidence({
+      id: attachmentId,
+      occurrenceId,
+      organizationId: preventiveStop?.organizationId ?? "",
+      attachmentType: "INITIAL_EVIDENCE",
+      originalFileName: fileName,
+      mimeType: "image/jpeg",
+      fileSize: 0,
+      caption: item.body,
+      uploadStatus: "COMPLETED",
+      createdAt: item.occurredAt,
+      uploadedByName: item.actorName,
+    });
+  }
+
+  if (!canRead) {
+    return null;
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <OccurrenceLoading />
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <OccurrenceError message="Não foi possível carregar a ocorrência." />
+      </SafeAreaView>
+    );
+  }
+
+  if (isNotFound || !preventiveStop) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <PreventiveStopEmpty
+          description="A ocorrência não existe ou você não possui acesso na organização ativa."
+          title="Ocorrência não encontrada"
+        />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView edges={["top"]} style={styles.container}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
+        style={styles.flex}
+      >
+        <OccurrenceTimelineList
+          contentPaddingBottom={140}
+          headerComponent={headerComponent}
+          isOnline={isOnline}
+          occurrenceId={occurrenceId}
+          occurrenceStatus={preventiveStop.status}
+          onPreviewEvidence={handlePreviewEvidence}
+        />
+
+        <CommentComposerBar
+          key={occurrenceId}
+          isOnline={isOnline}
+          isSubmitting={isCreating}
+          occurrenceId={occurrenceId}
+          occurrenceStatus={preventiveStop.status}
+          onSubmit={async (content) => {
+            await createComment(content);
           }}
-        >
-          <Text style={styles.homeButtonText}>Voltar ao início</Text>
-        </Pressable>
-      </ScrollView>
+        />
+      </KeyboardAvoidingView>
+
+      <EvidencePreviewModal
+        evidence={previewEvidence}
+        occurrenceId={occurrenceId}
+        visible={previewEvidence !== null}
+        onClose={() => {
+          setPreviewEvidence(null);
+        }}
+      />
+
+      <Pressable
+        accessibilityLabel="Voltar ao início"
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.homeButtonFloating, pressed && styles.buttonPressed]}
+        onPress={() => {
+          router.replace(authRoutes.app);
+        }}
+      >
+        <Text style={styles.homeButtonText}>Voltar ao início</Text>
+      </Pressable>
     </SafeAreaView>
   );
 }
@@ -164,10 +235,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F1115",
     flex: 1,
   },
-  content: {
-    gap: 12,
-    padding: 16,
-  },
   field: {
     gap: 4,
   },
@@ -181,17 +248,27 @@ const styles = StyleSheet.create({
     color: "#F9FAFB",
     fontSize: 15,
   },
-  homeButton: {
+  flex: {
+    flex: 1,
+  },
+  headerContent: {
+    gap: 12,
+  },
+  homeButtonFloating: {
     alignItems: "center",
     backgroundColor: "#374151",
     borderRadius: 8,
+    bottom: 96,
     justifyContent: "center",
-    marginTop: 8,
-    minHeight: 44,
+    minHeight: 40,
+    position: "absolute",
+    right: 16,
+    zIndex: 2,
+    paddingHorizontal: 12,
   },
   homeButtonText: {
     color: "#F9FAFB",
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
   },
   meta: {
