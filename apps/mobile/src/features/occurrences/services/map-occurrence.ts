@@ -2,6 +2,7 @@ import {
   isOccurrenceDecisionType,
   isOccurrenceSeverity,
   isOccurrenceStatus,
+  type OccurrenceDecision,
   type OccurrenceDetails,
   type OccurrenceSummary,
 } from "@safestop/types";
@@ -61,7 +62,59 @@ export type OccurrenceDetailsRow = OccurrenceSummaryRow & {
   released_at: string | null;
   closed_at: string | null;
   cancelled_at: string | null;
+  assigned_evaluator_id: string | null;
+  evaluator: ProfileJoin;
+  occurrence_decisions:
+    | {
+        id: string;
+        decision_type: string;
+        decision_reason: string | null;
+        decided_by: string;
+        decided_at: string;
+        created_at: string;
+        profiles: ProfileJoin;
+      }
+    | {
+        id: string;
+        decision_type: string;
+        decision_reason: string | null;
+        decided_by: string;
+        decided_at: string;
+        created_at: string;
+        profiles: ProfileJoin;
+      }[]
+    | null;
 };
+
+function mapOccurrenceDecisionEmbed(
+  occurrenceId: string,
+  value: OccurrenceDetailsRow["occurrence_decisions"],
+): OccurrenceDecision | null {
+  if (!value) {
+    return null;
+  }
+
+  const row = Array.isArray(value) ? value[0] : value;
+
+  if (!row?.decision_type || !isOccurrenceDecisionType(row.decision_type)) {
+    return null;
+  }
+
+  if (!row.decision_reason) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    occurrenceId,
+    decisionType: row.decision_type,
+    decisionReason: row.decision_reason,
+    decidedBy: row.decided_by,
+    decidedByName: resolveJoinName(row.profiles, "full_name"),
+    decidedAt: row.decided_at,
+    createdAt: row.created_at,
+  };
+}
 
 export function mapOccurrenceSummaryRow(row: OccurrenceSummaryRow): OccurrenceSummary | null {
   if (!isOccurrenceStatus(row.status) || !isOccurrenceSeverity(row.severity)) {
@@ -113,5 +166,8 @@ export function mapOccurrenceDetailsRow(row: OccurrenceDetailsRow): OccurrenceDe
     releasedAt: row.released_at,
     closedAt: row.closed_at,
     cancelledAt: row.cancelled_at,
+    assignedEvaluatorId: row.assigned_evaluator_id,
+    assignedEvaluatorName: resolveJoinName(row.evaluator, "full_name"),
+    decision: mapOccurrenceDecisionEmbed(row.id, row.occurrence_decisions),
   };
 }

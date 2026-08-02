@@ -9,6 +9,7 @@ import { EvidencePreviewModal, EvidenceSection, type EvidenceListItem } from "@/
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
 import { CommentComposerBar, OccurrenceTimelineList, useCreateComment } from "@/features/timeline";
+import { EvaluationSection } from "@/features/ver-e-agir";
 import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
 
 import { PreventiveStopEmpty } from "./preventive-stop-empty";
@@ -44,7 +45,7 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
   const router = useRouter();
   useRequirePermission("occurrence.read");
 
-  const { preventiveStop, isLoading, isError, isNotFound, canRead } =
+  const { preventiveStop, isLoading, isError, isNotFound, canRead, refetch, isFetching } =
     usePreventiveStop(occurrenceId);
 
   const { createComment, isCreating } = useCreateComment(occurrenceId);
@@ -109,9 +110,16 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
         ) : null}
 
         <EvidenceSection occurrenceId={occurrenceId} />
+
+        <EvaluationSection
+          isOnline={isOnline}
+          isRefreshing={isFetching}
+          occurrence={preventiveStop}
+          onRefresh={refetch}
+        />
       </View>
     );
-  }, [occurrenceId, preventiveStop, router]);
+  }, [isFetching, isOnline, occurrenceId, preventiveStop, refetch, router]);
 
   function handlePreviewEvidence(attachmentId: string, item: OccurrenceTimelineItem) {
     const fileName =

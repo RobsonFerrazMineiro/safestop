@@ -29,8 +29,19 @@ const OCCURRENCE_DETAIL_SELECT = `
   released_at,
   closed_at,
   cancelled_at,
+  assigned_evaluator_id,
+  occurrence_decisions (
+    id,
+    decision_type,
+    decision_reason,
+    decided_by,
+    decided_at,
+    created_at,
+    profiles:decided_by (full_name)
+  ),
   areas (name),
   profiles:created_by (full_name),
+  evaluator:profiles!occurrences_assigned_evaluator_id_fkey (full_name),
   contractor_organizations:contractor_organization_id (name)
 `;
 
