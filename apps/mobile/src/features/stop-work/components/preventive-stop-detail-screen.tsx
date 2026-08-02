@@ -10,6 +10,11 @@ import { OccurrenceError } from "@/features/occurrences/components/occurrence-er
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
 import { CommentComposerBar, OccurrenceTimelineList, useCreateComment } from "@/features/timeline";
 import { EvaluationSection } from "@/features/ver-e-agir";
+import {
+  InterdicaoBanner,
+  InterdicaoSection,
+  shouldShowInterdicaoBanner,
+} from "@/features/interdicao-oficial";
 import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
 
 import { PreventiveStopEmpty } from "./preventive-stop-empty";
@@ -82,6 +87,8 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
           {getOccurrenceSeverityLabel(preventiveStop.severity)}
         </Text>
 
+        {shouldShowInterdicaoBanner(preventiveStop.status) ? <InterdicaoBanner /> : null}
+
         <Text style={styles.sectionTitle}>Localização</Text>
         <DetailField label="Área" value={preventiveStop.areaName ?? "—"} />
         <DetailField label="Local" value={preventiveStop.locationDescription} />
@@ -112,6 +119,13 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
         <EvidenceSection occurrenceId={occurrenceId} />
 
         <EvaluationSection
+          isOnline={isOnline}
+          isRefreshing={isFetching}
+          occurrence={preventiveStop}
+          onRefresh={refetch}
+        />
+
+        <InterdicaoSection
           isOnline={isOnline}
           isRefreshing={isFetching}
           occurrence={preventiveStop}
