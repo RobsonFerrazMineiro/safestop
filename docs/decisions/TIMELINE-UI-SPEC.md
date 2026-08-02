@@ -7,7 +7,8 @@
 **Entregável:** `docs/decisions/TIMELINE-UI-SPEC.md`
 
 **PO (fonte oficial):** [`TIMELINE-DECISIONS.md`](./TIMELINE-DECISIONS.md) — PO-1…PO-15; Gate G0.  
-**Evidências (acima da timeline):** [`EVIDENCE-UI-SPEC.md`](./EVIDENCE-UI-SPEC.md) — **não redesenhar**.
+**Evidências (acima):** [`EVIDENCE-UI-SPEC.md`](./EVIDENCE-UI-SPEC.md) — **não redesenhar**.  
+**Ver e Agir (entre Evidências e Timeline):** [`VER-E-AGIR-UI-SPEC.md`](./VER-E-AGIR-UI-SPEC.md) — Sprint 2.4.
 
 **Referências:**
 
@@ -75,15 +76,18 @@ staleTime query: **30s** (PO-15).
 
 ## Ordem vertical do detalhe (PO-11) — obrigatória
 
+Atualizada pela Sprint **2.4** (bloco Ver e Agir). Spec: [`VER-E-AGIR-UI-SPEC.md`](./VER-E-AGIR-UI-SPEC.md).
+
 ```text
 1. Header — código SS-* + status badge (+ criticidade)
 2. Grid info — área, local, atividade, autor, datas
 3. Condição insegura (+ medida imediata se houver)
 4. Evidências — EvidenceSection 2.2 (galeria 80×80) — NÃO redesenhar
-5. Título seção — "LINHA DO TEMPO" (uppercase pequena)
-6. OccurrenceTimeline — lista de itens
-7. "Carregar mais" — se hasNextPage / nextCursor
-8. CommentComposer — textarea + botão Enviar
+5. Ver e Agir — Sprint 2.4 (start / form / summary) — NÃO fundir com timeline
+6. Título seção — "LINHA DO TEMPO" (uppercase pequena)
+7. OccurrenceTimeline — lista de itens
+8. "Carregar mais" — se hasNextPage / nextCursor
+9. CommentComposer — textarea + botão Enviar
 ```
 
 **Web e mobile:** mesma ordem stack. Composer **não** fica em painel lateral sticky como fluxo primário.
@@ -110,9 +114,11 @@ staleTime query: **30s** (PO-15).
 │ EVIDÊNCIAS                     2     │  (4) EvidenceSection 2.2
 │ [80][80][+] →                        │
 │                                      │
-│ LINHA DO TEMPO                       │  (5)
+│ AVALIAÇÃO / VER E AGIR               │  (5) Sprint 2.4 — ver VER-E-AGIR-UI-SPEC
 │                                      │
-│ ● Paralisação registrada      18:40  │  (6) DESC
+│ LINHA DO TEMPO                       │  (6)
+│                                      │
+│ ● Paralisação registrada      18:40  │  (7) DESC
 │   Ana Souza                          │
 │                                      │
 │ 💬 Ana Souza                   18:35 │
@@ -122,11 +128,11 @@ staleTime query: **30s** (PO-15).
 │ 📷 foto-01.jpg                18:20 │
 │   tap → preview 2.2                  │
 │                                      │
-│ [ Carregar mais ]                    │  (7)
+│ [ Carregar mais ]                    │  (8)
 │                                      │
 │ (padding para composer fixo)         │
 ├──────────────────────────────────────┤
-│ ┌─────────────────────────┐ ┌──────┐ │  (8) sticky + KAV
+│ ┌─────────────────────────┐ ┌──────┐ │  (9) sticky + KAV
 │ │ Adicionar comentário... │ │Enviar│ │
 │ └─────────────────────────┘ └──────┘ │
 │         Safe Area                    │
@@ -145,6 +151,7 @@ Composer mobile: **barra fixa inferior** + `KeyboardAvoidingView` (PO-11).
 │           │ [Grid info 2 cols]                         │
 │           │ [Condição insegura]                        │
 │           │ [Evidências — galeria 2.2]                 │
+│           │ [Ver e Agir — Sprint 2.4]                  │
 │           │                                            │
 │           │ LINHA DO TEMPO              [Atualizar]    │
 │           │ ● … itens DESC …                           │
@@ -481,7 +488,7 @@ Tap em `EVIDENCE_ADDED` → **mesmo fluxo** de [`EVIDENCE-UI-SPEC.md`](./EVIDENC
 
 # Critérios de aceite
 
-1. **PO-11:** ordem Header → Info → Condição → Evidências → Linha do Tempo → Load more → Composer.
+1. **PO-11 (+ 2.4):** ordem Header → Info → Condição → Evidências → Ver e Agir → Linha do Tempo → Load more → Composer.
 2. **PO-12:** feed DESC; load more 30; botão só com next page.
 3. **PO-4:** removido mostra `Comentário removido` **sem** body original.
 4. **PO-5:** editado = badge `(editado)` no timestamp; **sem** segundo evento.
@@ -502,11 +509,11 @@ Tap em `EVIDENCE_ADDED` → **mesmo fluxo** de [`EVIDENCE-UI-SPEC.md`](./EVIDENC
 
 - [ ] PO-4 removido — linha auditável sem texto original  
 - [ ] PO-5 editado — badge, sem 2º evento  
-- [ ] PO-11 ordem vertical completa (8 passos)  
+- [ ] PO-11 ordem vertical completa (9 passos; inclui Ver e Agir 2.4)  
 - [ ] PO-12 DESC + load more  
 - [ ] PO-14 sem notificados  
 - [ ] PO-15 sem Realtime  
-- [ ] Evidências 2.2 acima; não redesenhadas  
+- [ ] Evidências 2.2 acima; Ver e Agir 2.4; não redesenhar esses blocos  
 - [ ] Copy PT completa  
 - [ ] A11y coberta  
 - [ ] WEB/MOBILE sem ambiguidade de campos/estados  

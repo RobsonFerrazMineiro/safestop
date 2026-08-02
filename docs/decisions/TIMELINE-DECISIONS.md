@@ -236,10 +236,13 @@ Ordem oficial: **Etapa 0 DOCS → DATABASE → BACKEND → types/validation → 
 
 ## Integração UI (ordem oficial)
 
+Atualizada pela Sprint **2.4** — ver `VER-E-AGIR-DECISIONS.md` / `VER-E-AGIR-UI-SPEC.md`.
+
 ```text
 [Header código + status]
 [Info / descrição]
 [Evidências — EvidenceSection Sprint 2.2]
+[Ver e Agir — Sprint 2.4]
 [OccurrenceTimeline — Sprint 2.3]
 [CommentComposer — Sprint 2.3]
 ```
@@ -283,7 +286,7 @@ Ordem oficial: **Etapa 0 DOCS → DATABASE → BACKEND → types/validation → 
 
 | Tema | PO | UI-SPEC | Status |
 |---|---|---|---|
-| Ordem Evidências → Timeline → Composer | PO-11 | Posição no detalhe | Alinhado |
+| Ordem Evidências → Ver e Agir → Timeline → Composer | PO-11 (+ 2.4) | Posição no detalhe | Alinhado |
 | Comentário removido (sem body) | PO-4 | TL-ITEM `COMMENT_REMOVED` | Alinhado |
 | Badge “(editado)” sem 2º evento | PO-5 | TL-ITEM + TL-EDIT | Alinhado |
 | Bloqueio ENCERRADA/CANCELADA; LIBERADA ok | PO-6 | Composer disabled + copy | Alinhado |

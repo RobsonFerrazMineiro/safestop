@@ -171,10 +171,17 @@ Especificação UI: `docs/decisions/EVIDENCE-UI-SPEC.md`.
 
 ### Nota — Sub-sprint 2.3 (Comentários e Timeline)
 
-A **sub-sprint 2.3** entrega timeline unificada via RPC (`get_occurrence_timeline`) e comentários `GENERAL` — **sem** tabela `occurrence_timeline`, **sem** notificações/ciência (Sprint 3) e **sem** Realtime. Ordem UI: Evidências → Timeline → Composer.
+A **sub-sprint 2.3** entrega timeline unificada via RPC (`get_occurrence_timeline`) e comentários `GENERAL` — **sem** tabela `occurrence_timeline`, **sem** notificações/ciência (Sprint 3) e **sem** Realtime. Ordem UI: Evidências → Timeline → Composer *(atualizada na 2.4 com bloco Ver e Agir)*.
 
 Decisões oficiais: `docs/decisions/TIMELINE-DECISIONS.md` (PO-1…PO-15).  
 Especificação UI: `docs/decisions/TIMELINE-UI-SPEC.md`.
+
+### Nota — Sub-sprint 2.4 (Ver e Agir / Avaliação)
+
+A **sub-sprint 2.4** antecipa o caminho **Ver e Agir** até o status `VER_E_AGIR`: duas RPCs (`start_occurrence_evaluation` ≠ `record_occurrence_decision`), permissão `occurrence.evaluate`, **sem** Interdição Oficial, MDHO, IMS, correção/liberação nem notificações. Ordem UI: Evidências → Ver e Agir → Timeline → Composer. Roadmap Sprint 4/5 permanece a entrega completa de avaliação/IO e correção.
+
+Decisões oficiais: `docs/decisions/VER-E-AGIR-DECISIONS.md` (PO-1…PO-20).  
+Especificação UI: `docs/decisions/VER-E-AGIR-UI-SPEC.md`.
 
 ---
 
