@@ -97,3 +97,20 @@ export type {
   TimelineCursor,
   TimelineCursorPayload,
 } from "./occurrence-timeline";
+
+export {
+  OCCURRENCE_CONFLICT_ERROR_CODES,
+  OCCURRENCE_DECISION_REASON_MAX_LENGTH,
+  OCCURRENCE_DECISION_REASON_MIN_LENGTH,
+  isOccurrenceConflictErrorCode,
+} from "./occurrence-decision";
+export type {
+  OccurrenceConflictError,
+  OccurrenceConflictErrorCode,
+  OccurrenceDecision,
+  OccurrenceTransitionResult,
+  RecordVerEAgirDecisionInput,
+  RecordVerEAgirDecisionOccurrenceSnapshot,
+  RecordVerEAgirDecisionResult,
+  StartEvaluationResult,
+} from "./occurrence-decision";

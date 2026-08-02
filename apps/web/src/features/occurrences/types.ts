@@ -74,5 +74,7 @@ export function occurrenceQueryKeys(organizationId: string) {
       [...root, "detail", occurrenceId, "timeline", cursor ?? "initial"] as const,
     timelinePrefix: (occurrenceId: string) =>
       [...root, "detail", occurrenceId, "timeline"] as const,
+    /** Decisão vigente 1:1 — embed ou query dedicada (VER-E-AGIR-DECISIONS § Cache). */
+    decision: (occurrenceId: string) => [...root, "detail", occurrenceId, "decision"] as const,
   };
 }

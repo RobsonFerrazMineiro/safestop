@@ -1248,6 +1248,10 @@ export type Database = {
         Args: { target_occurrence_id: string }
         Returns: boolean
       }
+      can_read_occurrence_in_org: {
+        Args: { p_organization_id: string }
+        Returns: boolean
+      }
       complete_occurrence_attachment_upload: {
         Args: { target_attachment_id: string }
         Returns: Json
@@ -1301,6 +1305,11 @@ export type Database = {
       }
       prepare_occurrence_attachment_upload: {
         Args: { payload: Json }
+        Returns: Json
+      }
+      record_occurrence_decision: { Args: { p_payload: Json }; Returns: Json }
+      start_occurrence_evaluation: {
+        Args: { p_occurrence_id: string }
         Returns: Json
       }
       update_occurrence_comment: {

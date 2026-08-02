@@ -24,6 +24,9 @@ export const occurrenceQueryKeys = {
     [...occurrenceQueryKeys.detail(organizationId, occurrenceId), "timeline"] as const,
   timelinePage: (organizationId: string, occurrenceId: string, cursor: string | null = null) =>
     [...occurrenceQueryKeys.timeline(organizationId, occurrenceId), cursor ?? "initial"] as const,
+  /** Decisão vigente 1:1 — embed ou query dedicada (VER-E-AGIR-DECISIONS § Cache). */
+  decision: (organizationId: string, occurrenceId: string) =>
+    [...occurrenceQueryKeys.detail(organizationId, occurrenceId), "decision"] as const,
 };
 
 export type OccurrenceAreaOption = {

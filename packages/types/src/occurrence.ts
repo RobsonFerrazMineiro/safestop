@@ -1,3 +1,4 @@
+import type { OccurrenceDecision } from "./occurrence-decision";
 import type {
   OccurrenceDecisionType,
   OccurrenceSeverity,
@@ -43,6 +44,11 @@ export type OccurrenceDetails = OccurrenceSummary & {
   releasedAt: string | null;
   closedAt: string | null;
   cancelledAt: string | null;
+  /** Avaliador atribuído no start (Sprint 2.4). */
+  assignedEvaluatorId: string | null;
+  assignedEvaluatorName: string | null;
+  /** Decisão vigente 1:1 — embed occurrence_decisions (Sprint 2.4). */
+  decision: OccurrenceDecision | null;
 };
 
 /**
