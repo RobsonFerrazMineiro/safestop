@@ -15,6 +15,7 @@ import {
   InterdicaoSection,
   shouldShowInterdicaoBanner,
 } from "@/features/interdicao-oficial";
+import { MdhoSection } from "@/features/mdho";
 import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
 
 import { PreventiveStopEmpty } from "./preventive-stop-empty";
@@ -126,6 +127,13 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
         />
 
         <InterdicaoSection
+          isOnline={isOnline}
+          isRefreshing={isFetching}
+          occurrence={preventiveStop}
+          onRefresh={refetch}
+        />
+
+        <MdhoSection
           isOnline={isOnline}
           isRefreshing={isFetching}
           occurrence={preventiveStop}

@@ -33,8 +33,6 @@ export function InterdicaoSummary({ decision }: InterdicaoSummaryProps) {
           <Text style={styles.fieldValue}>{formatOccurrenceDate(decision.decidedAt)}</Text>
         </View>
       </View>
-
-      <Text style={styles.hint}>Próximas etapas (MDHO) em versão futura.</Text>
     </View>
   );
 }

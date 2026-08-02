@@ -27,6 +27,12 @@ export const occurrenceQueryKeys = {
   /** Decisão vigente 1:1 — embed ou query dedicada (VER-E-AGIR-DECISIONS § Cache). */
   decision: (organizationId: string, occurrenceId: string) =>
     [...occurrenceQueryKeys.detail(organizationId, occurrenceId), "decision"] as const,
+  /** Avaliação MDHO 1:1 por ocorrência (MDHO-DECISIONS § Cache). */
+  mdho: (organizationId: string, occurrenceId: string) =>
+    [...occurrenceQueryKeys.detail(organizationId, occurrenceId), "mdho"] as const,
+  /** Catálogo MDHO tenant-scoped (global + org). */
+  mdhoCatalog: (organizationId: string) =>
+    [TENANT_QUERY_KEY_PREFIX, organizationId, "mdho", "catalog"] as const,
 };
 
 export type OccurrenceAreaOption = {
