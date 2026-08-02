@@ -2,13 +2,14 @@ import type { OccurrenceDecision } from "@safestop/types";
 
 type InterdicaoSummaryProps = {
   decision: OccurrenceDecision;
+  hideMdhoHint?: boolean;
 };
 
 function formatDateTime(value: string): string {
   return new Date(value).toLocaleString("pt-BR");
 }
 
-export function InterdicaoSummary({ decision }: InterdicaoSummaryProps) {
+export function InterdicaoSummary({ decision, hideMdhoHint = false }: InterdicaoSummaryProps) {
   return (
     <div className="flex flex-col gap-4">
       <span className="inline-flex w-fit rounded-full border border-red-600/60 bg-red-950/40 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-red-300">
@@ -35,7 +36,9 @@ export function InterdicaoSummary({ decision }: InterdicaoSummaryProps) {
         </div>
       </div>
 
-      <p className="text-sm text-gray-400">Próximas etapas (MDHO) em versão futura.</p>
+      {!hideMdhoHint ? (
+        <p className="text-sm text-gray-400">Próximas etapas (MDHO) em versão futura.</p>
+      ) : null}
     </div>
   );
 }

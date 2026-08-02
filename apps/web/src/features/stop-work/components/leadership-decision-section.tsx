@@ -14,6 +14,7 @@ import {
   InterdicaoSummary,
   useInterdicaoContext,
 } from "@/features/interdicao-oficial";
+import { shouldShowMdhoSection } from "@/features/mdho";
 import {
   AlreadyDecidedCard,
   EvaluationConflictCard,
@@ -110,7 +111,10 @@ export function LeadershipDecisionSection({
 
       {!showConflict && !showAlreadyDecided && showIoSummary ? (
         occurrence.decision ? (
-          <InterdicaoSummary decision={occurrence.decision} />
+          <InterdicaoSummary
+            decision={occurrence.decision}
+            hideMdhoHint={shouldShowMdhoSection(occurrence)}
+          />
         ) : (
           <AlreadyDecidedCard
             isRefreshing={isRefreshing}

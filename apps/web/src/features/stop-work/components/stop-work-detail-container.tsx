@@ -12,6 +12,7 @@ import {
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { OccurrenceTimeline } from "@/features/timeline";
 import { InterdicaoBanner } from "@/features/interdicao-oficial";
+import { MdhoSection } from "@/features/mdho";
 
 import { usePreventiveStop } from "../hooks/use-stop-work";
 import { LeadershipDecisionSection } from "./leadership-decision-section";
@@ -127,6 +128,15 @@ export function StopWorkDetailContainer() {
 
       {organizationId ? (
         <LeadershipDecisionSection
+          isRefreshing={isFetching}
+          occurrence={stopWork}
+          organizationId={organizationId}
+          onRefresh={refetch}
+        />
+      ) : null}
+
+      {organizationId ? (
+        <MdhoSection
           isRefreshing={isFetching}
           occurrence={stopWork}
           organizationId={organizationId}

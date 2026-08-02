@@ -76,5 +76,9 @@ export function occurrenceQueryKeys(organizationId: string) {
       [...root, "detail", occurrenceId, "timeline"] as const,
     /** Decisão vigente 1:1 — embed ou query dedicada (VER-E-AGIR-DECISIONS § Cache). */
     decision: (occurrenceId: string) => [...root, "detail", occurrenceId, "decision"] as const,
+    /** Avaliação MDHO 1:1 por ocorrência (MDHO-DECISIONS § Cache). */
+    mdho: (occurrenceId: string) => [...root, "detail", occurrenceId, "mdho"] as const,
+    /** Catálogo MDHO tenant-scoped (global + org). */
+    mdhoCatalog: () => [TENANT_QUERY_KEY_PREFIX, organizationId, "mdho", "catalog"] as const,
   };
 }
