@@ -20,6 +20,7 @@
 --   qa-platform@safestop.local  — PLATFORM_ADMIN + papel plataforma (bypass UI)
 --   qa-supervisor@safestop.local — 1 org, Supervisor HSE (occurrence.evaluate — VA-*)
 --   qa-fiscal@safestop.local    — 1 org, Fiscal do Contrato (evaluate, sem confirm_interdiction — IO-*)
+--   qa-lideranca@safestop.local — 1 org, Liderança HSE (mdho.approve/return — MDHO-*)
 --
 -- Idempotente: seguro executar múltiplas vezes (supabase db reset).
 -- ============================================================================
@@ -487,6 +488,11 @@ declare
       'id', 'a0000000-0000-4000-8000-000000000010',
       'email', 'qa-fiscal@safestop.local',
       'full_name', 'QA Fiscal SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000011',
+      'email', 'qa-lideranca@safestop.local',
+      'full_name', 'QA Liderança HSE SafeStop'
     )
   );
   v_user jsonb;
@@ -656,6 +662,13 @@ values
     'a0000000-0000-4000-8000-000000000010',
     'INTERNAL',
     true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000011',
+    'b0000000-0000-4000-8000-000000000001',
+    'a0000000-0000-4000-8000-000000000011',
+    'INTERNAL',
+    true
   )
 on conflict (organization_id, profile_id) do update set
   membership_type = excluded.membership_type,
@@ -678,6 +691,7 @@ on conflict (organization_id, profile_id) do update set
 --   qa-platform  — Administrador da Plataforma na Delta (PLATFORM_ADMIN bypass)
 --   qa-supervisor — Supervisor HSE na Alpha (occurrence.evaluate — Sprint 2.4 VA-*)
 --   qa-fiscal     — Fiscal do Contrato na Alpha (evaluate, sem confirm_interdiction — Sprint 2.5 IO-*)
+--   qa-lideranca  — Liderança HSE na Alpha (mdho.approve/return — Sprint 2.6 MDHO-*)
 
 insert into public.member_roles (organization_member_id, role_id)
 select om.id, r.id
@@ -758,6 +772,103 @@ where om.id = 'c0000000-0000-4000-8000-000000000010'
   and r.organization_id is null
 on conflict (organization_member_id, role_id) do nothing;
 
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000011'
+  and r.name = 'Liderança HSE'
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
+
+-- ----------------------------------------------------------------------------
+-- Catálogo MDHO global (Sprint 2.6 — docs/database.md §14.2–14.3)
+-- ----------------------------------------------------------------------------
+-- organization_id NULL = catálogo global (PO-MDHO-8).
+
+insert into public.mdho_categories (
+  id, organization_id, code, name, description,
+  allows_multiple, requires_selection, display_order, is_active
+)
+values
+  (
+    '90000000-0000-4000-8000-000000000001', null, 'BEHAVIOR',
+    'Comportamento', 'Fatores comportamentais observados.', true, true, 1, true
+  ),
+  (
+    '90000000-0000-4000-8000-000000000002', null, 'DEVIATION_TYPE',
+    'Tipo de Desvio', 'Classificação do desvio (erro ou violação).', false, true, 2, true
+  ),
+  (
+    '90000000-0000-4000-8000-000000000003', null, 'PRECONDITIONS',
+    'Pré-condições', 'Condições físicas e ambientais.', true, true, 3, true
+  ),
+  (
+    '90000000-0000-4000-8000-000000000004', null, 'ORGANIZATIONAL_ISSUES',
+    'Questões Organizacionais', 'Fatores organizacionais contribuintes.', true, true, 4, true
+  ),
+  (
+    '90000000-0000-4000-8000-000000000005', null, 'SUPERVISION_INSPECTION',
+    'Supervisão/Fiscalização', 'Aspectos de supervisão e fiscalização.', true, true, 5, true
+  )
+on conflict (id) do update set
+  name = excluded.name,
+  description = excluded.description,
+  allows_multiple = excluded.allows_multiple,
+  requires_selection = excluded.requires_selection,
+  display_order = excluded.display_order,
+  is_active = excluded.is_active;
+
+insert into public.mdho_options (
+  id, organization_id, category_id, code, label, allows_detail, display_order, is_active
+)
+values
+  ('91000000-0000-4000-8000-000000000001', null, '90000000-0000-4000-8000-000000000001', 'EXCESS_CONFIDENCE', 'Excesso de confiança', false, 1, true),
+  ('91000000-0000-4000-8000-000000000002', null, '90000000-0000-4000-8000-000000000001', 'DISTRACTION', 'Distração', false, 2, true),
+  ('91000000-0000-4000-8000-000000000003', null, '90000000-0000-4000-8000-000000000001', 'LACK_OF_ATTENTION', 'Falta de atenção', false, 3, true),
+  ('91000000-0000-4000-8000-000000000004', null, '90000000-0000-4000-8000-000000000001', 'RUSH', 'Pressa', false, 4, true),
+  ('91000000-0000-4000-8000-000000000005', null, '90000000-0000-4000-8000-000000000001', 'IMPROVISATION', 'Improvisação', false, 5, true),
+  ('91000000-0000-4000-8000-000000000006', null, '90000000-0000-4000-8000-000000000001', 'PPE_NOT_USED', 'EPI não utilizado', false, 6, true),
+  ('91000000-0000-4000-8000-000000000007', null, '90000000-0000-4000-8000-000000000001', 'PROCEDURE_NOT_FOLLOWED', 'Procedimento não seguido', false, 7, true),
+  ('91000000-0000-4000-8000-000000000008', null, '90000000-0000-4000-8000-000000000001', 'OPERATIONAL_SHORTCUT', 'Atalho operacional', false, 8, true),
+  ('91000000-0000-4000-8000-000000000009', null, '90000000-0000-4000-8000-000000000001', 'RISK_NOT_PERCEIVED', 'Risco não percebido', false, 9, true),
+  ('91000000-0000-4000-8000-000000000010', null, '90000000-0000-4000-8000-000000000001', 'COMMUNICATION_FAILURE', 'Falha de comunicação', false, 10, true),
+  ('91000000-0000-4000-8000-000000000011', null, '90000000-0000-4000-8000-000000000001', 'OTHER', 'Outro', true, 11, true),
+  ('91000000-0000-4000-8000-000000000013', null, '90000000-0000-4000-8000-000000000002', 'ERROR', 'Erro', false, 1, true),
+  ('91000000-0000-4000-8000-000000000014', null, '90000000-0000-4000-8000-000000000002', 'VIOLATION', 'Violação', false, 2, true),
+  ('91000000-0000-4000-8000-000000000021', null, '90000000-0000-4000-8000-000000000003', 'INADEQUATE_TOOL', 'Ferramenta inadequada', false, 1, true),
+  ('91000000-0000-4000-8000-000000000022', null, '90000000-0000-4000-8000-000000000003', 'DEFECTIVE_EQUIPMENT', 'Equipamento defeituoso', false, 2, true),
+  ('91000000-0000-4000-8000-000000000023', null, '90000000-0000-4000-8000-000000000003', 'POOR_HOUSEKEEPING', 'Housekeeping inadequado', false, 3, true),
+  ('91000000-0000-4000-8000-000000000024', null, '90000000-0000-4000-8000-000000000003', 'INSUFFICIENT_SIGNALING', 'Sinalização insuficiente', false, 4, true),
+  ('91000000-0000-4000-8000-000000000025', null, '90000000-0000-4000-8000-000000000003', 'INADEQUATE_LIGHTING', 'Iluminação inadequada', false, 5, true),
+  ('91000000-0000-4000-8000-000000000026', null, '90000000-0000-4000-8000-000000000003', 'WEATHER_CONDITION', 'Condição climática', false, 6, true),
+  ('91000000-0000-4000-8000-000000000027', null, '90000000-0000-4000-8000-000000000003', 'MISSING_COLLECTIVE_PROTECTION', 'Proteção coletiva ausente', false, 7, true),
+  ('91000000-0000-4000-8000-000000000028', null, '90000000-0000-4000-8000-000000000003', 'APR_FAILURE', 'Falha na APR', false, 8, true),
+  ('91000000-0000-4000-8000-000000000029', null, '90000000-0000-4000-8000-000000000003', 'WORK_PERMIT_FAILURE', 'Falha no PT', false, 9, true),
+  ('91000000-0000-4000-8000-000000000030', null, '90000000-0000-4000-8000-000000000003', 'OTHER', 'Outro', true, 10, true),
+  ('91000000-0000-4000-8000-000000000031', null, '90000000-0000-4000-8000-000000000004', 'INADEQUATE_PLANNING', 'Planejamento inadequado', false, 1, true),
+  ('91000000-0000-4000-8000-000000000032', null, '90000000-0000-4000-8000-000000000004', 'MISSING_PROCEDURE', 'Procedimento ausente', false, 2, true),
+  ('91000000-0000-4000-8000-000000000033', null, '90000000-0000-4000-8000-000000000004', 'INADEQUATE_PROCEDURE', 'Procedimento inadequado', false, 3, true),
+  ('91000000-0000-4000-8000-000000000034', null, '90000000-0000-4000-8000-000000000004', 'POOR_COMMUNICATION', 'Comunicação deficiente', false, 4, true),
+  ('91000000-0000-4000-8000-000000000035', null, '90000000-0000-4000-8000-000000000004', 'INSUFFICIENT_TRAINING', 'Treinamento insuficiente', false, 5, true),
+  ('91000000-0000-4000-8000-000000000036', null, '90000000-0000-4000-8000-000000000004', 'INSUFFICIENT_RESOURCES', 'Recursos insuficientes', false, 6, true),
+  ('91000000-0000-4000-8000-000000000037', null, '90000000-0000-4000-8000-000000000004', 'SCHEDULE_PRESSURE', 'Pressão de cronograma', false, 7, true),
+  ('91000000-0000-4000-8000-000000000038', null, '90000000-0000-4000-8000-000000000004', 'CHANGE_MANAGEMENT_FAILURE', 'Falha na gestão de mudança', false, 8, true),
+  ('91000000-0000-4000-8000-000000000039', null, '90000000-0000-4000-8000-000000000004', 'INADEQUATE_STAFFING', 'Dimensionamento inadequado', false, 9, true),
+  ('91000000-0000-4000-8000-000000000040', null, '90000000-0000-4000-8000-000000000004', 'OTHER', 'Outro', true, 10, true),
+  ('91000000-0000-4000-8000-000000000041', null, '90000000-0000-4000-8000-000000000005', 'ABSENT_SUPERVISION', 'Supervisão ausente', false, 1, true),
+  ('91000000-0000-4000-8000-000000000042', null, '90000000-0000-4000-8000-000000000005', 'INSUFFICIENT_SUPERVISION', 'Supervisão insuficiente', false, 2, true),
+  ('91000000-0000-4000-8000-000000000043', null, '90000000-0000-4000-8000-000000000005', 'INADEQUATE_INSPECTION', 'Fiscalização inadequada', false, 3, true),
+  ('91000000-0000-4000-8000-000000000044', null, '90000000-0000-4000-8000-000000000005', 'GUIDANCE_NOT_PROVIDED', 'Orientação não fornecida', false, 4, true),
+  ('91000000-0000-4000-8000-000000000045', null, '90000000-0000-4000-8000-000000000005', 'VERIFICATION_FAILURE', 'Falha na verificação', false, 5, true),
+  ('91000000-0000-4000-8000-000000000046', null, '90000000-0000-4000-8000-000000000005', 'INADEQUATE_RELEASE', 'Liberação inadequada', false, 6, true),
+  ('91000000-0000-4000-8000-000000000047', null, '90000000-0000-4000-8000-000000000005', 'OTHER', 'Outro', true, 7, true)
+on conflict (id) do update set
+  label = excluded.label,
+  allows_detail = excluded.allows_detail,
+  display_order = excluded.display_order,
+  is_active = excluded.is_active;
+
 -- ============================================================================
 -- Referência QA — IDs determinísticos (Stop Work / PP — Sprint 2.1)
 -- ============================================================================
@@ -813,3 +924,13 @@ on conflict (organization_member_id, role_id) do nothing;
 --   c0000000-0000-4000-8000-000000000010  vínculo org Alpha
 --
 -- docs/decisions/INTERDICAO-OFICIAL-DECISIONS.md (PO-IO-1…PO-IO-12)
+--
+-- Cenários MDHO QA (Sprint 2.6 — MDHO-*):
+--   MDHO-01 qa-supervisor: start_mdho_assessment em IO confirmada
+--   MDHO-02 qa-supervisor: start em Ver e Agir → FORBIDDEN
+--   MDHO-07 qa-lideranca: approve_mdho_assessment → AGUARDANDO_REGISTRO_IMS
+--   a0000000-0000-4000-8000-000000000011  qa-lideranca (Liderança HSE Alpha)
+--   c0000000-0000-4000-8000-000000000011  vínculo org Alpha
+--   Catálogo MDHO: 90000000-0000-4000-8000-000000000001…005 (categorias)
+--
+-- docs/decisions/MDHO-DECISIONS.md (PO-MDHO-1…PO-MDHO-28)
