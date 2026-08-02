@@ -64,3 +64,36 @@ export type {
   PreventiveStopListFilters,
   PreventiveStopStatus,
 } from "./preventive-stop";
+
+export {
+  OCCURRENCE_COMMENT_EDIT_WINDOW_HOURS,
+  OCCURRENCE_COMMENT_MAX_LENGTH,
+  OCCURRENCE_COMMENT_TYPES,
+  USER_CREATABLE_COMMENT_TYPES,
+  isOccurrenceCommentType,
+  isUserCreatableCommentType,
+} from "./occurrence-comment";
+export type {
+  CreateOccurrenceCommentResult,
+  DeleteOccurrenceCommentResult,
+  OccurrenceComment,
+  OccurrenceCommentType,
+  UpdateOccurrenceCommentResult,
+  UserCreatableCommentType,
+} from "./occurrence-comment";
+
+export {
+  OCCURRENCE_TIMELINE_DEFAULT_PAGE_SIZE,
+  OCCURRENCE_TIMELINE_EVENT_KINDS,
+  OCCURRENCE_TIMELINE_STALE_TIME_MS,
+  OCCURRENCE_TIMELINE_TITLES,
+  formatTimelineTitle,
+  isOccurrenceTimelineEventKind,
+} from "./occurrence-timeline";
+export type {
+  GetOccurrenceTimelineResult,
+  OccurrenceTimelineEventKind,
+  OccurrenceTimelineItem,
+  TimelineCursor,
+  TimelineCursorPayload,
+} from "./occurrence-timeline";

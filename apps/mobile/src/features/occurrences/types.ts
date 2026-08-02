@@ -20,6 +20,10 @@ export const occurrenceQueryKeys = {
     [TENANT_QUERY_KEY_PREFIX, organizationId, "contractors", "list"] as const,
   contracts: (organizationId: string, contractorOrganizationId: string) =>
     [TENANT_QUERY_KEY_PREFIX, organizationId, "contracts", contractorOrganizationId] as const,
+  timeline: (organizationId: string, occurrenceId: string) =>
+    [...occurrenceQueryKeys.detail(organizationId, occurrenceId), "timeline"] as const,
+  timelinePage: (organizationId: string, occurrenceId: string, cursor: string | null = null) =>
+    [...occurrenceQueryKeys.timeline(organizationId, occurrenceId), cursor ?? "initial"] as const,
 };
 
 export type OccurrenceAreaOption = {

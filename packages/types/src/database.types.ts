@@ -362,6 +362,90 @@ export type Database = {
           },
         ]
       }
+      occurrence_comments: {
+        Row: {
+          author_id: string
+          comment_type: string
+          content: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          edited_at: string | null
+          edited_by: string | null
+          id: string
+          is_internal: boolean
+          occurrence_id: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          comment_type?: string
+          content: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          edited_at?: string | null
+          edited_by?: string | null
+          id?: string
+          is_internal?: boolean
+          occurrence_id: string
+          organization_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          comment_type?: string
+          content?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          edited_at?: string | null
+          edited_by?: string | null
+          id?: string
+          is_internal?: boolean
+          occurrence_id?: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "occurrence_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_comments_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_comments_edited_by_fkey"
+            columns: ["edited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_comments_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrence_comments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       occurrence_decisions: {
         Row: {
           created_at: string
@@ -1169,18 +1253,34 @@ export type Database = {
         Returns: Json
       }
       create_occurrence: { Args: { payload: Json }; Returns: Json }
+      create_occurrence_comment: {
+        Args: { p_content: string; p_occurrence_id: string }
+        Returns: Json
+      }
       current_organization_ids: { Args: never; Returns: string[] }
       current_profile_id: { Args: never; Returns: string }
       delete_occurrence_attachment: {
         Args: { target_attachment_id: string }
         Returns: Json
       }
+      delete_occurrence_comment: {
+        Args: { p_comment_id: string }
+        Returns: Json
+      }
       fail_occurrence_attachment_upload: {
         Args: { failure_reason?: string; target_attachment_id: string }
         Returns: Json
       }
+      format_occurrence_status_label: {
+        Args: { p_status: string }
+        Returns: string
+      }
       get_occurrence_attachment_signed_url: {
         Args: { target_attachment_id: string }
+        Returns: Json
+      }
+      get_occurrence_timeline: {
+        Args: { p_cursor?: Json; p_limit?: number; p_occurrence_id: string }
         Returns: Json
       }
       has_permission: {
@@ -1201,6 +1301,10 @@ export type Database = {
       }
       prepare_occurrence_attachment_upload: {
         Args: { payload: Json }
+        Returns: Json
+      }
+      update_occurrence_comment: {
+        Args: { p_comment_id: string; p_content: string }
         Returns: Json
       }
     }

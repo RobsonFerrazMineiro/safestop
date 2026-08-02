@@ -70,5 +70,9 @@ export function occurrenceQueryKeys(organizationId: string) {
       [...root, "detail", occurrenceId, "status-history"] as const,
     areas: () => [TENANT_QUERY_KEY_PREFIX, organizationId, "areas", "list"] as const,
     contractors: () => [TENANT_QUERY_KEY_PREFIX, organizationId, "contractors", "list"] as const,
+    timeline: (occurrenceId: string, cursor?: string | null) =>
+      [...root, "detail", occurrenceId, "timeline", cursor ?? "initial"] as const,
+    timelinePrefix: (occurrenceId: string) =>
+      [...root, "detail", occurrenceId, "timeline"] as const,
   };
 }
