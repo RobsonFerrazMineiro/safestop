@@ -22,3 +22,10 @@ export {
   prepareAttachmentUploadSchema,
   type PrepareAttachmentUploadInput,
 } from "./occurrence-attachment";
+export {
+  createOccurrenceCommentSchema,
+  updateOccurrenceCommentSchema,
+  OCCURRENCE_COMMENT_MAX_LENGTH,
+  type CreateOccurrenceCommentInput,
+  type UpdateOccurrenceCommentInput,
+} from "./occurrence-comment";
