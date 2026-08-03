@@ -309,7 +309,44 @@ MDHO **somente** no ramo Interdição Oficial. Clientes **não** atualizam statu
 
 - Permissão: `mdho.approve` (Liderança HSE)
 - Assessment → `APPROVED`; ocorrência → `AGUARDANDO_REGISTRO_IMS`
+- **PO-HSE-7:** rejeita quando `submitted_by = auth.uid()` → `SELF_APPROVAL_FORBIDDEN`
+- **PO-HSE-15:** idempotente se já `APPROVED` + ocorrência `AGUARDANDO_REGISTRO_IMS` (`data.idempotent: true`)
 - IMS **fora** da 2.6
+
+#### `list_mdho_pending_approvals(p_organization_id uuid, p_cursor jsonb?, p_limit int?)`
+
+Fila operacional HSE (Sprint 2.7 — PO-HSE-12).
+
+- Permissão: `mdho.approve`
+- Filtro: `assessment.status = SUBMITTED` AND `occurrence.status = AGUARDANDO_APROVACAO_HSE`
+- Ordenação: `submitted_at DESC`, desempate `assessment_id`
+- Paginação: cursor `{ submitted_at, assessment_id }`
+
+**Retorno sucesso:**
+
+```json
+{
+  "success": true,
+  "items": [
+    {
+      "occurrenceId": "uuid",
+      "organizationId": "uuid",
+      "assessmentId": "uuid",
+      "publicCode": "SS-26-000001",
+      "title": "string",
+      "submittedAt": "timestamptz",
+      "submittedBy": "uuid",
+      "submittedByName": "string | null",
+      "areaName": "string | null",
+      "taskSummary": "string",
+      "criticality": "LOW | MEDIUM | HIGH | CRITICAL"
+    }
+  ],
+  "nextCursor": { "submitted_at": "timestamptz", "assessment_id": "uuid" }
+}
+```
+
+Tipos: `MdhoPendingApprovalItem`, `ListMdhoPendingApprovalsResult` em `@safestop/types`. Mapper: `mapListMdhoPendingApprovalsResult`.
 
 #### `return_mdho_assessment(p_payload jsonb)`
 
@@ -323,7 +360,7 @@ MDHO **somente** no ramo Interdição Oficial. Clientes **não** atualizam statu
 - Permissão: `mdho.return` (Liderança HSE)
 - Assessment → `RETURNED`; ocorrência → `MDHO_EM_PREENCHIMENTO`
 
-**Erros MDHO:** `UNAUTHORIZED` | `FORBIDDEN` | `NOT_FOUND` | `STATUS_MISMATCH` | `ALREADY_EXISTS` | `ALREADY_SUBMITTED` | `VALIDATION_ERROR` | `CONFLICT` | `INTERNAL_ERROR`.
+**Erros MDHO:** `UNAUTHORIZED` | `FORBIDDEN` | `NOT_FOUND` | `STATUS_MISMATCH` | `ALREADY_EXISTS` | `ALREADY_SUBMITTED` | `VALIDATION_ERROR` | `CONFLICT` | `SELF_APPROVAL_FORBIDDEN` | `INTERNAL_ERROR`.
 
 **Schemas client (`@safestop/validation`):**
 
@@ -333,11 +370,13 @@ MDHO **somente** no ramo Interdição Oficial. Clientes **não** atualizam statu
 | Enviar | `createSubmitMdhoSchema(catalog)` / `submitMdhoSchema` + `validateMdhoSubmitSelections` | `assessmentId`, `selections`, `complement?` |
 | Devolver | `returnMdhoSchema` | `assessmentId`, `returnReason` (10–4000) |
 
-Tipos: `@safestop/types` — `MdhoAssessment`, `MdhoCatalog`, `StartMdhoAssessmentResult`, etc. Helper: `isMdhoEligible(occurrence)`.
+Tipos: `@safestop/types` — `MdhoAssessment`, `MdhoCatalog`, `StartMdhoAssessmentResult`, etc. Helpers: `isMdhoEligible`, `canApproveMdhoAssessment`, `HseApprovalContext`.
 
-**Query keys:** `occurrenceQueryKeys.mdho(occurrenceId)`, `occurrenceQueryKeys.mdhoCatalog()`.
+**Query keys:** `occurrenceQueryKeys.mdho(occurrenceId)`, `occurrenceQueryKeys.mdhoCatalog()`, `occurrenceQueryKeys.hseApprovalQueue(organizationId, cursor?)` (fila Sprint 2.7).
 
 **Categorias do catálogo (seed):** `BEHAVIOR` · `DEVIATION_TYPE` · `PRECONDITIONS` · `ORGANIZATIONAL_ISSUES` · `SUPERVISION_INSPECTION`.
+
+Contrato Aprovação HSE (fila, autoaprovação, idempotência): `docs/decisions/HSE-APPROVAL-DECISIONS.md`. Domínio MDHO base: `docs/decisions/MDHO-DECISIONS.md` — **não contradizer**.
 
 ---
 

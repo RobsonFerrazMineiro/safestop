@@ -197,6 +197,13 @@ A **sub-sprint 2.6** entrega MDHO operacional **somente no ramo IO**: `start_mdh
 Decisões oficiais: `docs/decisions/MDHO-DECISIONS.md` (PO-MDHO-1…PO-MDHO-28).  
 Especificação UI: `docs/decisions/MDHO-UI-SPEC.md`.
 
+### Nota — Sub-sprint 2.7 (Aprovação HSE)
+
+A **sub-sprint 2.7** operacionaliza a fase **Aprovação HSE** sobre o MDHO 2.6: fila `list_mdho_pending_approvals`, segregação submit≠approve, guard de autoaprovação (`SELF_APPROVAL_FORBIDDEN`), facade `features/hse-approval/` — **sem** nova entidade, **sem** IMS, notificações nem plano de ação. Herda e **não altera** `MDHO-DECISIONS.md` (PO-MDHO-7/12/19/20/27). Verificação: `docs/decisions/VERIFICATION-sprint-2.7-hse-approval.md`.
+
+Decisões oficiais: `docs/decisions/HSE-APPROVAL-DECISIONS.md` (PO-HSE-1…PO-HSE-27).  
+Especificação UI: `docs/decisions/HSE-APPROVAL-UI-SPEC.md`.
+
 ---
 
 # Sprint 3
