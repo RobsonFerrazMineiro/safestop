@@ -239,7 +239,7 @@ async function main() {
     gestor.access_token,
     `occurrences?select=status,decision_type&id=eq.${mainOcc}`,
   );
-  const webDetail = readRepo("apps/web/src/features/ver-e-agir/components/ver-e-agir-detail-section.tsx");
+  const webDetail = readRepo("apps/web/src/features/stop-work/components/leadership-decision-section.tsx");
   const mobileDetail = readRepo("apps/mobile/src/features/stop-work/components/preventive-stop-detail-screen.tsx");
   if (
     occRow[0]?.status === "VER_E_AGIR" &&
