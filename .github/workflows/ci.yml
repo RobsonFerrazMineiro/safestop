@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [master]
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -40,9 +40,63 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # `format:check` fica fora da CI por ora: a documentação pré-existente
-      # (docs/, README, CONTRIBUTING) ainda não está formatada com Prettier.
-      # É uma pendência registrada separadamente, não corrigida nesta tarefa.
+      # PO-CON-11 / Sprint 2.9 — limitações conscientes deste job:
       #
-      # `test` ainda não possui tarefa real (nenhum workspace possui script
-      # de teste até o momento). Será adicionado à CI quando existir de fato.
+      # - `format:check` permanece FORA da CI (T3 / S29-BLD-02): docs/, README e
+      #   CONTRIBUTING ainda não passaram por formatação Prettier em massa; ver
+      #   `.prettierignore`. Não incluir até sprint dedicada de formatação.
+      #
+      # - `test` ainda não possui tarefa real (nenhum workspace possui script
+      #   de teste até o momento). Será adicionado quando existir de fato.
+      #
+      # - Smokes Supabase (db reset, auth, fluxo IO) rodam no job `supabase-smoke`.
+
+  supabase-smoke:
+    name: Supabase db reset + smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.23.1"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Prepare pnpm
+        run: corepack prepare pnpm@11.5.3 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.109.1
+
+      - name: Start Supabase local stack
+        run: pnpm supabase:start
+
+      - name: Prepare QA credentials for smoke scripts
+        run: cp supabase/qa-credentials.local.example supabase/qa-credentials.local
+
+      - name: Reset database (migrations + seed)
+        run: pnpm supabase:db:reset
+
+      - name: Smoke auth
+        run: pnpm supabase:smoke-auth
+
+      - name: Smoke fluxo operacional IO
+        run: pnpm supabase:smoke-flow-io
+
+      # Limitações parciais deste job (PO-CON-11 / Sprint 2.9 T1):
+      #
+      # - Cobertura mínima: apenas smoke-auth + smoke-flow-io (PP → IMS).
+      # - Smokes individuais 2.3–2.8, RLS subset (PO-CON-16) e regressão QA
+      #   consolidada (PO-CON-17) continuam fora da CI nesta entrega.
+      # - Depende de Docker no runner (ubuntu-latest). Falha bloqueia PR quando
+      #   este job for required check no repositório.

@@ -38,7 +38,8 @@
     "supabase:smoke-ver-e-agir": "node supabase/scripts/smoke-ver-e-agir.mjs",
     "supabase:smoke-interdicao-oficial": "node supabase/scripts/smoke-interdicao-oficial.mjs",
     "supabase:smoke-mdho": "node supabase/scripts/smoke-mdho.mjs",
-    "supabase:smoke-ims-reference": "node supabase/scripts/smoke-ims-reference.mjs"
+    "supabase:smoke-ims-reference": "node supabase/scripts/smoke-ims-reference.mjs",
+    "supabase:smoke-flow-io": "node supabase/scripts/smoke-flow-operational-io.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.1",
