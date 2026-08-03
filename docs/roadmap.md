@@ -204,6 +204,13 @@ A **sub-sprint 2.7** operacionaliza a fase **Aprovação HSE** sobre o MDHO 2.6:
 Decisões oficiais: `docs/decisions/HSE-APPROVAL-DECISIONS.md` (PO-HSE-1…PO-HSE-27).  
 Especificação UI: `docs/decisions/HSE-APPROVAL-UI-SPEC.md`.
 
+### Nota — Sub-sprint 2.8 (Referência IMS)
+
+A **sub-sprint 2.8** entrega o **registro manual** do código IMS (`ims_reference_code`, formato BAA) após MDHO aprovado: `register_ims_reference` → `EM_TRATATIVA` e `update_ims_reference` com motivo — **sem** integração, consulta, sincronização ou validação no IMS externo; **sem** plano de ação nem notificações. Seção ausente no ramo Ver e Agir. Verificação: `docs/decisions/VERIFICATION-sprint-2.8-ims-reference.md`.
+
+Decisões oficiais: `docs/decisions/IMS-REFERENCE-DECISIONS.md` (PO-IMS-1…PO-IMS-16).  
+Especificação UI: `docs/decisions/IMS-REFERENCE-UI-SPEC.md`.
+
 ---
 
 # Sprint 3

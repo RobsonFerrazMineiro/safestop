@@ -378,6 +378,55 @@ Tipos: `@safestop/types` — `MdhoAssessment`, `MdhoCatalog`, `StartMdhoAssessme
 
 Contrato Aprovação HSE (fila, autoaprovação, idempotência): `docs/decisions/HSE-APPROVAL-DECISIONS.md`. Domínio MDHO base: `docs/decisions/MDHO-DECISIONS.md` — **não contradizer**.
 
+### RPCs — Referência IMS (Sprint 2.8)
+
+Registro **manual** do código emitido em plataforma externa. **Sem** integração IMS. Contrato: `docs/decisions/IMS-REFERENCE-DECISIONS.md`.
+
+#### `register_ims_reference(p_payload jsonb)`
+
+```json
+{
+  "occurrence_id": "uuid",
+  "ims_reference_code": "BAA-26-0001"
+}
+```
+
+- Permissão: `ims_reference.register`
+- Ramo: `decision_type = INTERDICAO_OFICIAL`
+- Status exigido: `AGUARDANDO_REGISTRO_IMS` + MDHO `APPROVED`
+- Formato: `^BAA-\d{2}-\d{4,}$`
+- Efeito: ocorrência → `EM_TRATATIVA`; preenche `ims_reference_*`
+- **PO-IMS-12:** retry com mesmo código → sucesso idempotente (`data.idempotent: true`)
+- Segundo register com código **diferente** → `ALREADY_REGISTERED`
+
+#### `update_ims_reference(p_payload jsonb)`
+
+```json
+{
+  "occurrence_id": "uuid",
+  "ims_reference_code": "BAA-26-0002",
+  "update_reason": "string 10-4000"
+}
+```
+
+- Permissão: `ims_reference.update`
+- Status: `EM_TRATATIVA` ou `AGUARDANDO_VALIDACAO` (não terminal)
+- Código já registrado; novo código ≠ anterior; **não** altera status
+- History metadata-only (`action: update_ims`)
+
+**Erros IMS:** `UNAUTHORIZED` | `FORBIDDEN` | `NOT_FOUND` | `STATUS_MISMATCH` | `VALIDATION_ERROR` | `ALREADY_REGISTERED` | `CONFLICT` | `INTERNAL_ERROR`.
+
+**Schemas client (`@safestop/validation`):**
+
+| Operação | Schema | Campos client (camelCase) |
+|---|---|---|
+| Registrar | `registerImsReferenceSchema` | `occurrenceId`, `imsReferenceCode` |
+| Corrigir | `updateImsReferenceSchema` | `occurrenceId`, `imsReferenceCode`, `updateReason` |
+
+Tipos: `RegisterImsReferenceResult`, `UpdateImsReferenceResult` em `@safestop/types`. Helper: `isImsRegisterEligible(occurrence)`.
+
+**Listagem:** `OccurrenceListFilters.imsReferenceCode` — filtro contains (PO-IMS-10).
+
 ---
 
 # Comunicação Mobile
