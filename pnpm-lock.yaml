@@ -246,6 +246,9 @@ importers:
 
   apps/mobile:
     dependencies:
+      '@safestop/query-keys':
+        specifier: workspace:*
+        version: link:../../packages/query-keys
       '@safestop/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -331,6 +334,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@safestop/query-keys':
+        specifier: workspace:*
+        version: link:../../packages/query-keys
       '@safestop/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -389,6 +395,16 @@ importers:
       typescript-eslint:
         specifier: 8.63.0
         version: 8.63.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.3)
+
+  packages/query-keys:
+    dependencies:
+      '@safestop/types':
+        specifier: workspace:*
+        version: link:../types
+    devDependencies:
+      '@safestop/config':
+        specifier: workspace:*
+        version: link:../config
 
   packages/types:
     devDependencies:

@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@safestop/query-keys": "workspace:*",
     "@safestop/types": "workspace:*",
     "@safestop/validation": "workspace:*",
     "@supabase/supabase-js": "2.110.2",

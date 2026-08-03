@@ -1,0 +1,23 @@
+{
+  "name": "@safestop/query-keys",
+  "version": "0.1.0",
+  "description": "Shared TanStack Query keys and post-mutation invalidation matrix for SafeStop.",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"const fs=require('fs');['dist','tsconfig.tsbuildinfo'].forEach((p)=>fs.rmSync(p,{recursive:true,force:true}))\""
+  },
+  "dependencies": {
+    "@safestop/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@safestop/config": "workspace:*"
+  }
+}
