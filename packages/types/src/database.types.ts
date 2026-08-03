@@ -1549,6 +1549,10 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: never; Returns: boolean }
+      list_mdho_pending_approvals: {
+        Args: { p_cursor?: Json; p_limit?: number; p_organization_id: string }
+        Returns: Json
+      }
       list_organization_contractors: {
         Args: { target_organization_id: string }
         Returns: Json

@@ -138,24 +138,32 @@ export type {
 
 export {
   MDHO_ASSESSMENT_STATUSES,
+  MDHO_APPROVAL_ERROR_CODES,
   MDHO_COMPLEMENT_MAX_LENGTH,
   MDHO_CONFLICT_ERROR_CODES,
+  MDHO_ERROR_CODES,
   MDHO_OTHER_DETAIL_MIN_LENGTH,
   MDHO_RETURN_REASON_MAX_LENGTH,
   MDHO_RETURN_REASON_MIN_LENGTH,
+  isMdhoApprovalErrorCode,
   isMdhoAssessmentStatus,
   isMdhoConflictErrorCode,
   isMdhoEditableStatus,
   isMdhoEligible,
+  isMdhoErrorCode,
 } from "./mdho-assessment";
 export type {
   ApproveMdhoAssessmentResult,
+  MdhoApprovalError,
+  MdhoApprovalErrorCode,
   MdhoAssessment,
   MdhoAssessmentSnapshot,
   MdhoAssessmentStatus,
   MdhoConflictError,
   MdhoConflictErrorCode,
+  MdhoDomainError,
   MdhoEligibilityOccurrence,
+  MdhoErrorCode,
   MdhoOccurrenceSnapshot,
   MdhoSelection,
   MdhoSelectionInput,
@@ -167,3 +175,21 @@ export type {
   SubmitMdhoAssessmentResult,
   SubmitMdhoInput,
 } from "./mdho-assessment";
+
+export {
+  canApproveMdhoAssessment,
+  canReturnMdhoAssessment,
+  mapListMdhoPendingApprovalsResult,
+  mapMdhoPendingApprovalCursor,
+  mapMdhoPendingApprovalItem,
+  showHseApprovalQueue,
+} from "./mdho-hse-approval";
+export type {
+  CanApproveMdhoAssessmentInput,
+  HseApprovalContext,
+  HseApprovalPermissions,
+  ListMdhoPendingApprovalsResult,
+  MdhoPendingApprovalCursor,
+  MdhoPendingApprovalCursorPayload,
+  MdhoPendingApprovalItem,
+} from "./mdho-hse-approval";

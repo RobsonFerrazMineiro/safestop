@@ -94,6 +94,8 @@ export type ApproveMdhoAssessmentResult = {
     approvedBy: string;
   };
   occurrence: MdhoOccurrenceSnapshot;
+  /** PO-HSE-15 — retry idempotente após sucesso. */
+  idempotent?: boolean;
 };
 
 export type ReturnMdhoAssessmentResult = {
@@ -107,7 +109,7 @@ export type ReturnMdhoAssessmentResult = {
   occurrence: MdhoOccurrenceSnapshot;
 };
 
-/** Erros tratáveis na UI (MDHO-DECISIONS § RPCs). */
+/** Erros tratáveis na UI (MDHO-DECISIONS § RPCs + HSE-APPROVAL 2.7). */
 export const MDHO_CONFLICT_ERROR_CODES = [
   "STATUS_MISMATCH",
   "ALREADY_EXISTS",
@@ -115,7 +117,18 @@ export const MDHO_CONFLICT_ERROR_CODES = [
   "CONFLICT",
 ] as const;
 
+export const MDHO_APPROVAL_ERROR_CODES = ["SELF_APPROVAL_FORBIDDEN"] as const;
+
+export const MDHO_ERROR_CODES = [
+  ...MDHO_CONFLICT_ERROR_CODES,
+  ...MDHO_APPROVAL_ERROR_CODES,
+] as const;
+
 export type MdhoConflictErrorCode = (typeof MDHO_CONFLICT_ERROR_CODES)[number];
+
+export type MdhoApprovalErrorCode = (typeof MDHO_APPROVAL_ERROR_CODES)[number];
+
+export type MdhoErrorCode = (typeof MDHO_ERROR_CODES)[number];
 
 export type MdhoConflictError = {
   code: MdhoConflictErrorCode;
@@ -124,12 +137,27 @@ export type MdhoConflictError = {
   assessmentId?: string;
 };
 
+export type MdhoApprovalError = {
+  code: MdhoApprovalErrorCode;
+  message: string;
+};
+
+export type MdhoDomainError = MdhoConflictError | MdhoApprovalError;
+
 export function isMdhoAssessmentStatus(value: string): value is MdhoAssessmentStatus {
   return (MDHO_ASSESSMENT_STATUSES as readonly string[]).includes(value);
 }
 
 export function isMdhoConflictErrorCode(value: string): value is MdhoConflictErrorCode {
   return (MDHO_CONFLICT_ERROR_CODES as readonly string[]).includes(value);
+}
+
+export function isMdhoApprovalErrorCode(value: string): value is MdhoApprovalErrorCode {
+  return (MDHO_APPROVAL_ERROR_CODES as readonly string[]).includes(value);
+}
+
+export function isMdhoErrorCode(value: string): value is MdhoErrorCode {
+  return (MDHO_ERROR_CODES as readonly string[]).includes(value);
 }
 
 /** Snapshot mínimo para guards de elegibilidade / start (PO-MDHO-2, PO-MDHO-4). */
