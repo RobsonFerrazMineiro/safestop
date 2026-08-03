@@ -21,6 +21,7 @@
 --   qa-supervisor@safestop.local — 1 org, Supervisor HSE (occurrence.evaluate — VA-*)
 --   qa-fiscal@safestop.local    — 1 org, Fiscal do Contrato (evaluate, sem confirm_interdiction — IO-*)
 --   qa-lideranca@safestop.local — 1 org, Liderança HSE (mdho.approve/return — MDHO-*)
+--   qa-dual-hse@safestop.local   — 1 org, Supervisor + Liderança HSE (HSE-07 autoaprovação)
 --
 -- Idempotente: seguro executar múltiplas vezes (supabase db reset).
 -- ============================================================================
@@ -493,6 +494,11 @@ declare
       'id', 'a0000000-0000-4000-8000-000000000011',
       'email', 'qa-lideranca@safestop.local',
       'full_name', 'QA Liderança HSE SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000012',
+      'email', 'qa-dual-hse@safestop.local',
+      'full_name', 'QA Dual HSE SafeStop'
     )
   );
   v_user jsonb;
@@ -669,6 +675,13 @@ values
     'a0000000-0000-4000-8000-000000000011',
     'INTERNAL',
     true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000012',
+    'b0000000-0000-4000-8000-000000000001',
+    'a0000000-0000-4000-8000-000000000012',
+    'INTERNAL',
+    true
   )
 on conflict (organization_id, profile_id) do update set
   membership_type = excluded.membership_type,
@@ -692,6 +705,7 @@ on conflict (organization_id, profile_id) do update set
 --   qa-supervisor — Supervisor HSE na Alpha (occurrence.evaluate — Sprint 2.4 VA-*)
 --   qa-fiscal     — Fiscal do Contrato na Alpha (evaluate, sem confirm_interdiction — Sprint 2.5 IO-*)
 --   qa-lideranca  — Liderança HSE na Alpha (mdho.approve/return — Sprint 2.6 MDHO-*)
+--   qa-dual-hse    — Supervisor + Liderança HSE Alpha (HSE-07 segregação)
 
 insert into public.member_roles (organization_member_id, role_id)
 select om.id, r.id
@@ -778,6 +792,15 @@ from public.organization_members om
 cross join public.roles r
 where om.id = 'c0000000-0000-4000-8000-000000000011'
   and r.name = 'Liderança HSE'
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
+
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000012'
+  and r.name in ('Supervisor HSE', 'Liderança HSE')
   and r.organization_id is null
 on conflict (organization_member_id, role_id) do nothing;
 
@@ -934,3 +957,13 @@ on conflict (id) do update set
 --   Catálogo MDHO: 90000000-0000-4000-8000-000000000001…005 (categorias)
 --
 -- docs/decisions/MDHO-DECISIONS.md (PO-MDHO-1…PO-MDHO-28)
+--
+-- Cenários Aprovação HSE QA (Sprint 2.7 — HSE-*):
+--   HSE-01 qa-lideranca: list_mdho_pending_approvals com item SUBMITTED
+--   HSE-06 qa-supervisor: list → FORBIDDEN (sem mdho.approve)
+--   HSE-07 qa-dual-hse: approve próprio submit → SELF_APPROVAL_FORBIDDEN
+--   HSE-03 qa-lideranca: approve → AGUARDANDO_REGISTRO_IMS
+--   a0000000-0000-4000-8000-000000000012  qa-dual-hse (Supervisor + Liderança Alpha)
+--   c0000000-0000-4000-8000-000000000012  vínculo org Alpha
+--
+-- docs/decisions/HSE-APPROVAL-DECISIONS.md (PO-HSE-1…PO-HSE-27)
