@@ -226,6 +226,55 @@ Utilizar quando existir:
 - cálculos;
 - validações próximas ao banco.
 
+### Catálogo RPC operacional (Sprints 2.0–2.9)
+
+Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberação/plano/notificação **não** existem nesta entrega (permissões reservadas — `docs/database.md` §6.2).
+
+| RPC | Sprint | Permissão (típica) | Contrato detalhado |
+|---|---|---|---|
+| `create_occurrence` | 2.0/2.1 | `occurrence.create` | `OCCURRENCE-FOUNDATION-DECISIONS` / `PREVENTIVE-STOP-DECISIONS` |
+| `start_occurrence_evaluation` | 2.4 | `occurrence.evaluate` | `VER-E-AGIR-DECISIONS` |
+| `record_occurrence_decision` | 2.4–2.5 | `occurrence.evaluate` / `occurrence.confirm_interdiction` | abaixo + IO decisions |
+| `prepare_occurrence_attachment_upload` | 2.2 | `occurrence.create` | `EVIDENCE-DECISIONS` |
+| `complete_occurrence_attachment_upload` | 2.2 | `occurrence.create` | `EVIDENCE-DECISIONS` |
+| `fail_occurrence_attachment_upload` | 2.2 | `occurrence.create` | `EVIDENCE-DECISIONS` |
+| `delete_occurrence_attachment` (soft) | 2.2 | autor + `occurrence.create` | `EVIDENCE-DECISIONS` |
+| `get_occurrence_attachment_signed_url` | 2.2 | `occurrence.read` | `EVIDENCE-DECISIONS` |
+| `get_occurrence_timeline` | 2.3 | `occurrence.read` | `TIMELINE-DECISIONS` |
+| `create_occurrence_comment` | 2.3 | `occurrence.read` + access | `TIMELINE-DECISIONS` |
+| `update_occurrence_comment` | 2.3 | autor + janela | `TIMELINE-DECISIONS` |
+| `delete_occurrence_comment` | 2.3 | autor ou `occurrence.cancel`\* | `TIMELINE-DECISIONS` |
+| `start_mdho_assessment` | 2.6 | `mdho.fill` | abaixo |
+| `save_mdho_draft` | 2.6 | `mdho.fill` | abaixo |
+| `submit_mdho_assessment` | 2.6 | `mdho.submit` | abaixo |
+| `approve_mdho_assessment` | 2.6–2.7 | `mdho.approve` | abaixo |
+| `return_mdho_assessment` | 2.6 | `mdho.return` | abaixo |
+| `list_mdho_pending_approvals` | 2.7 | `mdho.approve` | abaixo |
+| `register_ims_reference` | 2.8 | `ims_reference.register` | abaixo — **manual**, sem integração |
+| `update_ims_reference` | 2.8 | `ims_reference.update` | abaixo — **manual**, sem integração |
+
+\*Remoção de comentário por supervisor usa `occurrence.cancel` na matriz RBAC aprovada — a permissão permanece **reservada** para cancelamento formal de ocorrência (PO-CON-20); não implica RPC `cancel_occurrence` na 2.9.
+
+**Fora do catálogo operacional 2.9:** `submit_correction`, `validate_correction`, `release_occurrence`, `close_occurrence`, `cancel_occurrence`, RPCs de `action_plan.*`, criação de `notification_events`.
+
+### Fundação / avaliação — referências rápidas
+
+#### `create_occurrence(p_payload jsonb)`
+
+- Permissão: `occurrence.create`
+- Cria PP em `PARALISACAO_PREVENTIVA`; gera `public_code` no servidor
+- Contrato: `docs/decisions/OCCURRENCE-FOUNDATION-DECISIONS.md`, `PREVENTIVE-STOP-DECISIONS.md`
+
+#### `start_occurrence_evaluation(p_occurrence_id uuid)`
+
+- Permissão: `occurrence.evaluate`
+- `PARALISACAO_PREVENTIVA` → `EM_AVALIACAO`
+- Contrato: `docs/decisions/VER-E-AGIR-DECISIONS.md`
+
+#### `get_occurrence_timeline` / comentários / evidências
+
+Ver `docs/decisions/TIMELINE-DECISIONS.md` e `docs/decisions/EVIDENCE-DECISIONS.md` — payloads e erros padronizados nas decisões oficiais.
+
 ### `record_occurrence_decision(p_payload jsonb)`
 
 RPC de domínio para registrar a decisão formal da liderança. Clientes **não** atualizam `occurrences.status` diretamente.

@@ -211,6 +211,12 @@ A **sub-sprint 2.8** entrega o **registro manual** do código IMS (`ims_referenc
 Decisões oficiais: `docs/decisions/IMS-REFERENCE-DECISIONS.md` (PO-IMS-1…PO-IMS-16).  
 Especificação UI: `docs/decisions/IMS-REFERENCE-UI-SPEC.md`.
 
+### Nota — Sub-sprint 2.9 (Consolidação e Hardening)
+
+A **sub-sprint 2.9** **não** entrega domínio novo: consolida o fluxo operacional 2.0–2.8 (smoke IO integrado, detalhe canônico, query-keys, CI Supabase, UX de dead-ends). Dead-ends intencionais: ramo VA em `VER_E_AGIR` (validação/liberação futura) e ramo IO em `EM_TRATATIVA` (Plano de Ação futuro). **Sem** notificações (Sprint 3), plano de ação, liberação ou integração IMS. Contrato de eventos para Notificações futuras: `docs/decisions/CONSOLIDATION-DECISIONS.md` (PO-CON-21).
+
+Decisões oficiais: `docs/decisions/CONSOLIDATION-DECISIONS.md` (PO-CON-1…PO-CON-22).
+
 ---
 
 # Sprint 3

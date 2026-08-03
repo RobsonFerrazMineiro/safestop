@@ -369,6 +369,11 @@ O SafeStop apenas comunica que o código foi registrado.
 
 Ele não consulta o IMS.
 
+### Contrato evento → destinatário (Sprint 3 — pré-implementação)
+
+Mapa oficial gatilho → papéis → permissão → timeline: `docs/decisions/CONSOLIDATION-DECISIONS.md` **PO-CON-21**.  
+Implementação de `notification_events` / push / ciência: **Sprint 3** — fora da 2.9. Sem integração IMS.
+
 ---
 
 ## Plano de ação criado

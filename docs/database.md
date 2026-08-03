@@ -390,6 +390,28 @@ report.read
 audit.read
 ```
 
+### Operacionais vs reservadas (Sprint 2.9 — PO-CON-20)
+
+Catálogo no seed pode incluir códigos **ainda sem fluxo de produto** nas sub-sprints 2.0–2.9. Marcar como **reservadas** evita tratar seed como feature entregue.
+
+| Código | Estado na entrega 2.0–2.9 |
+|---|---|
+| `occurrence.create` | **Operacional** |
+| `occurrence.read` | **Operacional** |
+| `occurrence.evaluate` | **Operacional** |
+| `occurrence.confirm_interdiction` | **Operacional** |
+| `mdho.fill` · `mdho.submit` · `mdho.approve` · `mdho.return` | **Operacional** |
+| `ims_reference.register` · `ims_reference.update` | **Operacional** (registro **manual** — sem integração IMS) |
+| `occurrence.validate_correction` | **Reservada** — validação/correção futura |
+| `occurrence.release` | **Reservada** — liberação futura |
+| `occurrence.cancel` | **Reservada** — cancelamento formal futuro (sem RPC operacional 2.9) |
+| `action_plan.create` · `action_plan.manage` · `action_plan.validate` | **Reservadas** — Plano de Ação (Sprint futura) |
+| `notification.read` · `notification.confirm_awareness` | **Reservadas** — Notificações (Sprint 3); ciência permanece no catálogo |
+| `user.manage` · `organization.manage` · `area.manage` · `contract.manage` · `settings.manage` | Administração — fora do fluxo operacional de ocorrência |
+| `report.read` · `audit.read` | Consulta / auditoria — fora do fluxo operacional 2.9 |
+
+**Regra:** permissão **reservada** pode existir em `permissions` / `role_permissions` no seed, mas **não** implica RPC, UI ou transição disponível. Não inventar integração IMS nem ativar `action_plan.*` / `notification.*` sem sprint dedicada.
+
 ---
 
 ## 6.3 `role_permissions`

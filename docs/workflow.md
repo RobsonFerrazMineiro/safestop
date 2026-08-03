@@ -296,13 +296,22 @@ Ações necessárias:
 - anexar evidência quando exigida;
 - enviar para validação.
 
-Próximo status:
+Próximo status (fluxo oficial completo — sprints futuras):
 
 ```text
 AGUARDANDO_VALIDACAO
 ```
 
 Também poderá ser cancelada apenas mediante justificativa e permissão.
+
+### Dead-end incremental — ramo Ver e Agir (Sprint 2.9)
+
+Até a entrega de validação/liberação, o status `VER_E_AGIR` é um **dead-end operacional intencional** (`docs/decisions/CONSOLIDATION-DECISIONS.md` PO-CON-2):
+
+- a ocorrência permanece acompanhável (detalhe, evidências quando permitido, timeline, comentários);
+- **não** há CTA de correção, validação ou liberação na entrega atual;
+- UX: banner informativo — *“Aguardando validação e liberação — em versão futura”*;
+- a transição `VER_E_AGIR` → `AGUARDANDO_VALIDACAO` permanece no mapa oficial (§18), **fora** do escopo 2.0–2.9.
 
 ---
 
@@ -396,7 +405,7 @@ O projeto poderá futuramente permitir avanço sem código IMS em situações au
 
 A ocorrência possui ações corretivas em andamento.
 
-Ações permitidas:
+Ações permitidas (fluxo oficial completo — Plano de Ação / Sprint futura):
 
 - criar ações;
 - atribuir responsáveis;
@@ -407,11 +416,25 @@ Ações permitidas:
 - rejeitar correções;
 - solicitar complementos.
 
-Próximo status:
+Próximo status (fluxo oficial completo):
 
 ```text
 AGUARDANDO_VALIDACAO
 ```
+
+### Dead-end operacional — entrega incremental (Sprint 2.9)
+
+Após o registro **manual** da referência IMS (2.8), o ramo **Interdição Oficial** **encerra operacionalmente** em `EM_TRATATIVA` até o Plano de Ação (PO-CON-3).
+
+| Item | Regra |
+|---|---|
+| Status terminal operacional atual | `EM_TRATATIVA` |
+| CTA Plano de Ação / tratativa estruturada | **Ausente** — sem botão fake |
+| UX | Banner: *Em tratativa — Plano de Ação em versão futura* |
+| Referência IMS | Card read-only mantido (2.8); correção de código conforme `ims_reference.update` |
+| Continua permitido | Leitura, timeline, comentários, evidências segundo regras vigentes |
+| Transição `→ AGUARDANDO_VALIDACAO` | **Fora** da entrega 2.0–2.9 — permanece no mapa oficial §18 para sprint futura |
+| Integração IMS | **Proibida** — o código continua sendo digitado manualmente |
 
 ---
 
