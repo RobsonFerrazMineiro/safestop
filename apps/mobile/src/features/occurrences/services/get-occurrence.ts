@@ -30,6 +30,11 @@ const OCCURRENCE_DETAIL_SELECT = `
   closed_at,
   cancelled_at,
   assigned_evaluator_id,
+  ims_reference_code,
+  ims_reference_registered_at,
+  ims_reference_registered_by,
+  ims_reference_updated_at,
+  ims_reference_updated_by,
   occurrence_decisions (
     id,
     decision_type,
@@ -42,6 +47,8 @@ const OCCURRENCE_DETAIL_SELECT = `
   areas (name),
   profiles:created_by (full_name),
   evaluator:profiles!occurrences_assigned_evaluator_id_fkey (full_name),
+  ims_registered_by:profiles!occurrences_ims_reference_registered_by_fkey (full_name),
+  ims_updated_by:profiles!occurrences_ims_reference_updated_by_fkey (full_name),
   contractor_organizations:contractor_organization_id (name)
 `;
 

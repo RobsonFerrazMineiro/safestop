@@ -9,9 +9,10 @@ import type { MdhoCatalogCategory } from "@safestop/types";
 type MdhoSummaryProps = {
   assessment: MdhoAssessmentEnriched;
   catalog: MdhoCatalogCategory[];
+  hideImsHint?: boolean;
 };
 
-export function MdhoSummary({ assessment, catalog }: MdhoSummaryProps) {
+export function MdhoSummary({ assessment, catalog, hideImsHint = false }: MdhoSummaryProps) {
   return (
     <View style={styles.container}>
       <View style={styles.badge}>
@@ -33,7 +34,7 @@ export function MdhoSummary({ assessment, catalog }: MdhoSummaryProps) {
         </View>
       </View>
 
-      <Text style={styles.hint}>Aguardando registro da referência IMS</Text>
+      {!hideImsHint ? <Text style={styles.hint}>Aguardando registro da referência IMS</Text> : null}
     </View>
   );
 }

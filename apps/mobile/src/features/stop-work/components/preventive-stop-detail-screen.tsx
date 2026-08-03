@@ -29,6 +29,12 @@ import {
   InterdicaoSection,
   shouldShowInterdicaoBanner,
 } from "@/features/interdicao-oficial";
+import {
+  ImsReferenceSection,
+  ImsRegisterFooter,
+  shouldShowImsReferenceSection,
+  type ImsRegisterFooterState,
+} from "@/features/ims-reference";
 import { MdhoSection } from "@/features/mdho";
 import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
 
@@ -84,6 +90,7 @@ function useIsOnline(): boolean {
 }
 
 const HSE_FOOTER_HEIGHT = 72;
+const IMS_REGISTER_FOOTER_HEIGHT = 72;
 const COMPOSER_HEIGHT = 72;
 
 export function PreventiveStopDetailScreen({
@@ -99,6 +106,7 @@ export function PreventiveStopDetailScreen({
   const { createComment, isCreating } = useCreateComment(occurrenceId);
   const [previewEvidence, setPreviewEvidence] = useState<EvidenceListItem | null>(null);
   const [hseFooter, setHseFooter] = useState<HseActionsFooterState | null>(null);
+  const [imsRegisterFooter, setImsRegisterFooter] = useState<ImsRegisterFooterState | null>(null);
   const isOnline = useIsOnline();
 
   const listRef = useRef<FlatList<OccurrenceTimelineItem>>(null);
@@ -107,7 +115,9 @@ export function PreventiveStopDetailScreen({
 
   const focusMdhoReview = focusSection === "mdho-review";
   const bottomPadding =
-    140 + (hseFooter?.visible ? HSE_FOOTER_HEIGHT : 0) + (hseFooter?.visible ? 0 : 0);
+    140 +
+    (hseFooter?.visible ? HSE_FOOTER_HEIGHT : 0) +
+    (imsRegisterFooter?.visible ? IMS_REGISTER_FOOTER_HEIGHT : 0);
 
   useEffect(() => {
     if (!focusMdhoReview || hasScrolledToReview.current || isLoading || !preventiveStop) {
@@ -138,6 +148,8 @@ export function PreventiveStopDetailScreen({
       preventiveStop.latitude !== null && preventiveStop.longitude !== null
         ? `${preventiveStop.latitude.toFixed(5)}, ${preventiveStop.longitude.toFixed(5)}`
         : null;
+
+    const showImsSection = shouldShowImsReferenceSection(preventiveStop);
 
     return (
       <View style={styles.headerContent}>
@@ -205,11 +217,20 @@ export function PreventiveStopDetailScreen({
         />
 
         <MdhoSection
+          hideImsHint={showImsSection}
           isOnline={isOnline}
           isRefreshing={isFetching}
           occurrence={preventiveStop}
           reviewSectionRef={reviewSectionRef}
           onHseFooterChange={setHseFooter}
+          onRefresh={refetch}
+        />
+
+        <ImsReferenceSection
+          isOnline={isOnline}
+          isRefreshing={isFetching}
+          occurrence={preventiveStop}
+          onRegisterFooterChange={setImsRegisterFooter}
           onRefresh={refetch}
         />
       </View>
@@ -286,8 +307,18 @@ export function PreventiveStopDetailScreen({
         />
 
         {hseFooter?.visible ? (
-          <View style={[styles.hseFooterHost, { bottom: COMPOSER_HEIGHT }]}>
+          <View style={[styles.stickyFooterHost, { bottom: COMPOSER_HEIGHT }]}>
             <HseActionsFooter {...hseFooter} />
+          </View>
+        ) : null}
+
+        {imsRegisterFooter?.visible ? (
+          <View style={[styles.stickyFooterHost, { bottom: COMPOSER_HEIGHT }]}>
+            <ImsRegisterFooter
+              isOnline={imsRegisterFooter.isOnline}
+              isRegistering={imsRegisterFooter.isRegistering}
+              onRegister={imsRegisterFooter.onRegister}
+            />
           </View>
         ) : null}
 
@@ -317,7 +348,9 @@ export function PreventiveStopDetailScreen({
         accessibilityRole="button"
         style={({ pressed }) => [
           styles.homeButtonFloating,
-          hseFooter?.visible ? styles.homeButtonWithHseFooter : null,
+          hseFooter?.visible || imsRegisterFooter?.visible
+            ? styles.homeButtonWithStickyFooter
+            : null,
           pressed && styles.buttonPressed,
         ]}
         onPress={() => {
@@ -385,10 +418,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
   },
-  homeButtonWithHseFooter: {
+  homeButtonWithStickyFooter: {
     bottom: 168,
   },
-  hseFooterHost: {
+  stickyFooterHost: {
     left: 0,
     position: "absolute",
     right: 0,

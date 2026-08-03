@@ -42,6 +42,7 @@ type MdhoSectionProps = {
   onRefresh: () => Promise<unknown>;
   onHseFooterChange?: (state: HseActionsFooterState | null) => void;
   reviewSectionRef?: RefObject<View | null>;
+  hideImsHint?: boolean;
 };
 
 export function MdhoSection({
@@ -51,6 +52,7 @@ export function MdhoSection({
   onRefresh,
   onHseFooterChange,
   reviewSectionRef,
+  hideImsHint = false,
 }: MdhoSectionProps) {
   const { user } = useAuth();
   const { can, isPlatformAdmin } = useAuthorization();
@@ -322,7 +324,11 @@ export function MdhoSection({
       ) : null}
 
       {!showConflict && showSummary && assessment && catalog ? (
-        <MdhoSummary assessment={assessment} catalog={catalog.categories} />
+        <MdhoSummary
+          assessment={assessment}
+          catalog={catalog.categories}
+          hideImsHint={hideImsHint}
+        />
       ) : null}
     </View>
   );

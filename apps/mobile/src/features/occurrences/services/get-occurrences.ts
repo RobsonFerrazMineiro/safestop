@@ -47,6 +47,12 @@ export async function getOccurrences(params: GetOccurrencesParams) {
     query = query.eq("severity", params.filters.severity);
   }
 
+  const imsReferenceCode = params.filters?.imsReferenceCode?.trim();
+
+  if (imsReferenceCode) {
+    query = query.ilike("ims_reference_code", `%${imsReferenceCode}%`);
+  }
+
   const { data, error } = await query;
 
   if (error) {

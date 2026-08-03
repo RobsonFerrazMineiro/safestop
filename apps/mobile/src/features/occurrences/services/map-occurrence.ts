@@ -63,6 +63,13 @@ export type OccurrenceDetailsRow = OccurrenceSummaryRow & {
   closed_at: string | null;
   cancelled_at: string | null;
   assigned_evaluator_id: string | null;
+  ims_reference_code: string | null;
+  ims_reference_registered_at: string | null;
+  ims_reference_registered_by: string | null;
+  ims_reference_updated_at: string | null;
+  ims_reference_updated_by: string | null;
+  ims_registered_by: ProfileJoin;
+  ims_updated_by: ProfileJoin;
   evaluator: ProfileJoin;
   occurrence_decisions:
     | {
@@ -168,6 +175,13 @@ export function mapOccurrenceDetailsRow(row: OccurrenceDetailsRow): OccurrenceDe
     cancelledAt: row.cancelled_at,
     assignedEvaluatorId: row.assigned_evaluator_id,
     assignedEvaluatorName: resolveJoinName(row.evaluator, "full_name"),
+    imsReferenceCode: row.ims_reference_code,
+    imsReferenceRegisteredAt: row.ims_reference_registered_at,
+    imsReferenceRegisteredBy: row.ims_reference_registered_by,
+    imsReferenceRegisteredByName: resolveJoinName(row.ims_registered_by, "full_name"),
+    imsReferenceUpdatedAt: row.ims_reference_updated_at,
+    imsReferenceUpdatedBy: row.ims_reference_updated_by,
+    imsReferenceUpdatedByName: resolveJoinName(row.ims_updated_by, "full_name"),
     decision: mapOccurrenceDecisionEmbed(row.id, row.occurrence_decisions),
   };
 }
