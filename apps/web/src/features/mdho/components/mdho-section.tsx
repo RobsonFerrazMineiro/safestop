@@ -106,14 +106,14 @@ export function MdhoSection({
           {assessment?.status === "SUBMITTED" ? (
             <MdhoReviewPanel
               assessment={assessment}
-              canApprove={context.canApproveMdho}
-              canReturn={context.canReturnMdho}
               categories={categories}
-              isOffline={context.isOffline}
               occurrenceId={occurrence.id}
               organizationId={organizationId}
               onConflict={() => {
                 setShowConflict(true);
+              }}
+              onRefresh={() => {
+                void handleRefresh();
               }}
             />
           ) : null}

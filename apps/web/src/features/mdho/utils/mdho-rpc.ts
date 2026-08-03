@@ -24,6 +24,17 @@ export class MdhoRpcValidationError extends Error {
   }
 }
 
+export class MdhoRpcSelfApprovalError extends Error {
+  constructor(message = "Quem enviou o MDHO não pode aprová-lo.") {
+    super(message);
+    this.name = "MdhoRpcSelfApprovalError";
+  }
+}
+
+export function isMdhoRpcSelfApprovalError(error: unknown): error is MdhoRpcSelfApprovalError {
+  return error instanceof MdhoRpcSelfApprovalError;
+}
+
 export function isMdhoRpcConflictError(error: unknown): error is MdhoRpcConflictError {
   return error instanceof MdhoRpcConflictError;
 }
@@ -72,6 +83,10 @@ export function assertMdhoRpcDataOrThrow<T>(data: unknown, fallbackMessage: stri
       throw new MdhoRpcValidationError(
         envelope.error.message ?? "Verifique os dados informados e tente novamente.",
       );
+    }
+
+    if (envelope.error?.code === "SELF_APPROVAL_FORBIDDEN") {
+      throw new MdhoRpcSelfApprovalError(envelope.error.message);
     }
 
     throw new Error(envelope.error?.message ?? fallbackMessage);
