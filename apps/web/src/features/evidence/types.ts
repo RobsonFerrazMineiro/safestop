@@ -1,6 +1,5 @@
 import type { OccurrenceAttachmentSummary } from "@safestop/types";
-
-import { TENANT_QUERY_KEY_PREFIX } from "@/features/organization/types";
+import { TENANT_QUERY_KEY_PREFIX } from "@safestop/query-keys";
 
 /** Lista tenant-scoped — 30s (alinhado a occurrences list). */
 export const EVIDENCE_LIST_STALE_TIME_MS = 30_000;

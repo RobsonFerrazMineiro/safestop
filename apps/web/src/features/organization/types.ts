@@ -1,8 +1,8 @@
 /**
  * Prefixo obrigatório para query keys com escopo de tenant (Sprint 1.9+).
- * Exemplo: ["tenant", organizationId, "occurrences", "list"]
+ * Reexportado de @safestop/query-keys para compatibilidade.
  */
-export const TENANT_QUERY_KEY_PREFIX = "tenant" as const;
+export { TENANT_QUERY_KEY_PREFIX } from "@safestop/query-keys";
 
 export const ORGANIZATIONS_QUERY_KEY = "organizations" as const;
 

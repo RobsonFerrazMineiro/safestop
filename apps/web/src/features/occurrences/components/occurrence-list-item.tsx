@@ -11,7 +11,7 @@ export function OccurrenceListItem({ occurrence }: OccurrenceListItemProps) {
   return (
     <Link
       className="flex flex-col gap-2 rounded-lg border border-gray-800 bg-gray-900 px-4 py-4 transition hover:border-gray-600"
-      href={`/occurrences/${occurrence.id}`}
+      href={`/stop-work/${occurrence.id}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <span className="font-mono text-xs text-orange-400">{occurrence.publicCode}</span>

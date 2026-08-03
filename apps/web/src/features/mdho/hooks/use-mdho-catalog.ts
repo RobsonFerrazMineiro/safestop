@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuthorization } from "@/features/authorization";
-import { occurrenceQueryKeys } from "@/features/occurrences/types";
+import { occurrenceQueryKeys } from "@safestop/query-keys";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
 import { getMdhoCatalog } from "../services/get-mdho-catalog";
@@ -19,7 +19,7 @@ export function useMdhoCatalog(enabled: boolean) {
     enabled && isOrgReady && isAuthzReady && organizationId !== undefined && canRead;
 
   const query = useQuery({
-    queryKey: occurrenceQueryKeys(organizationId ?? "").mdhoCatalog(),
+    queryKey: occurrenceQueryKeys.mdhoCatalog(organizationId ?? ""),
     queryFn: () => getMdhoCatalog(organizationId!),
     enabled: queryEnabled,
     staleTime: MDHO_CATALOG_STALE_TIME_MS,

@@ -5,8 +5,10 @@ import type { MdhoPendingApprovalCursor } from "@safestop/types";
 
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
+import { hseApprovalQueryKeys } from "@safestop/query-keys";
+
 import { listMdhoPendingApprovals } from "../services/list-mdho-pending-approvals";
-import { HSE_APPROVAL_QUEUE_STALE_TIME_MS, hseApprovalQueryKeys } from "../types";
+import { HSE_APPROVAL_QUEUE_STALE_TIME_MS } from "../types";
 import { useHseApprovalContext } from "./use-hse-approval-context";
 
 export function useHseApprovalQueue() {
@@ -17,7 +19,7 @@ export function useHseApprovalQueue() {
   const enabled = isOrgReady && isContextReady && organizationId.length > 0 && showQueue;
 
   const query = useInfiniteQuery({
-    queryKey: hseApprovalQueryKeys(organizationId).queue(),
+    queryKey: hseApprovalQueryKeys.queue(organizationId),
     queryFn: ({ pageParam }) =>
       listMdhoPendingApprovals(organizationId, pageParam as MdhoPendingApprovalCursor | null),
     initialPageParam: null as MdhoPendingApprovalCursor | null,

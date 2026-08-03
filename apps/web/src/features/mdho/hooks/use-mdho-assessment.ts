@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { useAuthorization } from "@/features/authorization";
-import { occurrenceQueryKeys } from "@/features/occurrences/types";
+import { occurrenceQueryKeys } from "@safestop/query-keys";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
 import { getMdhoAssessment } from "../services/get-mdho-assessment";
@@ -25,7 +25,7 @@ export function useMdhoAssessment(occurrenceId: string | undefined, enabled: boo
     canRead;
 
   const query = useQuery({
-    queryKey: occurrenceQueryKeys(organizationId ?? "").mdho(occurrenceId ?? ""),
+    queryKey: occurrenceQueryKeys.mdho(organizationId ?? "", occurrenceId ?? ""),
     queryFn: () => getMdhoAssessment(organizationId!, occurrenceId!),
     enabled: queryEnabled,
     staleTime: MDHO_ASSESSMENT_STALE_TIME_MS,

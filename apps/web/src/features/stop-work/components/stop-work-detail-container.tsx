@@ -16,6 +16,7 @@ import { ImsReferenceSection } from "@/features/ims-reference";
 import { MdhoSection } from "@/features/mdho";
 
 import { usePreventiveStop } from "../hooks/use-stop-work";
+import { OperationalDeadEndBanner } from "./operational-dead-end-banner";
 import { LeadershipDecisionSection } from "./leadership-decision-section";
 import { StopWorkError, StopWorkLoading } from "./stop-work-states";
 
@@ -75,7 +76,7 @@ export function StopWorkDetailContainer() {
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-6 px-6 py-10">
       <nav aria-label="Breadcrumb" className="text-sm text-gray-400">
         <Link className="text-orange-400 hover:text-orange-300" href="/stop-work">
-          Paralisação Preventiva
+          Paralisações
         </Link>
         <span className="mx-2">/</span>
         <span className="text-gray-300">{stopWork.publicCode}</span>
@@ -96,6 +97,7 @@ export function StopWorkDetailContainer() {
       </header>
 
       {stopWork.status === "INTERDICAO_CONFIRMADA" ? <InterdicaoBanner /> : null}
+      <OperationalDeadEndBanner status={stopWork.status} />
 
       <section className="flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/40 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Localização</h2>

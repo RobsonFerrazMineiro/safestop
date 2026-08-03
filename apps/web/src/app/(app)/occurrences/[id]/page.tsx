@@ -1,5 +1,12 @@
-import { OccurrenceDetailPage } from "@/features/occurrences/components/occurrence-detail-page";
+import { redirect } from "next/navigation";
 
-export default function OccurrenceDetailRoute() {
-  return <OccurrenceDetailPage />;
+type OccurrenceDetailRedirectPageProps = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function OccurrenceDetailRedirectPage({
+  params,
+}: OccurrenceDetailRedirectPageProps) {
+  const { id } = await params;
+  redirect(`/stop-work/${id}`);
 }

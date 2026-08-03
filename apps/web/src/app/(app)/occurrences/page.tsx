@@ -1,5 +1,5 @@
-import { OccurrenceListPage } from "@/features/occurrences/components/occurrence-list-page";
+import { redirect } from "next/navigation";
 
-export default function OccurrencesPage() {
-  return <OccurrenceListPage />;
+export default function OccurrencesRedirectPage() {
+  redirect("/stop-work");
 }

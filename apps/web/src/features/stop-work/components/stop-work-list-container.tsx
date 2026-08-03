@@ -58,10 +58,8 @@ export function StopWorkListContainer() {
           <Link className="text-sm text-orange-400 hover:text-orange-300" href="/">
             ← Voltar
           </Link>
-          <h1 className="text-3xl font-bold text-gray-100">Paralisação Preventiva</h1>
-          <p className="text-sm text-gray-400">
-            Ocorrências em status Paralisação Preventiva da organização ativa.
-          </p>
+          <h1 className="text-3xl font-bold text-gray-100">Paralisações</h1>
+          <p className="text-sm text-gray-400">Ocorrências operacionais da organização ativa.</p>
         </div>
         <Can permission="occurrence.create">
           <Link

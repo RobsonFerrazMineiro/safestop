@@ -1,12 +1,12 @@
 import type {
   OccurrenceDetails,
-  OccurrenceListFilters,
   OccurrenceSeverity,
   OccurrenceStatus,
   OccurrenceSummary,
 } from "@safestop/types";
+import { occurrenceQueryKeys } from "@safestop/query-keys";
 
-import { TENANT_QUERY_KEY_PREFIX } from "@/features/organization/types";
+export { occurrenceQueryKeys };
 
 /** Lista tenant-scoped — 30s (OCCURRENCE-FOUNDATION-DECISIONS.md). */
 export const OCCURRENCE_LIST_STALE_TIME_MS = 30_000;
@@ -56,29 +56,3 @@ export type OccurrenceStatusHistoryItem = {
   changedAt: string;
   changedByName: string | null;
 };
-
-export function occurrenceQueryKeys(organizationId: string) {
-  const root = [TENANT_QUERY_KEY_PREFIX, organizationId, "occurrences"] as const;
-
-  return {
-    all: root,
-    lists: () => [...root, "list"] as const,
-    list: (filters: OccurrenceListFilters = {}) => [...root, "list", filters] as const,
-    details: () => [...root, "detail"] as const,
-    detail: (occurrenceId: string) => [...root, "detail", occurrenceId] as const,
-    statusHistory: (occurrenceId: string) =>
-      [...root, "detail", occurrenceId, "status-history"] as const,
-    areas: () => [TENANT_QUERY_KEY_PREFIX, organizationId, "areas", "list"] as const,
-    contractors: () => [TENANT_QUERY_KEY_PREFIX, organizationId, "contractors", "list"] as const,
-    timeline: (occurrenceId: string, cursor?: string | null) =>
-      [...root, "detail", occurrenceId, "timeline", cursor ?? "initial"] as const,
-    timelinePrefix: (occurrenceId: string) =>
-      [...root, "detail", occurrenceId, "timeline"] as const,
-    /** Decisão vigente 1:1 — embed ou query dedicada (VER-E-AGIR-DECISIONS § Cache). */
-    decision: (occurrenceId: string) => [...root, "detail", occurrenceId, "decision"] as const,
-    /** Avaliação MDHO 1:1 por ocorrência (MDHO-DECISIONS § Cache). */
-    mdho: (occurrenceId: string) => [...root, "detail", occurrenceId, "mdho"] as const,
-    /** Catálogo MDHO tenant-scoped (global + org). */
-    mdhoCatalog: () => [TENANT_QUERY_KEY_PREFIX, organizationId, "mdho", "catalog"] as const,
-  };
-}

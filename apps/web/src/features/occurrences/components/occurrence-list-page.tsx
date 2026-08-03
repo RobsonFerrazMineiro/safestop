@@ -38,7 +38,7 @@ export function OccurrenceListPage() {
         <Can permission="occurrence.create">
           <Link
             className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-400"
-            href="/occurrences/new"
+            href="/stop-work/new"
           >
             Nova ocorrência
           </Link>

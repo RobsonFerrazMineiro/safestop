@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { CreateOccurrenceInput } from "@safestop/validation";
 import type { OccurrenceListFilters } from "@safestop/types";
 
+import { occurrenceQueryKeys } from "@safestop/query-keys";
+
 import { useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
@@ -16,7 +18,6 @@ import {
   OCCURRENCE_DETAIL_STALE_TIME_MS,
   OCCURRENCE_LIST_STALE_TIME_MS,
   OCCURRENCE_STATUS_HISTORY_STALE_TIME_MS,
-  occurrenceQueryKeys,
 } from "../types";
 
 export function useOccurrences(filters: OccurrenceListFilters = {}) {
@@ -28,7 +29,7 @@ export function useOccurrences(filters: OccurrenceListFilters = {}) {
   const enabled = isOrgReady && isAuthzReady && organizationId !== undefined && canRead;
 
   const query = useQuery({
-    queryKey: occurrenceQueryKeys(organizationId ?? "").list(filters),
+    queryKey: occurrenceQueryKeys.list(organizationId ?? "", filters),
     queryFn: () => getOccurrences(organizationId!, filters),
     enabled,
     staleTime: OCCURRENCE_LIST_STALE_TIME_MS,
@@ -60,7 +61,7 @@ export function useOccurrence(occurrenceId: string | undefined) {
     canRead;
 
   const query = useQuery({
-    queryKey: occurrenceQueryKeys(organizationId ?? "").detail(occurrenceId ?? ""),
+    queryKey: occurrenceQueryKeys.detail(organizationId ?? "", occurrenceId ?? ""),
     queryFn: () => getOccurrence(organizationId!, occurrenceId!),
     enabled,
     staleTime: OCCURRENCE_DETAIL_STALE_TIME_MS,
@@ -87,7 +88,7 @@ export function useOrganizationAreas() {
   const enabled = isOrgReady && isAuthzReady && organizationId !== undefined && canCreate;
 
   const query = useQuery({
-    queryKey: occurrenceQueryKeys(organizationId ?? "").areas(),
+    queryKey: occurrenceQueryKeys.areas(organizationId ?? ""),
     queryFn: () => getOrganizationAreas(organizationId!),
     enabled,
     staleTime: OCCURRENCE_LIST_STALE_TIME_MS,
@@ -120,7 +121,7 @@ export function useCreateOccurrence() {
       }
 
       await queryClient.invalidateQueries({
-        queryKey: occurrenceQueryKeys(organizationId).lists(),
+        queryKey: occurrenceQueryKeys.lists(organizationId),
       });
     },
   });
@@ -142,7 +143,7 @@ export function useContractorOrganizations() {
   const enabled = isOrgReady && isAuthzReady && organizationId !== undefined && canCreate;
 
   const query = useQuery({
-    queryKey: occurrenceQueryKeys(organizationId ?? "").contractors(),
+    queryKey: occurrenceQueryKeys.contractors(organizationId ?? ""),
     queryFn: () => getContractorOrganizations(organizationId!),
     enabled,
     staleTime: OCCURRENCE_LIST_STALE_TIME_MS,
@@ -171,7 +172,7 @@ export function useOccurrenceStatusHistory(occurrenceId: string | undefined) {
     canRead;
 
   const query = useQuery({
-    queryKey: occurrenceQueryKeys(organizationId ?? "").statusHistory(occurrenceId ?? ""),
+    queryKey: occurrenceQueryKeys.statusHistory(organizationId ?? "", occurrenceId ?? ""),
     queryFn: () => getOccurrenceStatusHistory(organizationId!, occurrenceId!),
     enabled,
     staleTime: OCCURRENCE_STATUS_HISTORY_STALE_TIME_MS,

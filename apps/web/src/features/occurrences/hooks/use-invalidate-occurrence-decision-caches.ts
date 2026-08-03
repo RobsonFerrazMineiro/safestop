@@ -2,23 +2,20 @@
 
 import { useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-
-import { occurrenceQueryKeys } from "../types";
+import {
+  getOccurrenceInvalidationTargets,
+  resolveOccurrenceInvalidationKeys,
+} from "@safestop/query-keys";
 
 export function useInvalidateOccurrenceDecisionCaches() {
   const queryClient = useQueryClient();
 
   return useCallback(
     async (organizationId: string, occurrenceId: string) => {
-      const keys = occurrenceQueryKeys(organizationId);
+      const targets = getOccurrenceInvalidationTargets("decision");
+      const keys = resolveOccurrenceInvalidationKeys(organizationId, occurrenceId, targets);
 
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: keys.detail(occurrenceId) }),
-        queryClient.invalidateQueries({ queryKey: keys.lists() }),
-        queryClient.invalidateQueries({ queryKey: keys.timelinePrefix(occurrenceId) }),
-        queryClient.invalidateQueries({ queryKey: keys.statusHistory(occurrenceId) }),
-        queryClient.invalidateQueries({ queryKey: keys.decision(occurrenceId) }),
-      ]);
+      await Promise.all(keys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
     },
     [queryClient],
   );
