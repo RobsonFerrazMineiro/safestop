@@ -193,3 +193,28 @@ export type {
   MdhoPendingApprovalCursorPayload,
   MdhoPendingApprovalItem,
 } from "./mdho-hse-approval";
+
+export {
+  IMS_REFERENCE_CODE_PATTERN,
+  IMS_REFERENCE_ERROR_CODES,
+  IMS_UPDATE_REASON_MAX_LENGTH,
+  IMS_UPDATE_REASON_MIN_LENGTH,
+  isImsReferenceErrorCode,
+  isImsRegisterEligible,
+  isValidImsReferenceCode,
+  canRegisterImsReference,
+  canUpdateImsReference,
+  shouldShowImsReferenceSection,
+} from "./ims-reference";
+export type {
+  ImsReferenceError,
+  ImsReferenceErrorCode,
+  ImsReferenceGuardContext,
+  ImsReferenceOccurrenceSnapshot,
+  ImsReferencePermissions,
+  ImsRegisterEligibilityOccurrence,
+  RegisterImsReferenceInput,
+  RegisterImsReferenceResult,
+  UpdateImsReferenceInput,
+  UpdateImsReferenceResult,
+} from "./ims-reference";

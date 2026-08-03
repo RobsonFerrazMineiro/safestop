@@ -1569,6 +1569,7 @@ export type Database = {
         Returns: Json
       }
       record_occurrence_decision: { Args: { p_payload: Json }; Returns: Json }
+      register_ims_reference: { Args: { p_payload: Json }; Returns: Json }
       return_mdho_assessment: { Args: { p_payload: Json }; Returns: Json }
       save_mdho_draft: { Args: { p_payload: Json }; Returns: Json }
       start_mdho_assessment: {
@@ -1583,6 +1584,7 @@ export type Database = {
         Args: { p_assessment_id: string }
         Returns: Json
       }
+      update_ims_reference: { Args: { p_payload: Json }; Returns: Json }
       update_occurrence_comment: {
         Args: { p_comment_id: string; p_content: string }
         Returns: Json

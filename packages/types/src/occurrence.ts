@@ -49,6 +49,14 @@ export type OccurrenceDetails = OccurrenceSummary & {
   assignedEvaluatorName: string | null;
   /** Decisão vigente 1:1 — embed occurrence_decisions (Sprint 2.4). */
   decision: OccurrenceDecision | null;
+  /** Referência IMS manual (Sprint 2.8). */
+  imsReferenceCode: string | null;
+  imsReferenceRegisteredAt: string | null;
+  imsReferenceRegisteredBy: string | null;
+  imsReferenceRegisteredByName: string | null;
+  imsReferenceUpdatedAt: string | null;
+  imsReferenceUpdatedBy: string | null;
+  imsReferenceUpdatedByName: string | null;
 };
 
 /**
@@ -69,4 +77,6 @@ export type OccurrenceStatusHistoryEntry = {
 export type OccurrenceListFilters = {
   status?: OccurrenceStatus[];
   severity?: OccurrenceSeverity;
+  /** Contains normalizado — PO-IMS-10 (Sprint 2.8). */
+  imsReferenceCode?: string;
 };

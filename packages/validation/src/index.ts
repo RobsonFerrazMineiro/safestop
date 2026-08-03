@@ -55,3 +55,12 @@ export {
   type SubmitMdhoInput,
   type ReturnMdhoInput,
 } from "./mdho-assessment";
+export {
+  registerImsReferenceSchema,
+  updateImsReferenceSchema,
+  IMS_REFERENCE_CODE_PATTERN,
+  IMS_UPDATE_REASON_MAX_LENGTH,
+  IMS_UPDATE_REASON_MIN_LENGTH,
+  type RegisterImsReferenceInput,
+  type UpdateImsReferenceInput,
+} from "./ims-reference";
