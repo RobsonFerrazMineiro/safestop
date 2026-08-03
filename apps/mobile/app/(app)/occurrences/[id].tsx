@@ -1,13 +1,22 @@
-import { useLocalSearchParams } from "expo-router";
+import type { Href } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 
-import { OccurrenceDetailsScreen } from "@/features/occurrences/components/occurrence-details-screen";
+import { stopWorkDetailRoute } from "@/lib/auth/routes";
 
-export default function OccurrenceDetailsRoute() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+export default function OccurrenceDetailsRedirectRoute() {
+  const { id, section } = useLocalSearchParams<{ id: string; section?: string }>();
 
   if (!id || Array.isArray(id)) {
     return null;
   }
 
-  return <OccurrenceDetailsScreen occurrenceId={id} />;
+  const focusSection = Array.isArray(section) ? section[0] : section;
+
+  if (focusSection) {
+    const href = `${stopWorkDetailRoute(id)}?section=${encodeURIComponent(focusSection)}` as Href;
+
+    return <Redirect href={href} />;
+  }
+
+  return <Redirect href={stopWorkDetailRoute(id)} />;
 }

@@ -1,10 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 
+import { useInvalidateHseApprovalCaches } from "@/features/hse-approval/hooks/use-invalidate-hse-approval-caches";
+
 import { approveMdhoAssessment } from "../services/approve-mdho-assessment";
-import { useInvalidateMdhoCaches } from "./use-invalidate-mdho-caches";
 
 export function useApproveMdho(occurrenceId: string) {
-  const invalidateCaches = useInvalidateMdhoCaches();
+  const invalidateCaches = useInvalidateHseApprovalCaches();
 
   const mutation = useMutation({
     mutationFn: approveMdhoAssessment,

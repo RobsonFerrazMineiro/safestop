@@ -38,6 +38,7 @@ import {
 import { MdhoSection } from "@/features/mdho";
 import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
 
+import { FlowDeadEndBanner } from "./flow-dead-end-banner";
 import { PreventiveStopEmpty } from "./preventive-stop-empty";
 import { usePreventiveStop } from "../hooks/use-preventive-stop";
 
@@ -172,6 +173,8 @@ export function PreventiveStopDetailScreen({
         </Text>
 
         {shouldShowInterdicaoBanner(preventiveStop.status) ? <InterdicaoBanner /> : null}
+
+        <FlowDeadEndBanner status={preventiveStop.status} />
 
         <Text style={styles.sectionTitle}>Localização</Text>
         <DetailField label="Área" value={preventiveStop.areaName ?? "—"} />

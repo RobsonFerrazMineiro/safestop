@@ -15,7 +15,7 @@ export const authRoutes = {
 } as const;
 
 export function occurrenceDetailRoute(occurrenceId: string): Href {
-  return `/(app)/occurrences/${occurrenceId}` as Href;
+  return stopWorkDetailRoute(occurrenceId);
 }
 
 export const stopWorkRoute = authRoutes.stopWork;

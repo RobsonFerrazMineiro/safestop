@@ -3,10 +3,13 @@ import { Alert, ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import type { OccurrenceDetails } from "@safestop/types";
 
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
-import type { HseActionsFooterState } from "@/features/hse-approval/types";
-import { HseReviewContent } from "@/features/hse-approval/components/hse-review-content";
-import { HSE_APPROVAL_COPY } from "@/features/hse-approval/utils/hse-approval-copy";
-import { canApproveHse, canReturnHse } from "@/features/hse-approval/utils/hse-approval-guards";
+import {
+  HSE_APPROVAL_COPY,
+  HseReviewContent,
+  canApproveHse,
+  canReturnHse,
+  type HseActionsFooterState,
+} from "@/features/hse-approval";
 import { EvaluationConflictCard } from "@/features/ver-e-agir/components/evaluation-conflict-card";
 import { useAuth } from "@/hooks/use-auth";
 

@@ -5,7 +5,9 @@ import { useAuthorization } from "@/features/authorization/hooks/use-authorizati
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
 import { listMdhoPendingApprovals } from "../services/list-mdho-pending-approvals";
-import { HSE_APPROVAL_QUEUE_STALE_TIME_MS, hseApprovalQueryKeys } from "../types";
+import { hseApprovalQueryKeys } from "@safestop/query-keys";
+
+import { HSE_APPROVAL_QUEUE_STALE_TIME_MS } from "../types";
 import { showHseApprovalQueue } from "../utils/hse-approval-guards";
 
 export function useMdhoPendingApprovals() {

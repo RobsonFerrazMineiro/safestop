@@ -1,5 +1,7 @@
-import { OccurrencesListScreen } from "@/features/occurrences/components/occurrences-list-screen";
+import { Redirect } from "expo-router";
 
-export default function OccurrencesRoute() {
-  return <OccurrencesListScreen />;
+import { stopWorkRoute } from "@/lib/auth/routes";
+
+export default function OccurrencesIndexRedirectRoute() {
+  return <Redirect href={stopWorkRoute} />;
 }

@@ -1,29 +1,9 @@
-import { useQueryClient } from "@tanstack/react-query";
-
-import { occurrenceQueryKeys } from "@/features/occurrences/types";
-import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
+import { useInvalidateOccurrenceDomain } from "@/features/occurrences/hooks/use-invalidate-occurrence-domain";
 
 export function useInvalidateImsReferenceCaches() {
-  const queryClient = useQueryClient();
-  const { activeOrganization } = useActiveOrganization();
+  const invalidateDomain = useInvalidateOccurrenceDomain();
 
   return async function invalidateImsReferenceCaches(occurrenceId: string) {
-    const organizationId = activeOrganization?.id;
-
-    if (!organizationId) {
-      return;
-    }
-
-    await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: occurrenceQueryKeys.detail(organizationId, occurrenceId),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: occurrenceQueryKeys.lists(organizationId),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: occurrenceQueryKeys.timeline(organizationId, occurrenceId),
-      }),
-    ]);
+    await invalidateDomain(occurrenceId, "ims");
   };
 }

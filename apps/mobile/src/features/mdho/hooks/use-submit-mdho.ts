@@ -1,15 +1,18 @@
 import { useMutation } from "@tanstack/react-query";
 
+import { useInvalidateHseApprovalQueue } from "@/features/hse-approval/hooks/use-invalidate-hse-approval-caches";
+
 import { submitMdhoAssessment } from "../services/submit-mdho-assessment";
 import { useInvalidateMdhoCaches } from "./use-invalidate-mdho-caches";
 
 export function useSubmitMdho(occurrenceId: string) {
-  const invalidateCaches = useInvalidateMdhoCaches();
+  const invalidateMdhoCaches = useInvalidateMdhoCaches();
+  const invalidateHseQueue = useInvalidateHseApprovalQueue();
 
   const mutation = useMutation({
     mutationFn: submitMdhoAssessment,
     onSuccess: async () => {
-      await invalidateCaches(occurrenceId);
+      await Promise.all([invalidateMdhoCaches(occurrenceId), invalidateHseQueue()]);
     },
   });
 

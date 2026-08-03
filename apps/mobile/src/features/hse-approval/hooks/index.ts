@@ -1,2 +1,5 @@
 export { useMdhoPendingApprovals } from "./use-mdho-pending-approvals";
-export { useInvalidateHseApprovalQueue } from "./use-invalidate-hse-approval-queue";
+export {
+  useInvalidateHseApprovalCaches,
+  useInvalidateHseApprovalQueue,
+} from "./use-invalidate-hse-approval-caches";
