@@ -37,7 +37,8 @@
     "supabase:validate-occurrence-comments": "node supabase/scripts/validate-occurrence-comments.mjs",
     "supabase:smoke-ver-e-agir": "node supabase/scripts/smoke-ver-e-agir.mjs",
     "supabase:smoke-interdicao-oficial": "node supabase/scripts/smoke-interdicao-oficial.mjs",
-    "supabase:smoke-mdho": "node supabase/scripts/smoke-mdho.mjs"
+    "supabase:smoke-mdho": "node supabase/scripts/smoke-mdho.mjs",
+    "supabase:smoke-ims-reference": "node supabase/scripts/smoke-ims-reference.mjs"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.1",
