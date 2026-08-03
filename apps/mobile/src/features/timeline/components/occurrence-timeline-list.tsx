@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactElement } from "react";
+import { forwardRef, useCallback, useState, type ReactElement } from "react";
 import { Alert, FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import type { OccurrenceStatus, OccurrenceTimelineItem } from "@safestop/types";
 
@@ -37,14 +37,20 @@ function readIsOnline(): boolean {
   return browserGlobal.navigator?.onLine !== false;
 }
 
-export function OccurrenceTimelineList({
-  occurrenceId,
-  occurrenceStatus,
-  headerComponent,
-  contentPaddingBottom = 120,
-  isOnline,
-  onPreviewEvidence,
-}: OccurrenceTimelineListProps) {
+export const OccurrenceTimelineList = forwardRef<
+  FlatList<OccurrenceTimelineItem>,
+  OccurrenceTimelineListProps
+>(function OccurrenceTimelineList(
+  {
+    occurrenceId,
+    occurrenceStatus,
+    headerComponent,
+    contentPaddingBottom = 120,
+    isOnline,
+    onPreviewEvidence,
+  },
+  ref,
+) {
   const { user } = useAuth();
   const { can } = useAuthorization();
   const canCancelOccurrence = can("occurrence.cancel");
@@ -149,6 +155,7 @@ export function OccurrenceTimelineList({
   return (
     <>
       <FlatList
+        ref={ref}
         contentContainerStyle={[styles.content, { paddingBottom: contentPaddingBottom }]}
         data={isLoading ? [] : items}
         keyExtractor={(item) => `${item.kind}-${item.id}`}
@@ -197,7 +204,7 @@ export function OccurrenceTimelineList({
       />
     </>
   );
-}
+});
 
 const styles = StyleSheet.create({
   content: {

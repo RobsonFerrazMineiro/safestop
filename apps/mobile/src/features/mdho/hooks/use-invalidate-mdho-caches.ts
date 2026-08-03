@@ -1,11 +1,13 @@
 import { useQueryClient } from "@tanstack/react-query";
 
+import { useInvalidateHseApprovalQueue } from "@/features/hse-approval/hooks/use-invalidate-hse-approval-queue";
 import { occurrenceQueryKeys } from "@/features/occurrences/types";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
 export function useInvalidateMdhoCaches() {
   const queryClient = useQueryClient();
   const { activeOrganization } = useActiveOrganization();
+  const invalidateHseApprovalQueue = useInvalidateHseApprovalQueue();
 
   return async function invalidateMdhoCaches(occurrenceId: string) {
     const organizationId = activeOrganization?.id;
@@ -27,6 +29,7 @@ export function useInvalidateMdhoCaches() {
       queryClient.invalidateQueries({
         queryKey: occurrenceQueryKeys.mdho(organizationId, occurrenceId),
       }),
+      invalidateHseApprovalQueue(),
     ]);
   };
 }

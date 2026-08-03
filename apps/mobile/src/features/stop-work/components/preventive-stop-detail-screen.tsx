@@ -1,13 +1,27 @@
-import { useMemo, useState } from "react";
-import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import type { OccurrenceTimelineItem } from "@safestop/types";
 
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { EvidencePreviewModal, EvidenceSection, type EvidenceListItem } from "@/features/evidence";
+import { HseActionsFooter, type HseActionsFooterState } from "@/features/hse-approval";
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
+import {
+  formatOccurrenceDate,
+  getOccurrenceSeverityLabel,
+  getOccurrenceStatusLabel,
+} from "@/features/occurrences/utils/occurrence-labels";
 import { CommentComposerBar, OccurrenceTimelineList, useCreateComment } from "@/features/timeline";
 import { EvaluationSection } from "@/features/ver-e-agir";
 import {
@@ -20,14 +34,10 @@ import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
 
 import { PreventiveStopEmpty } from "./preventive-stop-empty";
 import { usePreventiveStop } from "../hooks/use-preventive-stop";
-import {
-  formatOccurrenceDate,
-  getOccurrenceSeverityLabel,
-  getOccurrenceStatusLabel,
-} from "@/features/occurrences/utils/occurrence-labels";
 
 type PreventiveStopDetailScreenProps = {
   occurrenceId: string;
+  focusSection?: string;
 };
 
 function DetailField({ label, value }: { label: string; value: string }) {
@@ -39,15 +49,47 @@ function DetailField({ label, value }: { label: string; value: string }) {
   );
 }
 
-function readIsOnline(): boolean {
-  const browserGlobal = globalThis as typeof globalThis & {
-    navigator?: { onLine?: boolean };
-  };
+function useIsOnline(): boolean {
+  const [isOnline, setIsOnline] = useState(() => {
+    const browserGlobal = globalThis as typeof globalThis & {
+      navigator?: { onLine?: boolean };
+    };
 
-  return browserGlobal.navigator?.onLine !== false;
+    return browserGlobal.navigator?.onLine !== false;
+  });
+
+  useEffect(() => {
+    const browserGlobal = globalThis as typeof globalThis & {
+      addEventListener?: (type: string, listener: () => void) => void;
+      removeEventListener?: (type: string, listener: () => void) => void;
+    };
+
+    const handleOnline = () => {
+      setIsOnline(true);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    browserGlobal.addEventListener?.("online", handleOnline);
+    browserGlobal.addEventListener?.("offline", handleOffline);
+
+    return () => {
+      browserGlobal.removeEventListener?.("online", handleOnline);
+      browserGlobal.removeEventListener?.("offline", handleOffline);
+    };
+  }, []);
+
+  return isOnline;
 }
 
-export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetailScreenProps) {
+const HSE_FOOTER_HEIGHT = 72;
+const COMPOSER_HEIGHT = 72;
+
+export function PreventiveStopDetailScreen({
+  occurrenceId,
+  focusSection,
+}: PreventiveStopDetailScreenProps) {
   const router = useRouter();
   useRequirePermission("occurrence.read");
 
@@ -56,7 +98,36 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
 
   const { createComment, isCreating } = useCreateComment(occurrenceId);
   const [previewEvidence, setPreviewEvidence] = useState<EvidenceListItem | null>(null);
-  const [isOnline] = useState(readIsOnline);
+  const [hseFooter, setHseFooter] = useState<HseActionsFooterState | null>(null);
+  const isOnline = useIsOnline();
+
+  const listRef = useRef<FlatList<OccurrenceTimelineItem>>(null);
+  const reviewSectionRef = useRef<View>(null);
+  const hasScrolledToReview = useRef(false);
+
+  const focusMdhoReview = focusSection === "mdho-review";
+  const bottomPadding =
+    140 + (hseFooter?.visible ? HSE_FOOTER_HEIGHT : 0) + (hseFooter?.visible ? 0 : 0);
+
+  useEffect(() => {
+    if (!focusMdhoReview || hasScrolledToReview.current || isLoading || !preventiveStop) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      reviewSectionRef.current?.measureInWindow((_x, y) => {
+        listRef.current?.scrollToOffset({
+          animated: true,
+          offset: Math.max(0, y - 80),
+        });
+        hasScrolledToReview.current = true;
+      });
+    }, 350);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [focusMdhoReview, isLoading, preventiveStop]);
 
   const headerComponent = useMemo(() => {
     if (!preventiveStop) {
@@ -137,6 +208,8 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
           isOnline={isOnline}
           isRefreshing={isFetching}
           occurrence={preventiveStop}
+          reviewSectionRef={reviewSectionRef}
+          onHseFooterChange={setHseFooter}
           onRefresh={refetch}
         />
       </View>
@@ -203,13 +276,20 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
         style={styles.flex}
       >
         <OccurrenceTimelineList
-          contentPaddingBottom={140}
+          ref={listRef}
+          contentPaddingBottom={bottomPadding}
           headerComponent={headerComponent}
           isOnline={isOnline}
           occurrenceId={occurrenceId}
           occurrenceStatus={preventiveStop.status}
           onPreviewEvidence={handlePreviewEvidence}
         />
+
+        {hseFooter?.visible ? (
+          <View style={[styles.hseFooterHost, { bottom: COMPOSER_HEIGHT }]}>
+            <HseActionsFooter {...hseFooter} />
+          </View>
+        ) : null}
 
         <CommentComposerBar
           key={occurrenceId}
@@ -235,7 +315,11 @@ export function PreventiveStopDetailScreen({ occurrenceId }: PreventiveStopDetai
       <Pressable
         accessibilityLabel="Voltar ao início"
         accessibilityRole="button"
-        style={({ pressed }) => [styles.homeButtonFloating, pressed && styles.buttonPressed]}
+        style={({ pressed }) => [
+          styles.homeButtonFloating,
+          hseFooter?.visible ? styles.homeButtonWithHseFooter : null,
+          pressed && styles.buttonPressed,
+        ]}
         onPress={() => {
           router.replace(authRoutes.app);
         }}
@@ -291,15 +375,24 @@ const styles = StyleSheet.create({
     bottom: 96,
     justifyContent: "center",
     minHeight: 40,
+    paddingHorizontal: 12,
     position: "absolute",
     right: 16,
     zIndex: 2,
-    paddingHorizontal: 12,
   },
   homeButtonText: {
     color: "#F9FAFB",
     fontSize: 13,
     fontWeight: "600",
+  },
+  homeButtonWithHseFooter: {
+    bottom: 168,
+  },
+  hseFooterHost: {
+    left: 0,
+    position: "absolute",
+    right: 0,
+    zIndex: 3,
   },
   meta: {
     color: "#9CA3AF",

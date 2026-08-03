@@ -1,12 +1,16 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState, type RefObject } from "react";
 import { Alert, ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import type { OccurrenceDetails } from "@safestop/types";
 
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
+import type { HseActionsFooterState } from "@/features/hse-approval/types";
+import { HseReviewContent } from "@/features/hse-approval/components/hse-review-content";
+import { HSE_APPROVAL_COPY } from "@/features/hse-approval/utils/hse-approval-copy";
+import { canApproveHse, canReturnHse } from "@/features/hse-approval/utils/hse-approval-guards";
 import { EvaluationConflictCard } from "@/features/ver-e-agir/components/evaluation-conflict-card";
+import { useAuth } from "@/hooks/use-auth";
 
 import { MdhoReturnedBanner } from "./mdho-returned-banner";
-import { MdhoReviewPanel } from "./mdho-review-panel";
 import { MdhoStartCard } from "./mdho-start-card";
 import { MdhoStepperForm } from "./mdho-stepper-form";
 import { MdhoSummary } from "./mdho-summary";
@@ -22,9 +26,7 @@ import {
 import { MdhoMutationError } from "../utils/mdho-errors";
 import type { MdhoFormState } from "../utils/mdho-form-state";
 import {
-  canApproveMdho,
   canEditMdho,
-  canReturnMdho,
   canStartMdho,
   canSubmitMdho,
   shouldShowMdhoForm,
@@ -38,6 +40,8 @@ type MdhoSectionProps = {
   isOnline: boolean;
   isRefreshing?: boolean;
   onRefresh: () => Promise<unknown>;
+  onHseFooterChange?: (state: HseActionsFooterState | null) => void;
+  reviewSectionRef?: RefObject<View | null>;
 };
 
 export function MdhoSection({
@@ -45,7 +49,10 @@ export function MdhoSection({
   isOnline,
   isRefreshing = false,
   onRefresh,
+  onHseFooterChange,
+  reviewSectionRef,
 }: MdhoSectionProps) {
+  const { user } = useAuth();
   const { can, isPlatformAdmin } = useAuthorization();
   const canFill = can("mdho.fill");
   const canSubmitPermission = can("mdho.submit");
@@ -68,9 +75,7 @@ export function MdhoSection({
 
   const [showConflict, setShowConflict] = useState(false);
 
-  if (!canRead || !shouldShowMdhoSection(occurrence)) {
-    return null;
-  }
+  const shouldRender = canRead && shouldShowMdhoSection(occurrence);
 
   const hasAssessment = assessment !== null;
   const assessmentStatus = assessment?.status ?? null;
@@ -89,24 +94,127 @@ export function MdhoSection({
   const showReview = catalog && assessment && shouldShowMdhoReview(assessmentStatus);
   const showSummary = catalog && assessment && shouldShowMdhoSummary(assessmentStatus);
 
-  async function handleRefresh() {
+  const canApproveHseAction =
+    assessment &&
+    canApproveHse({
+      canApprove: canApprovePermission,
+      isPlatformAdmin,
+      status: assessmentStatus,
+      submittedBy: assessment.submittedBy,
+      currentUserId: user?.id,
+    });
+
+  const canReturnHseAction = canReturnHse({
+    canReturn: canReturnPermission,
+    isPlatformAdmin,
+    status: assessmentStatus,
+  });
+
+  const showSelfApprovalInfo =
+    assessment?.status === "SUBMITTED" &&
+    assessment.submittedBy !== null &&
+    assessment.submittedBy === user?.id &&
+    canApprovePermission &&
+    !isPlatformAdmin;
+
+  const handleRefresh = useCallback(async () => {
     setShowConflict(false);
     await Promise.all([onRefresh(), refetchAssessment()]);
-  }
+  }, [onRefresh, refetchAssessment]);
 
-  async function handleMutationConflict(error: unknown, fallbackMessage: string) {
-    if (error instanceof MdhoMutationError && error.code === "ALREADY_EXISTS") {
-      await handleRefresh();
+  const handleMutationConflict = useCallback(
+    async (error: unknown, fallbackMessage: string) => {
+      if (error instanceof MdhoMutationError && error.code === "ALREADY_EXISTS") {
+        await handleRefresh();
+        return;
+      }
+
+      if (error instanceof MdhoMutationError && error.code === "SELF_APPROVAL_FORBIDDEN") {
+        Alert.alert(HSE_APPROVAL_COPY.selfApprovalInfo);
+        await handleRefresh();
+        return;
+      }
+
+      if (error instanceof MdhoMutationError && error.isConflict()) {
+        setShowConflict(true);
+        Alert.alert(HSE_APPROVAL_COPY.conflictMessage);
+        return;
+      }
+
+      Alert.alert("Erro", error instanceof Error ? error.message : fallbackMessage);
+    },
+    [handleRefresh],
+  );
+
+  const handleApprove = useCallback(async () => {
+    if (!assessment) {
       return;
     }
 
-    if (error instanceof MdhoMutationError && error.isConflict()) {
-      setShowConflict(true);
-      Alert.alert("Esta avaliação foi atualizada", "Atualize para continuar.");
+    try {
+      await approveMdho(assessment.id);
+      setShowConflict(false);
+    } catch (error) {
+      await handleMutationConflict(error, "Não foi possível aprovar o MDHO.");
+    }
+  }, [approveMdho, assessment, handleMutationConflict]);
+
+  const handleReturn = useCallback(
+    async (returnReason: string) => {
+      if (!assessment) {
+        return;
+      }
+
+      try {
+        await returnMdho({ assessmentId: assessment.id, returnReason });
+        setShowConflict(false);
+      } catch (error) {
+        await handleMutationConflict(error, "Não foi possível devolver o MDHO.");
+      }
+    },
+    [assessment, handleMutationConflict, returnMdho],
+  );
+
+  useEffect(() => {
+    if (!onHseFooterChange || !shouldRender) {
+      onHseFooterChange?.(null);
       return;
     }
 
-    Alert.alert("Erro", error instanceof Error ? error.message : fallbackMessage);
+    if (!showConflict && showReview && assessment && (canApproveHseAction || canReturnHseAction)) {
+      onHseFooterChange({
+        visible: true,
+        canApprove: canApproveHseAction ?? false,
+        canReturn: canReturnHseAction,
+        isOnline,
+        isApproving,
+        isReturning,
+        onApprove: () => {
+          void handleApprove();
+        },
+        onReturn: handleReturn,
+      });
+      return;
+    }
+
+    onHseFooterChange(null);
+  }, [
+    assessment,
+    canApproveHseAction,
+    canReturnHseAction,
+    handleApprove,
+    handleReturn,
+    isApproving,
+    isOnline,
+    isReturning,
+    onHseFooterChange,
+    shouldRender,
+    showConflict,
+    showReview,
+  ]);
+
+  if (!shouldRender) {
+    return null;
   }
 
   async function handleStart() {
@@ -155,37 +263,13 @@ export function MdhoSection({
     }
   }
 
-  async function handleApprove() {
-    if (!assessment) {
-      return;
-    }
-
-    try {
-      await approveMdho(assessment.id);
-      setShowConflict(false);
-    } catch (error) {
-      await handleMutationConflict(error, "Não foi possível aprovar o MDHO.");
-    }
-  }
-
-  async function handleReturn(returnReason: string) {
-    if (!assessment) {
-      return;
-    }
-
-    try {
-      await returnMdho({ assessmentId: assessment.id, returnReason });
-      setShowConflict(false);
-    } catch (error) {
-      await handleMutationConflict(error, "Não foi possível devolver o MDHO.");
-    }
-  }
-
   return (
     <View style={styles.container}>
-      <Text accessibilityRole="header" style={styles.sectionTitle}>
-        Avaliação Técnica (MDHO)
-      </Text>
+      {!showReview ? (
+        <Text accessibilityRole="header" style={styles.sectionTitle}>
+          Avaliação Técnica (MDHO)
+        </Text>
+      ) : null}
 
       {isAssessmentLoading || isCatalogLoading ? (
         <ActivityIndicator color="#2563EB" size="small" />
@@ -228,25 +312,13 @@ export function MdhoSection({
       ) : null}
 
       {!showConflict && showReview && assessment && catalog ? (
-        <MdhoReviewPanel
-          assessment={assessment}
-          canApprove={canApproveMdho({
-            canApprove: canApprovePermission,
-            isPlatformAdmin,
-            status: assessmentStatus,
-          })}
-          canReturn={canReturnMdho({
-            canReturn: canReturnPermission,
-            isPlatformAdmin,
-            status: assessmentStatus,
-          })}
-          catalog={catalog.categories}
-          isApproving={isApproving}
-          isOnline={isOnline}
-          isReturning={isReturning}
-          onApprove={handleApprove}
-          onReturn={handleReturn}
-        />
+        <View ref={reviewSectionRef} collapsable={false}>
+          <HseReviewContent
+            assessment={assessment}
+            catalog={catalog.categories}
+            showSelfApprovalInfo={showSelfApprovalInfo}
+          />
+        </View>
       ) : null}
 
       {!showConflict && showSummary && assessment && catalog ? (

@@ -2,14 +2,26 @@ import { useRouter } from "expo-router";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
+import { showHseApprovalQueue } from "@/features/hse-approval";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
-import { authRoutes, stopWorkNewRoute } from "@/lib/auth/routes";
+import { authRoutes, hseApprovalQueueRoute, stopWorkNewRoute } from "@/lib/auth/routes";
 
 export default function AuthenticatedHomeScreen() {
   const router = useRouter();
   const { user, signOut, isRefreshing } = useAuth();
+  const { can, isPlatformAdmin } = useAuthorization();
   const { activeOrganization, hasMultipleOrganizations } = useActiveOrganization();
+
+  const canViewHseQueue = showHseApprovalQueue({
+    currentUserId: user?.id ?? "",
+    isPlatformAdmin,
+    permissions: {
+      mdhoApprove: can("mdho.approve"),
+      mdhoReturn: can("mdho.return"),
+    },
+  });
 
   async function handleSignOut() {
     await signOut();
@@ -63,6 +75,19 @@ export default function AuthenticatedHomeScreen() {
         >
           <Text style={styles.occurrencesButtonText}>Paralisação Preventiva</Text>
         </Pressable>
+
+        {canViewHseQueue ? (
+          <Pressable
+            accessibilityLabel="Aprovação HSE"
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.hseButton, pressed && styles.buttonPressed]}
+            onPress={() => {
+              router.push(hseApprovalQueueRoute);
+            }}
+          >
+            <Text style={styles.hseButtonText}>Aprovação HSE</Text>
+          </Pressable>
+        ) : null}
 
         <Pressable
           accessibilityLabel="Meu perfil"
@@ -184,6 +209,23 @@ const styles = StyleSheet.create({
   },
   occurrencesButtonText: {
     color: "#0F1115",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  hseButton: {
+    alignItems: "center",
+    backgroundColor: "#92400E",
+    borderColor: "#D97706",
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    marginTop: 8,
+    minHeight: 48,
+    minWidth: 200,
+    paddingHorizontal: 24,
+  },
+  hseButtonText: {
+    color: "#FDE68A",
     fontSize: 16,
     fontWeight: "700",
   },
