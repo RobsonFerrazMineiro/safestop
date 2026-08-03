@@ -151,6 +151,7 @@ export {
   isMdhoEditableStatus,
   isMdhoEligible,
   isMdhoErrorCode,
+  shouldShowMdhoSection,
 } from "./mdho-assessment";
 export type {
   ApproveMdhoAssessmentResult,

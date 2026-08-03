@@ -185,3 +185,24 @@ export function isMdhoEligible(occurrence: MdhoEligibilityOccurrence): boolean {
 export function isMdhoEditableStatus(status: MdhoAssessmentStatus): boolean {
   return status === "DRAFT" || status === "RETURNED";
 }
+
+const MDHO_IO_SECTION_STATUSES = [
+  "INTERDICAO_CONFIRMADA",
+  "MDHO_EM_PREENCHIMENTO",
+  "AGUARDANDO_APROVACAO_HSE",
+  "AGUARDANDO_REGISTRO_IMS",
+] as const satisfies readonly OccurrenceStatus[];
+
+/**
+ * Seção MDHO visível no detalhe IO (PO-CON-8 / S29-TYP-01).
+ */
+export function shouldShowMdhoSection(occurrence: {
+  decisionType: OccurrenceDecisionType | null;
+  status: OccurrenceStatus;
+}): boolean {
+  if (occurrence.decisionType !== "INTERDICAO_OFICIAL") {
+    return false;
+  }
+
+  return (MDHO_IO_SECTION_STATUSES as readonly OccurrenceStatus[]).includes(occurrence.status);
+}
