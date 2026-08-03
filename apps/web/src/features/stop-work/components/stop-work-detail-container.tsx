@@ -12,6 +12,7 @@ import {
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { OccurrenceTimeline } from "@/features/timeline";
 import { InterdicaoBanner } from "@/features/interdicao-oficial";
+import { ImsReferenceSection } from "@/features/ims-reference";
 import { MdhoSection } from "@/features/mdho";
 
 import { usePreventiveStop } from "../hooks/use-stop-work";
@@ -137,6 +138,15 @@ export function StopWorkDetailContainer() {
 
       {organizationId ? (
         <MdhoSection
+          isRefreshing={isFetching}
+          occurrence={stopWork}
+          organizationId={organizationId}
+          onRefresh={refetch}
+        />
+      ) : null}
+
+      {organizationId ? (
+        <ImsReferenceSection
           isRefreshing={isFetching}
           occurrence={stopWork}
           organizationId={organizationId}

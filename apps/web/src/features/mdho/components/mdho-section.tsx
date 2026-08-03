@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { shouldShowImsReferenceSection } from "@/features/ims-reference";
 import type { OccurrenceDetailsEnriched } from "@/features/occurrences/types";
 import { useInvalidateMdhoCaches } from "../hooks/use-invalidate-mdho-caches";
 import { useMdhoAssessment } from "../hooks/use-mdho-assessment";
@@ -119,7 +120,11 @@ export function MdhoSection({
           ) : null}
 
           {assessment?.status === "APPROVED" ? (
-            <MdhoSummary assessment={assessment} categories={categories} />
+            <MdhoSummary
+              assessment={assessment}
+              categories={categories}
+              hideImsHint={shouldShowImsReferenceSection(occurrence)}
+            />
           ) : null}
         </>
       ) : null}

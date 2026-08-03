@@ -62,8 +62,15 @@ type OccurrenceDetailRow = OccurrenceListRow & {
   released_at: string | null;
   closed_at: string | null;
   cancelled_at: string | null;
+  ims_reference_code: string | null;
+  ims_reference_registered_at: string | null;
+  ims_reference_registered_by: string | null;
+  ims_reference_updated_at: string | null;
+  ims_reference_updated_by: string | null;
   assigned_evaluator_id: string | null;
   evaluator: ProfileJoin | ProfileJoin[] | null;
+  ims_registered_by_profile: ProfileJoin | ProfileJoin[] | null;
+  ims_updated_by_profile: ProfileJoin | ProfileJoin[] | null;
   occurrence_decisions: OccurrenceDecisionJoin | OccurrenceDecisionJoin[] | null;
 };
 
@@ -150,6 +157,8 @@ export function mapOccurrenceDetailRow(row: OccurrenceDetailRow): OccurrenceDeta
     row.decision_type && isOccurrenceDecisionType(row.decision_type) ? row.decision_type : null;
 
   const evaluator = normalizeJoin(row.evaluator);
+  const imsRegisteredByProfile = normalizeJoin(row.ims_registered_by_profile);
+  const imsUpdatedByProfile = normalizeJoin(row.ims_updated_by_profile);
 
   return {
     ...summary,
@@ -175,6 +184,13 @@ export function mapOccurrenceDetailRow(row: OccurrenceDetailRow): OccurrenceDeta
     cancelledAt: row.cancelled_at,
     assignedEvaluatorId: row.assigned_evaluator_id,
     assignedEvaluatorName: evaluator?.full_name ?? null,
+    imsReferenceCode: row.ims_reference_code,
+    imsReferenceRegisteredAt: row.ims_reference_registered_at,
+    imsReferenceRegisteredBy: row.ims_reference_registered_by,
+    imsReferenceRegisteredByName: imsRegisteredByProfile?.full_name ?? null,
+    imsReferenceUpdatedAt: row.ims_reference_updated_at,
+    imsReferenceUpdatedBy: row.ims_reference_updated_by,
+    imsReferenceUpdatedByName: imsUpdatedByProfile?.full_name ?? null,
     decision: mapOccurrenceDecisionEmbed(row.id, row.occurrence_decisions),
   };
 }

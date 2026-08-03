@@ -7,9 +7,10 @@ import { formatMdhoDateTime } from "../utils/mdho-read-only-view";
 type MdhoSummaryProps = {
   assessment: MdhoAssessmentEnriched;
   categories: MdhoCatalogCategory[];
+  hideImsHint?: boolean;
 };
 
-export function MdhoSummary({ assessment, categories }: MdhoSummaryProps) {
+export function MdhoSummary({ assessment, categories, hideImsHint = false }: MdhoSummaryProps) {
   return (
     <div className="flex flex-col gap-4">
       <span className="inline-flex w-fit rounded-full border border-green-600/50 bg-green-950/30 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-green-300">
@@ -31,7 +32,9 @@ export function MdhoSummary({ assessment, categories }: MdhoSummaryProps) {
         </div>
       </div>
 
-      <p className="text-sm text-gray-400">Aguardando registro da referência IMS</p>
+      {!hideImsHint ? (
+        <p className="text-sm text-gray-400">Aguardando registro da referência IMS</p>
+      ) : null}
     </div>
   );
 }

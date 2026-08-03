@@ -43,8 +43,15 @@ const DETAIL_SELECT = `
   released_at,
   closed_at,
   cancelled_at,
+  ims_reference_code,
+  ims_reference_registered_at,
+  ims_reference_registered_by,
+  ims_reference_updated_at,
+  ims_reference_updated_by,
   assigned_evaluator_id,
   evaluator:profiles!occurrences_assigned_evaluator_id_fkey ( full_name ),
+  ims_registered_by_profile:profiles!occurrences_ims_reference_registered_by_fkey ( full_name ),
+  ims_updated_by_profile:profiles!occurrences_ims_reference_updated_by_fkey ( full_name ),
   occurrence_decisions (
     id,
     decision_type,
@@ -86,6 +93,10 @@ export async function getOccurrences(organizationId: string, filters: Occurrence
 
   if (filters.severity) {
     query = query.eq("severity", filters.severity);
+  }
+
+  if (filters.imsReferenceCode?.trim()) {
+    query = query.ilike("ims_reference_code", `%${filters.imsReferenceCode.trim()}%`);
   }
 
   const { data, error } = await query;

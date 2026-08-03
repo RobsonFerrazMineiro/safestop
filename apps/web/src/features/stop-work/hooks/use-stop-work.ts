@@ -6,12 +6,17 @@ import {
   useOccurrenceStatusHistory,
   useOrganizationAreas,
 } from "@/features/occurrences";
+import type { OccurrenceListFilters } from "@safestop/types";
 import { createPreventiveStopSchema, type CreatePreventiveStopInput } from "@safestop/validation";
 
 import { PREVENTIVE_STOP_LIST_FILTERS, PREVENTIVE_STOP_STATUS } from "../constants";
 
-export function usePreventiveStops() {
-  return useOccurrences(PREVENTIVE_STOP_LIST_FILTERS);
+export function usePreventiveStops(filters: OccurrenceListFilters = PREVENTIVE_STOP_LIST_FILTERS) {
+  const imsQuery = filters.imsReferenceCode?.trim();
+  const resolvedFilters: OccurrenceListFilters =
+    imsQuery && imsQuery.length > 0 ? { imsReferenceCode: imsQuery } : filters;
+
+  return useOccurrences(resolvedFilters);
 }
 
 export function usePreventiveStop(occurrenceId: string | undefined) {
