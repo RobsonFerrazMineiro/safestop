@@ -14,6 +14,7 @@ const QA_ALPHA_CONTRACTOR_ID = "b0000000-0000-4000-8000-000000000002";
 const QA_FIELD_EMAIL = "qa-field@safestop.local";
 const QA_SUPERVISOR_EMAIL = "qa-supervisor@safestop.local";
 const QA_LIDERANCA_EMAIL = "qa-lideranca@safestop.local";
+const QA_DUAL_HSE_EMAIL = "qa-dual-hse@safestop.local";
 
 const MDHO_CAT_BEHAVIOR = "90000000-0000-4000-8000-000000000001";
 const MDHO_CAT_DEVIATION = "90000000-0000-4000-8000-000000000002";
@@ -177,15 +178,55 @@ async function createVaOccurrence(apiUrl, anonKey, fieldToken, supervisorToken) 
   return occurrenceId;
 }
 
+async function prepareSubmittedMdho(apiUrl, anonKey, fieldToken, submitterToken, suffix) {
+  const occurrenceId = await createIoOccurrence(
+    apiUrl,
+    anonKey,
+    fieldToken,
+    submitterToken,
+    suffix,
+  );
+
+  const startMdho = await rpc(apiUrl, anonKey, submitterToken, "start_mdho_assessment", {
+    p_occurrence_id: occurrenceId,
+  });
+  if (!startMdho.success) {
+    throw new Error(`start_mdho_assessment falhou: ${JSON.stringify(startMdho)}`);
+  }
+
+  const assessmentId = startMdho.data.assessment.id;
+
+  const saveDraft = await rpc(apiUrl, anonKey, submitterToken, "save_mdho_draft", {
+    p_payload: {
+      assessment_id: assessmentId,
+      selections: buildValidSelections(),
+      complement: "Complemento técnico da avaliação MDHO para smoke QA.",
+    },
+  });
+  if (!saveDraft.success) {
+    throw new Error(`save_mdho_draft falhou: ${JSON.stringify(saveDraft)}`);
+  }
+
+  const submit = await rpc(apiUrl, anonKey, submitterToken, "submit_mdho_assessment", {
+    p_assessment_id: assessmentId,
+  });
+  if (!submit.success || submit.data?.occurrence?.status !== "AGUARDANDO_APROVACAO_HSE") {
+    throw new Error(`submit falhou: ${JSON.stringify(submit)}`);
+  }
+
+  return { occurrenceId, assessmentId };
+}
+
 async function main() {
   const password = loadPassword();
   const { apiUrl, anonKey } = loadSupabaseLocalEnv();
 
-  console.log("=== Smoke MDHO (Sprint 2.6) ===\n");
+  console.log("=== Smoke MDHO + HSE Approval (Sprint 2.6 / 2.7) ===\n");
 
   const field = await signIn(apiUrl, anonKey, QA_FIELD_EMAIL, password);
   const supervisor = await signIn(apiUrl, anonKey, QA_SUPERVISOR_EMAIL, password);
   const lideranca = await signIn(apiUrl, anonKey, QA_LIDERANCA_EMAIL, password);
+  const dualHse = await signIn(apiUrl, anonKey, QA_DUAL_HSE_EMAIL, password);
 
   console.log("MDHO-02 — start em Ver e Agir → FORBIDDEN...");
   const vaOccurrenceId = await createVaOccurrence(
@@ -206,70 +247,69 @@ async function main() {
   }
   console.log("   OK");
 
-  const ioOccurrenceId = await createIoOccurrence(
+  const { occurrenceId: ioOccurrenceId, assessmentId } = await prepareSubmittedMdho(
     apiUrl,
     anonKey,
     field.access_token,
     supervisor.access_token,
-    "MDHO",
+    "HSE-main",
   );
-  console.log(`Ocorrência IO: ${ioOccurrenceId}\n`);
+  console.log(`Ocorrência IO (fila HSE): ${ioOccurrenceId}\n`);
 
-  console.log("MDHO-01 — qa-supervisor start_mdho_assessment...");
-  const startMdho = await rpc(
+  console.log("HSE-01 — qa-liderança list_mdho_pending_approvals...");
+  const queue = await rpc(
+    apiUrl,
+    anonKey,
+    lideranca.access_token,
+    "list_mdho_pending_approvals",
+    { p_organization_id: QA_ALPHA_ORG_ID, p_limit: 20 },
+  );
+  if (!queue.success) {
+    throw new Error(`list falhou: ${JSON.stringify(queue)}`);
+  }
+  const queueItem = queue.items?.find((item) => item.assessmentId === assessmentId);
+  if (!queueItem?.areaName || !queueItem?.criticality) {
+    throw new Error(`Item fila incompleto: ${JSON.stringify(queueItem)}`);
+  }
+  console.log("   OK");
+
+  console.log("HSE-06 — qa-supervisor list → FORBIDDEN...");
+  const supervisorQueue = await rpc(
     apiUrl,
     anonKey,
     supervisor.access_token,
-    "start_mdho_assessment",
-    { p_occurrence_id: ioOccurrenceId },
+    "list_mdho_pending_approvals",
+    { p_organization_id: QA_ALPHA_ORG_ID },
   );
-  if (!startMdho.success || startMdho.data?.occurrence?.status !== "MDHO_EM_PREENCHIMENTO") {
-    throw new Error(`Start MDHO falhou: ${JSON.stringify(startMdho)}`);
-  }
-  const assessmentId = startMdho.data.assessment.id;
-  console.log("   OK");
-
-  console.log("MDHO-04 — save_mdho_draft...");
-  const saveDraft = await rpc(apiUrl, anonKey, supervisor.access_token, "save_mdho_draft", {
-    p_payload: {
-      assessment_id: assessmentId,
-      selections: buildValidSelections(),
-      complement: "Complemento técnico da avaliação MDHO para smoke QA.",
-    },
-  });
-  if (!saveDraft.success) {
-    throw new Error(`save_mdho_draft falhou: ${JSON.stringify(saveDraft)}`);
+  if (supervisorQueue.success !== false || supervisorQueue.error?.code !== "FORBIDDEN") {
+    throw new Error(`Esperado FORBIDDEN, recebido ${JSON.stringify(supervisorQueue)}`);
   }
   console.log("   OK");
 
-  console.log("MDHO-06 — submit_mdho_assessment...");
-  const submit = await rpc(
+  console.log("HSE-07 — qa-dual-hse autoaprovação → SELF_APPROVAL_FORBIDDEN...");
+  const dualFlow = await prepareSubmittedMdho(
     apiUrl,
     anonKey,
-    supervisor.access_token,
-    "submit_mdho_assessment",
-    { p_assessment_id: assessmentId },
+    field.access_token,
+    dualHse.access_token,
+    "HSE-self-approval",
   );
-  if (!submit.success || submit.data?.occurrence?.status !== "AGUARDANDO_APROVACAO_HSE") {
-    throw new Error(`submit falhou: ${JSON.stringify(submit)}`);
-  }
-  console.log("   OK");
-
-  console.log("MDHO-12 — timeline títulos MDHO...");
-  const timeline = await rpc(
+  const selfApprove = await rpc(
     apiUrl,
     anonKey,
-    supervisor.access_token,
-    "get_occurrence_timeline",
-    { p_occurrence_id: ioOccurrenceId, p_limit: 20 },
+    dualHse.access_token,
+    "approve_mdho_assessment",
+    { p_assessment_id: dualFlow.assessmentId },
   );
-  const titles = timeline.items?.map((item) => item.title) ?? [];
-  if (!titles.includes("MDHO iniciado") || !titles.includes("MDHO enviado")) {
-    throw new Error(`Timeline MDHO incompleta: ${JSON.stringify(titles)}`);
+  if (
+    selfApprove.success !== false ||
+    selfApprove.error?.code !== "SELF_APPROVAL_FORBIDDEN"
+  ) {
+    throw new Error(`Esperado SELF_APPROVAL_FORBIDDEN, recebido ${JSON.stringify(selfApprove)}`);
   }
   console.log("   OK");
 
-  console.log("MDHO-07 — qa-lideranca approve_mdho_assessment...");
+  console.log("HSE-03 — qa-liderança approve_mdho_assessment...");
   const approve = await rpc(
     apiUrl,
     anonKey,
@@ -282,20 +322,38 @@ async function main() {
   }
   console.log("   OK");
 
-  const timelineApproved = await rpc(
+  console.log("HSE-16 — retry approve idempotente...");
+  const retryApprove = await rpc(
+    apiUrl,
+    anonKey,
+    lideranca.access_token,
+    "approve_mdho_assessment",
+    { p_assessment_id: assessmentId },
+  );
+  if (!retryApprove.success || retryApprove.data?.idempotent !== true) {
+    throw new Error(`Idempotência falhou: ${JSON.stringify(retryApprove)}`);
+  }
+  console.log("   OK");
+
+  console.log("MDHO-12 — timeline títulos MDHO...");
+  const timeline = await rpc(
     apiUrl,
     anonKey,
     lideranca.access_token,
     "get_occurrence_timeline",
     { p_occurrence_id: ioOccurrenceId, p_limit: 20 },
   );
-  const approvedTitle = timelineApproved.items?.find((item) => item.title === "MDHO aprovado");
-  if (!approvedTitle?.metadata?.assessmentId) {
-    throw new Error(`Timeline MDHO aprovado ausente: ${JSON.stringify(approvedTitle)}`);
+  const titles = timeline.items?.map((item) => item.title) ?? [];
+  if (
+    !titles.includes("MDHO iniciado") ||
+    !titles.includes("MDHO enviado") ||
+    !titles.includes("MDHO aprovado")
+  ) {
+    throw new Error(`Timeline MDHO incompleta: ${JSON.stringify(titles)}`);
   }
-  console.log("   OK (timeline MDHO aprovado)");
+  console.log("   OK");
 
-  console.log("\nSmoke MDHO concluído com sucesso.");
+  console.log("\nSmoke MDHO + HSE concluído com sucesso.");
 }
 
 main().catch((error) => {
