@@ -1,10 +1,12 @@
 import { getSupabaseClient } from "@/lib/auth/client";
 
+import { assertRpcSuccess } from "@/features/evidence/utils/rpc-response";
+
 import type { OccurrenceContractorOption } from "../types";
 
-type ContractRow = {
+type RpcContractorRow = {
   contractor_organization_id: string;
-  organizations: { id: string; name: string } | { id: string; name: string }[] | null;
+  contractor_name: string;
 };
 
 type GetContractorsParams = {
@@ -25,37 +27,23 @@ export async function getContractors(
     throw new Error("Não autenticado.");
   }
 
-  const { data, error } = await supabase
-    .from("contracts")
-    .select("contractor_organization_id, organizations:contractor_organization_id (id, name)")
-    .eq("client_organization_id", params.organizationId)
-    .eq("is_active", true)
-    .order("contractor_organization_id");
+  const { data, error } = await supabase.rpc("list_organization_contractors", {
+    target_organization_id: params.organizationId,
+  });
 
   if (error) {
     throw new Error("Não foi possível carregar as empresas contratadas.");
   }
 
-  const seen = new Set<string>();
-  const contractors: OccurrenceContractorOption[] = [];
+  const rows = assertRpcSuccess<RpcContractorRow[]>(
+    data,
+    "Não foi possível carregar as empresas contratadas.",
+  );
 
-  for (const row of data as ContractRow[]) {
-    if (seen.has(row.contractor_organization_id)) {
-      continue;
-    }
-
-    const org = Array.isArray(row.organizations) ? row.organizations[0] : row.organizations;
-
-    if (!org?.id || !org.name) {
-      continue;
-    }
-
-    seen.add(row.contractor_organization_id);
-    contractors.push({
-      id: org.id,
-      name: org.name,
-    });
-  }
-
-  return contractors.sort((left, right) => left.name.localeCompare(right.name, "pt-BR"));
+  return rows
+    .map((row) => ({
+      id: row.contractor_organization_id,
+      name: row.contractor_name,
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name, "pt-BR"));
 }

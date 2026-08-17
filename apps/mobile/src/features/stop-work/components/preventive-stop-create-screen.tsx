@@ -16,7 +16,9 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
+import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
 import { OccurrenceSyncStatusBadge } from "@/features/occurrences/components/occurrence-sync-status-badge";
@@ -84,6 +86,8 @@ function useIsOffline(): boolean {
 export function PreventiveStopCreateScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { isReady: isAuthReady } = useAuthorization();
+  const { isReady: isOrgReady } = useActiveOrganization();
   useRequirePermission("occurrence.create");
 
   const { createPreventiveStop, isCreating, canCreate } = useCreatePreventiveStop();
@@ -172,8 +176,20 @@ export function PreventiveStopCreateScreen() {
     autoContractRef.current = null;
   }, [selectedContractorId]);
 
+  if (!isAuthReady || !isOrgReady) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <OccurrenceLoading />
+      </SafeAreaView>
+    );
+  }
+
   if (!canCreate) {
-    return null;
+    return (
+      <SafeAreaView style={styles.container}>
+        <OccurrenceError message="Você não possui permissão para registrar paralisações nesta organização." />
+      </SafeAreaView>
+    );
   }
 
   if (successResult) {
@@ -212,6 +228,11 @@ export function PreventiveStopCreateScreen() {
   const hasAreas = areas.length > 0;
   const hasContractors = contractors.length > 0;
   const canSubmit = hasAreas && hasContractors && !isOffline && !isCreating;
+  const setupBlockedMessage = !hasAreas
+    ? "Cadastre ao menos uma área ativa na organização para registrar paralisações."
+    : !hasContractors
+      ? "Cadastre ao menos uma contratada com contrato ativo na organização para registrar paralisações."
+      : null;
   const showContractField =
     Boolean(selectedContractorId) && !isContractsLoading && contracts.length > 0;
 
@@ -472,6 +493,8 @@ export function PreventiveStopCreateScreen() {
             />
 
             <Text style={styles.geoHint}>📍 {geoLabel}</Text>
+
+            {setupBlockedMessage ? <Text style={styles.error}>{setupBlockedMessage}</Text> : null}
 
             {formError ? <Text style={styles.error}>{formError}</Text> : null}
           </View>

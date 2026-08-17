@@ -11,10 +11,15 @@ import { HSE_APPROVAL_QUEUE_STALE_TIME_MS } from "../types";
 import { showHseApprovalQueue } from "../utils/hse-approval-guards";
 
 export function useMdhoPendingApprovals() {
-  const { can, isPlatformAdmin } = useAuthorization();
-  const { activeOrganization, isReady } = useActiveOrganization();
+  const {
+    can,
+    isPlatformAdmin,
+    isReady: isAuthReady,
+    isLoading: isAuthLoading,
+  } = useAuthorization();
+  const { activeOrganization, isReady: isOrgReady } = useActiveOrganization();
 
-  const organizationId = activeOrganization?.id;
+  const organizationId = activeOrganization?.id ?? "";
   const canViewQueue = showHseApprovalQueue({
     currentUserId: "",
     isPlatformAdmin,
@@ -24,26 +29,27 @@ export function useMdhoPendingApprovals() {
     },
   });
 
-  const enabled = isReady && organizationId !== undefined && canViewQueue;
+  const enabled = isOrgReady && isAuthReady && organizationId.length > 0 && canViewQueue;
 
   const query = useInfiniteQuery({
-    queryKey: hseApprovalQueryKeys.queue(organizationId ?? ""),
+    queryKey: hseApprovalQueryKeys.queue(organizationId),
     queryFn: ({ pageParam }) =>
       listMdhoPendingApprovals({
-        organizationId: organizationId ?? "",
+        organizationId,
         cursor: pageParam ?? null,
       }),
     initialPageParam: null as MdhoPendingApprovalCursor | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled,
     staleTime: HSE_APPROVAL_QUEUE_STALE_TIME_MS,
+    refetchOnMount: "always",
   });
 
   const items = query.data?.pages.flatMap((page) => page.items) ?? [];
 
   return {
     items,
-    isLoading: enabled && query.isLoading,
+    isLoading: !enabled || isAuthLoading || query.isLoading || query.isPending,
     isFetching: query.isFetching,
     isError: query.isError,
     hasNextPage: query.hasNextPage ?? false,

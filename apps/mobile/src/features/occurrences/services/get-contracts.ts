@@ -1,11 +1,15 @@
 import { getSupabaseClient } from "@/lib/auth/client";
 
+import { assertRpcSuccess } from "@/features/evidence/utils/rpc-response";
+
 import type { OccurrenceContractOption } from "../types";
 
-type ContractRow = {
-  id: string;
+type RpcContractRow = {
+  contract_id: string;
   contract_number: string | null;
   name: string;
+  contractor_organization_id: string;
+  unit_id: string | null;
 };
 
 type GetContractsParams = {
@@ -27,20 +31,19 @@ export async function getContracts(
     throw new Error("Não autenticado.");
   }
 
-  const { data, error } = await supabase
-    .from("contracts")
-    .select("id, contract_number, name")
-    .eq("client_organization_id", params.organizationId)
-    .eq("contractor_organization_id", params.contractorOrganizationId)
-    .eq("is_active", true)
-    .order("name", { ascending: true });
+  const { data, error } = await supabase.rpc("list_organization_contracts", {
+    target_organization_id: params.organizationId,
+    filter_contractor_organization_id: params.contractorOrganizationId,
+  });
 
   if (error) {
     throw new Error("Não foi possível carregar os contratos.");
   }
 
-  return (data as ContractRow[]).map((contract) => ({
-    id: contract.id,
+  const rows = assertRpcSuccess<RpcContractRow[]>(data, "Não foi possível carregar os contratos.");
+
+  return rows.map((contract) => ({
+    id: contract.contract_id,
     contractNumber: contract.contract_number,
     name: contract.name,
   }));

@@ -15,16 +15,16 @@ export function useRequirePermission(
   options: UseRequirePermissionOptions = {},
 ): void {
   const router = useRouter();
-  const { can, isReady, isLoading } = useAuthorization();
+  const { can, isReady, isLoading, isSwitching } = useAuthorization();
   const redirectTo = options.redirectTo ?? authRoutes.forbidden;
 
   useEffect(() => {
-    if (isLoading || !isReady) {
+    if (isLoading || !isReady || isSwitching) {
       return;
     }
 
     if (!can(permission)) {
       router.replace(redirectTo);
     }
-  }, [can, isLoading, isReady, permission, redirectTo, router]);
+  }, [can, isLoading, isReady, isSwitching, permission, redirectTo, router]);
 }

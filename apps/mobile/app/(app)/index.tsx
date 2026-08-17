@@ -2,11 +2,17 @@ import { useRouter } from "expo-router";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { Can } from "@/features/authorization/components/can";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { showHseApprovalQueue } from "@/features/hse-approval";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
-import { authRoutes, hseApprovalQueueRoute, stopWorkNewRoute } from "@/lib/auth/routes";
+import {
+  authRoutes,
+  hseApprovalQueueRoute,
+  stopWorkNewRoute,
+  stopWorkRoute,
+} from "@/lib/auth/routes";
 
 export default function AuthenticatedHomeScreen() {
   const router = useRouter();
@@ -65,16 +71,31 @@ export default function AuthenticatedHomeScreen() {
           </View>
         ) : null}
 
-        <Pressable
-          accessibilityLabel="Paralisação Preventiva"
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.occurrencesButton, pressed && styles.buttonPressed]}
-          onPress={() => {
-            router.push(stopWorkNewRoute);
-          }}
-        >
-          <Text style={styles.occurrencesButtonText}>Paralisação Preventiva</Text>
-        </Pressable>
+        <Can permission="occurrence.read">
+          <Pressable
+            accessibilityLabel="Ver paralisações"
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.occurrencesButton, pressed && styles.buttonPressed]}
+            onPress={() => {
+              router.push(stopWorkRoute);
+            }}
+          >
+            <Text style={styles.occurrencesButtonText}>Paralisações</Text>
+          </Pressable>
+        </Can>
+
+        <Can permission="occurrence.create">
+          <Pressable
+            accessibilityLabel="Nova paralisação preventiva"
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.createButton, pressed && styles.buttonPressed]}
+            onPress={() => {
+              router.push(stopWorkNewRoute);
+            }}
+          >
+            <Text style={styles.createButtonText}>Nova Paralisação</Text>
+          </Pressable>
+        </Can>
 
         {canViewHseQueue ? (
           <Pressable
@@ -209,6 +230,22 @@ const styles = StyleSheet.create({
   },
   occurrencesButtonText: {
     color: "#0F1115",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  createButton: {
+    alignItems: "center",
+    backgroundColor: "#1E3A5F",
+    borderColor: "#2563EB",
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    minHeight: 48,
+    minWidth: 200,
+    paddingHorizontal: 24,
+  },
+  createButtonText: {
+    color: "#DBEAFE",
     fontSize: 16,
     fontWeight: "700",
   },
