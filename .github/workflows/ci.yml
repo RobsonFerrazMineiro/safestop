@@ -93,9 +93,12 @@ jobs:
       - name: Smoke fluxo operacional IO
         run: pnpm supabase:smoke-flow-io
 
-      # Limitações parciais deste job (PO-CON-11 / Sprint 2.9 T1):
+      - name: Smoke plano de ação
+        run: pnpm supabase:smoke-action-plan
+
+      # Limitações parciais deste job (Sprint 2.9 + 3.0):
       #
-      # - Cobertura mínima: apenas smoke-auth + smoke-flow-io (PP → IMS).
+      # - Cobertura CI: smoke-auth + smoke-flow-io (PP → IMS) + smoke-action-plan.
       # - Smokes individuais 2.3–2.8, RLS subset (PO-CON-16) e regressão QA
       #   consolidada (PO-CON-17) continuam fora da CI nesta entrega.
       # - Depende de Docker no runner (ubuntu-latest). Falha bloqueia PR quando
