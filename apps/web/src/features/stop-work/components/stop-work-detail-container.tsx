@@ -13,6 +13,7 @@ import { useActiveOrganization } from "@/features/organization/hooks/use-active-
 import { OccurrenceTimeline } from "@/features/timeline";
 import { InterdicaoBanner } from "@/features/interdicao-oficial";
 import { ImsReferenceSection } from "@/features/ims-reference";
+import { ActionPlanSection, shouldShowActionPlanSection } from "@/features/action-plan";
 import { MdhoSection } from "@/features/mdho";
 
 import { usePreventiveStop } from "../hooks/use-stop-work";
@@ -97,7 +98,9 @@ export function StopWorkDetailContainer() {
       </header>
 
       {stopWork.status === "INTERDICAO_CONFIRMADA" ? <InterdicaoBanner /> : null}
-      <OperationalDeadEndBanner status={stopWork.status} />
+      {!(shouldShowActionPlanSection(stopWork) && stopWork.status === "EM_TRATATIVA") ? (
+        <OperationalDeadEndBanner status={stopWork.status} />
+      ) : null}
 
       <section className="flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/40 p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Localização</h2>
@@ -149,6 +152,15 @@ export function StopWorkDetailContainer() {
 
       {organizationId ? (
         <ImsReferenceSection
+          isRefreshing={isFetching}
+          occurrence={stopWork}
+          organizationId={organizationId}
+          onRefresh={refetch}
+        />
+      ) : null}
+
+      {organizationId ? (
+        <ActionPlanSection
           isRefreshing={isFetching}
           occurrence={stopWork}
           organizationId={organizationId}
