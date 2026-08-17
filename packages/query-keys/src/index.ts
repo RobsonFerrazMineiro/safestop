@@ -4,6 +4,21 @@ export { occurrenceQueryKeys } from "./occurrence";
 
 export { hseApprovalQueryKeys } from "./hse-approval";
 
+export { actionPlanKeys, ACTION_PLAN_SCOPE } from "./action-plan";
+
+export {
+  getActionPlanInvalidationTargets,
+  ACTION_PLAN_INVALIDATION_MATRIX,
+  ACTION_PLAN_INVALIDATION_TARGETS,
+  ACTION_PLAN_MUTATION_DOMAINS,
+  resolveActionPlanInvalidationKeys,
+} from "./action-plan-invalidation";
+export type {
+  ActionPlanInvalidationScope,
+  ActionPlanInvalidationTarget,
+  ActionPlanMutationDomain,
+} from "./action-plan-invalidation";
+
 export {
   getOccurrenceInvalidationTargets,
   OCCURRENCE_INVALIDATION_MATRIX,
