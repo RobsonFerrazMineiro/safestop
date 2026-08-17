@@ -1,17 +1,11 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   OCCURRENCE_DECISION_REASON_MAX_LENGTH,
   OCCURRENCE_DECISION_REASON_MIN_LENGTH,
 } from "@safestop/types";
+
+import { confirmAction } from "@/lib/confirm-action";
 
 type VerEAgirPanelProps = {
   isOnline: boolean;
@@ -31,8 +25,7 @@ export function VerEAgirPanel({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const trimmed = decisionReason.trim();
-  const canSubmit =
-    isOnline &&
+  const isFormValid =
     !isSubmitting &&
     trimmed.length >= OCCURRENCE_DECISION_REASON_MIN_LENGTH &&
     trimmed.length <= OCCURRENCE_DECISION_REASON_MAX_LENGTH;
@@ -43,7 +36,7 @@ export function VerEAgirPanel({
       ? "Mínimo 10 caracteres"
       : null;
 
-  function applyCommentDraft() {
+  async function applyCommentDraft() {
     if (!latestCommentBody?.trim()) {
       return;
     }
@@ -55,37 +48,46 @@ export function VerEAgirPanel({
     };
 
     if (decisionReason.trim().length > 0) {
-      Alert.alert("Substituir o texto da justificativa?", undefined, [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Substituir", onPress: apply },
-      ]);
-      return;
+      const confirmed = await confirmAction({
+        title: "Substituir o texto da justificativa?",
+        message: "O texto atual será substituído pelo comentário.",
+        confirmLabel: "Substituir",
+      });
+
+      if (!confirmed) {
+        return;
+      }
     }
 
     apply();
   }
 
-  function confirmSubmit() {
-    if (!canSubmit) {
+  async function confirmSubmit() {
+    if (!isFormValid) {
       if (trimmed.length < OCCURRENCE_DECISION_REASON_MIN_LENGTH) {
         setValidationError("Informe uma justificativa com pelo menos 10 caracteres.");
       }
       return;
     }
 
-    Alert.alert("Registrar decisão Ver e Agir?", "Esta ação não pode ser desfeita nesta etapa.", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Registrar Ver e Agir",
-        onPress: () => {
-          void handleSubmit();
-        },
-      },
-    ]);
+    if (!isOnline) {
+      setSubmitError("Você está offline. Conecte-se para registrar a decisão.");
+      return;
+    }
+
+    const confirmed = await confirmAction({
+      title: "Registrar decisão Ver e Agir?",
+      message: "Esta ação não pode ser desfeita nesta etapa.",
+      confirmLabel: "Registrar Ver e Agir",
+    });
+
+    if (confirmed) {
+      await handleSubmit();
+    }
   }
 
   async function handleSubmit() {
-    if (!canSubmit) {
+    if (!isFormValid || !isOnline) {
       return;
     }
 
@@ -111,7 +113,7 @@ export function VerEAgirPanel({
       <Text style={styles.label}>Justificativa</Text>
       <TextInput
         accessibilityLabel="Justificativa da decisão Ver e Agir"
-        editable={!isSubmitting && isOnline}
+        editable={!isSubmitting}
         multiline
         placeholder="Descreva a justificativa da decisão..."
         placeholderTextColor="#6B7280"
@@ -137,7 +139,9 @@ export function VerEAgirPanel({
           accessibilityLabel="Usar comentário como rascunho"
           accessibilityRole="button"
           hitSlop={8}
-          onPress={applyCommentDraft}
+          onPress={() => {
+            void applyCommentDraft();
+          }}
         >
           <Text style={styles.draftLink}>Usar comentário como rascunho</Text>
         </Pressable>
@@ -146,14 +150,16 @@ export function VerEAgirPanel({
       <Pressable
         accessibilityLabel={isSubmitting ? "Registrando decisão" : "Registrar Ver e Agir"}
         accessibilityRole="button"
-        accessibilityState={{ disabled: !canSubmit, busy: isSubmitting }}
-        disabled={!canSubmit}
+        accessibilityState={{ disabled: !isFormValid, busy: isSubmitting }}
+        disabled={!isFormValid}
         style={({ pressed }) => [
           styles.submitButton,
-          !canSubmit && styles.submitButtonDisabled,
-          pressed && canSubmit && styles.pressed,
+          !isFormValid && styles.submitButtonDisabled,
+          pressed && isFormValid && styles.pressed,
         ]}
-        onPress={confirmSubmit}
+        onPress={() => {
+          void confirmSubmit();
+        }}
       >
         {isSubmitting ? (
           <ActivityIndicator color="#0F1115" size="small" />

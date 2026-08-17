@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import type { OccurrenceDetails } from "@safestop/types";
 import { registerImsReferenceSchema } from "@safestop/validation";
 
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { EvaluationConflictCard } from "@/features/ver-e-agir/components/evaluation-conflict-card";
+import { confirmAction } from "@/lib/confirm-action";
 
 import { ImsEditDialog } from "./ims-edit-dialog";
 import { ImsReferenceCard } from "./ims-reference-card";
@@ -77,11 +78,10 @@ export function ImsReferenceSection({
 
     if (error instanceof ImsReferenceMutationError && error.isConflict()) {
       setShowConflict(true);
-      Alert.alert(IMS_REFERENCE_COPY.conflictMessage);
       return;
     }
 
-    Alert.alert("Erro", error instanceof Error ? error.message : fallbackMessage);
+    setValidationError(error instanceof Error ? error.message : fallbackMessage);
   }
 
   async function submitRegister() {
@@ -106,12 +106,7 @@ export function ImsReferenceSection({
     }
   }
 
-  function handleRegisterPress() {
-    if (!isOnline) {
-      Alert.alert(IMS_REFERENCE_COPY.offlineToast);
-      return;
-    }
-
+  async function handleRegisterPress() {
     const parsed = registerImsReferenceSchema.safeParse({
       occurrenceId: occurrence.id,
       imsReferenceCode: code,
@@ -122,24 +117,25 @@ export function ImsReferenceSection({
       return;
     }
 
-    Alert.alert(
-      IMS_REFERENCE_COPY.confirmTitle,
-      `${IMS_REFERENCE_COPY.confirmBody}\n\nCódigo: ${parsed.data.imsReferenceCode}`,
-      [
-        { text: IMS_REFERENCE_COPY.cancel, style: "cancel" },
-        {
-          text: IMS_REFERENCE_COPY.confirmAction,
-          onPress: () => {
-            void submitRegister();
-          },
-        },
-      ],
-    );
+    if (!isOnline) {
+      setValidationError(IMS_REFERENCE_COPY.offlineToast);
+      return;
+    }
+
+    const confirmed = await confirmAction({
+      title: IMS_REFERENCE_COPY.confirmTitle,
+      message: `${IMS_REFERENCE_COPY.confirmBody}\n\nCódigo: ${parsed.data.imsReferenceCode}`,
+      confirmLabel: IMS_REFERENCE_COPY.confirmAction,
+    });
+
+    if (confirmed) {
+      await submitRegister();
+    }
   }
 
   async function handleUpdate(newCode: string, updateReason: string) {
     if (!isOnline) {
-      Alert.alert(IMS_REFERENCE_COPY.offlineToast);
+      setValidationError(IMS_REFERENCE_COPY.offlineToast);
       return;
     }
 
@@ -217,7 +213,7 @@ export function ImsReferenceSection({
           occurrence={occurrence}
           onEdit={() => {
             if (!isOnline) {
-              Alert.alert(IMS_REFERENCE_COPY.offlineToast);
+              setValidationError(IMS_REFERENCE_COPY.offlineToast);
               return;
             }
             setEditVisible(true);

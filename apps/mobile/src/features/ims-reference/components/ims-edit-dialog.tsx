@@ -99,7 +99,7 @@ export function ImsEditDialog({
             accessibilityLabel={IMS_REFERENCE_COPY.newCodeLabel}
             autoCapitalize="characters"
             autoCorrect={false}
-            editable={isOnline && !isUpdating}
+            editable={!isUpdating}
             placeholder={IMS_REFERENCE_COPY.placeholder}
             placeholderTextColor="#6B7280"
             style={[styles.input, codeError ? styles.inputError : null]}
@@ -115,7 +115,7 @@ export function ImsEditDialog({
           <Text style={styles.helper}>{IMS_REFERENCE_COPY.reasonHelper}</Text>
           <TextInput
             accessibilityLabel={IMS_REFERENCE_COPY.reasonLabel}
-            editable={isOnline && !isUpdating}
+            editable={!isUpdating}
             multiline
             placeholder="Descreva o motivo..."
             placeholderTextColor="#6B7280"
@@ -146,8 +146,12 @@ export function ImsEditDialog({
                 isUpdating ? IMS_REFERENCE_COPY.saving : IMS_REFERENCE_COPY.saveEditCta
               }
               accessibilityRole="button"
-              disabled={!isOnline || isUpdating}
-              style={({ pressed }) => [styles.confirmButton, pressed && styles.pressed]}
+              disabled={isUpdating}
+              style={({ pressed }) => [
+                styles.confirmButton,
+                isUpdating && styles.buttonDisabled,
+                pressed && !isUpdating && styles.pressed,
+              ]}
               onPress={handleConfirm}
             >
               {isUpdating ? (
@@ -193,6 +197,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     minHeight: 48,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   confirmText: {
     color: "#EFF6FF",

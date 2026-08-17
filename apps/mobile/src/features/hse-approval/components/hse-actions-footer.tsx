@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+import { confirmAction } from "@/lib/confirm-action";
 
 import type { HseActionsFooterState } from "../types";
 import { HSE_APPROVAL_COPY } from "../utils/hse-approval-copy";
@@ -22,28 +24,24 @@ export function HseActionsFooter({
 
   const isBusy = isApproving || isReturning;
 
-  function showOfflineAlert() {
-    Alert.alert(HSE_APPROVAL_COPY.offlineToast);
-  }
-
-  function confirmApprove() {
+  async function confirmApprove() {
     if (!isOnline) {
-      showOfflineAlert();
       return;
     }
 
-    Alert.alert(HSE_APPROVAL_COPY.approveDialogTitle, HSE_APPROVAL_COPY.approveDialogBody, [
-      { text: HSE_APPROVAL_COPY.cancel, style: "cancel" },
-      {
-        text: HSE_APPROVAL_COPY.approveDialogAction,
-        onPress: onApprove,
-      },
-    ]);
+    const confirmed = await confirmAction({
+      title: HSE_APPROVAL_COPY.approveDialogTitle,
+      message: HSE_APPROVAL_COPY.approveDialogBody,
+      confirmLabel: HSE_APPROVAL_COPY.approveDialogAction,
+    });
+
+    if (confirmed) {
+      onApprove();
+    }
   }
 
   function handleReturnPress() {
     if (!isOnline) {
-      showOfflineAlert();
       return;
     }
 
@@ -66,12 +64,12 @@ export function HseActionsFooter({
             <Pressable
               accessibilityLabel={HSE_APPROVAL_COPY.returnCta}
               accessibilityRole="button"
-              disabled={!isOnline || isBusy}
+              disabled={isBusy}
               style={({ pressed }) => [
                 styles.returnButton,
                 canApprove ? styles.halfButton : styles.fullButton,
-                (!isOnline || isBusy) && styles.buttonDisabled,
-                pressed && isOnline && !isBusy && styles.pressed,
+                isBusy && styles.buttonDisabled,
+                pressed && !isBusy && styles.pressed,
               ]}
               onPress={handleReturnPress}
             >
@@ -89,14 +87,16 @@ export function HseActionsFooter({
                 isApproving ? HSE_APPROVAL_COPY.approving : HSE_APPROVAL_COPY.approveCta
               }
               accessibilityRole="button"
-              disabled={!isOnline || isBusy}
+              disabled={isBusy}
               style={({ pressed }) => [
                 styles.approveButton,
                 canReturn ? styles.halfButton : styles.fullButton,
-                (!isOnline || isBusy) && styles.buttonDisabled,
-                pressed && isOnline && !isBusy && styles.pressed,
+                isBusy && styles.buttonDisabled,
+                pressed && !isBusy && styles.pressed,
               ]}
-              onPress={confirmApprove}
+              onPress={() => {
+                void confirmApprove();
+              }}
             >
               {isApproving ? (
                 <ActivityIndicator color="#FFFBEB" size="small" />

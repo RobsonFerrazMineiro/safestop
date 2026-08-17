@@ -34,12 +34,12 @@ export function MdhoDraftBar({
         <Pressable
           accessibilityLabel={isSaving ? "Salvando rascunho" : "Salvar rascunho"}
           accessibilityRole="button"
-          accessibilityState={{ disabled: !isOnline || isBusy, busy: isSaving }}
-          disabled={!isOnline || isBusy}
+          accessibilityState={{ disabled: isBusy, busy: isSaving }}
+          disabled={isBusy}
           style={({ pressed }) => [
             styles.saveButton,
-            (!isOnline || isBusy) && styles.buttonDisabled,
-            pressed && isOnline && !isBusy && styles.pressed,
+            isBusy && styles.buttonDisabled,
+            pressed && !isBusy && styles.pressed,
           ]}
           onPress={onSaveDraft}
         >
@@ -54,12 +54,12 @@ export function MdhoDraftBar({
           <Pressable
             accessibilityLabel={isSubmitting ? "Enviando MDHO" : "Enviar MDHO"}
             accessibilityRole="button"
-            accessibilityState={{ disabled: !isOnline || isBusy, busy: isSubmitting }}
-            disabled={!isOnline || isBusy}
+            accessibilityState={{ disabled: isBusy, busy: isSubmitting }}
+            disabled={isBusy}
             style={({ pressed }) => [
               styles.submitButton,
-              (!isOnline || isBusy) && styles.buttonDisabled,
-              pressed && isOnline && !isBusy && styles.pressed,
+              isBusy && styles.buttonDisabled,
+              pressed && !isBusy && styles.pressed,
             ]}
             onPress={onSubmit}
           >

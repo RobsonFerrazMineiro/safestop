@@ -1,44 +1,39 @@
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+
+import { confirmAction } from "@/lib/confirm-action";
 
 type StartEvaluationButtonProps = {
-  isOnline: boolean;
   isStarting: boolean;
   onStart: () => Promise<void>;
 };
 
-export function StartEvaluationButton({
-  isOnline,
-  isStarting,
-  onStart,
-}: StartEvaluationButtonProps) {
-  function confirmStart() {
-    Alert.alert(
-      "Iniciar avaliação desta paralisação?",
-      "A ocorrência passará para Em Avaliação para registro da decisão da liderança.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Iniciar avaliação",
-          onPress: () => {
-            void onStart();
-          },
-        },
-      ],
-    );
+export function StartEvaluationButton({ isStarting, onStart }: StartEvaluationButtonProps) {
+  async function confirmStart() {
+    const confirmed = await confirmAction({
+      title: "Iniciar avaliação desta paralisação?",
+      message: "A ocorrência passará para Em Avaliação para registro da decisão da liderança.",
+      confirmLabel: "Iniciar avaliação",
+    });
+
+    if (confirmed) {
+      await onStart();
+    }
   }
 
   return (
     <Pressable
       accessibilityLabel={isStarting ? "Iniciando avaliação" : "Iniciar avaliação"}
       accessibilityRole="button"
-      accessibilityState={{ disabled: !isOnline || isStarting, busy: isStarting }}
-      disabled={!isOnline || isStarting}
+      accessibilityState={{ disabled: isStarting, busy: isStarting }}
+      disabled={isStarting}
       style={({ pressed }) => [
         styles.button,
-        (!isOnline || isStarting) && styles.buttonDisabled,
-        pressed && isOnline && !isStarting && styles.pressed,
+        isStarting && styles.buttonDisabled,
+        pressed && !isStarting && styles.pressed,
       ]}
-      onPress={confirmStart}
+      onPress={() => {
+        void confirmStart();
+      }}
     >
       {isStarting ? (
         <ActivityIndicator color="#0F1115" size="small" />

@@ -95,10 +95,16 @@ export function EvaluationSection({
   }
 
   async function handleStartEvaluation() {
+    if (!isOnline) {
+      Alert.alert("Sem conexão", "Conecte-se para iniciar a avaliação.");
+      return;
+    }
+
     try {
       await startEvaluation();
       setConflictMessage(null);
       setAlreadyDecidedMessage(null);
+      await onRefresh();
     } catch (error) {
       await handleMutationConflict(error, "Não foi possível iniciar a avaliação.");
     }
@@ -164,11 +170,7 @@ export function EvaluationSection({
       {showStart && !conflictMessage ? (
         <View style={styles.stack}>
           <EvaluationWaitingBanner />
-          <StartEvaluationButton
-            isOnline={isOnline}
-            isStarting={isStarting}
-            onStart={handleStartEvaluation}
-          />
+          <StartEvaluationButton isStarting={isStarting} onStart={handleStartEvaluation} />
         </View>
       ) : null}
 

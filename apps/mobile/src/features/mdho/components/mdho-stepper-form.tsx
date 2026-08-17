@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import type { MdhoCatalogCategory } from "@safestop/types";
 import {
   MDHO_COMPLEMENT_MAX_LENGTH,
@@ -7,6 +7,8 @@ import {
   MDHO_OTHER_OPTION_CODE,
 } from "@safestop/types";
 import { createSubmitMdhoSchema } from "@safestop/validation";
+
+import { confirmAction } from "@/lib/confirm-action";
 
 import type { MdhoAssessmentEnriched } from "../services/map-mdho";
 import {
@@ -84,7 +86,7 @@ export function MdhoStepperForm({
     }
   }
 
-  function handleSubmitPress() {
+  async function handleSubmitPress() {
     const error = validateForSubmit();
 
     if (error) {
@@ -92,19 +94,15 @@ export function MdhoStepperForm({
       return;
     }
 
-    Alert.alert(
-      "Enviar Avaliação Técnica (MDHO)?",
-      "Após o envio, a edição só será possível se a liderança devolver.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Enviar MDHO",
-          onPress: () => {
-            void onSubmit(form);
-          },
-        },
-      ],
-    );
+    const confirmed = await confirmAction({
+      title: "Enviar Avaliação Técnica (MDHO)?",
+      message: "Após o envio, a edição só será possível se a liderança devolver.",
+      confirmLabel: "Enviar MDHO",
+    });
+
+    if (confirmed) {
+      await onSubmit(form);
+    }
   }
 
   return (
@@ -233,7 +231,9 @@ export function MdhoStepperForm({
         onSaveDraft={() => {
           void handleSaveDraft();
         }}
-        onSubmit={handleSubmitPress}
+        onSubmit={() => {
+          void handleSubmitPress();
+        }}
       />
     </View>
   );

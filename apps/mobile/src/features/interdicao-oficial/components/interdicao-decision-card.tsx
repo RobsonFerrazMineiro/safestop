@@ -1,17 +1,11 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   OCCURRENCE_DECISION_REASON_MAX_LENGTH,
   OCCURRENCE_DECISION_REASON_MIN_LENGTH,
 } from "@safestop/types";
+
+import { confirmAction } from "@/lib/confirm-action";
 
 type InterdicaoDecisionCardProps = {
   isOnline: boolean;
@@ -29,8 +23,7 @@ export function InterdicaoDecisionCard({
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const trimmed = decisionReason.trim();
-  const canSubmit =
-    isOnline &&
+  const isFormValid =
     !isSubmitting &&
     trimmed.length >= OCCURRENCE_DECISION_REASON_MIN_LENGTH &&
     trimmed.length <= OCCURRENCE_DECISION_REASON_MAX_LENGTH;
@@ -41,32 +34,33 @@ export function InterdicaoDecisionCard({
       ? "Mínimo 10 caracteres"
       : null;
 
-  function confirmSubmit() {
-    if (!canSubmit) {
+  async function confirmSubmit() {
+    if (!isFormValid) {
       if (trimmed.length < OCCURRENCE_DECISION_REASON_MIN_LENGTH) {
         setValidationError("Informe uma justificativa técnica com pelo menos 10 caracteres.");
       }
       return;
     }
 
-    Alert.alert(
-      "Confirmar Interdição Oficial?",
-      "A atividade permanecerá formalmente interditada. Esta decisão não pode ser desfeita nesta etapa.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Confirmar interdição",
-          style: "destructive",
-          onPress: () => {
-            void handleSubmit();
-          },
-        },
-      ],
-    );
+    if (!isOnline) {
+      setSubmitError("Conecte-se para confirmar a Interdição Oficial.");
+      return;
+    }
+
+    const confirmed = await confirmAction({
+      title: "Confirmar Interdição Oficial?",
+      message:
+        "A atividade permanecerá formalmente interditada. Esta decisão não pode ser desfeita nesta etapa.",
+      confirmLabel: "Confirmar interdição",
+    });
+
+    if (confirmed) {
+      await handleSubmit();
+    }
   }
 
   async function handleSubmit() {
-    if (!canSubmit) {
+    if (!isFormValid || !isOnline) {
       return;
     }
 
@@ -93,7 +87,7 @@ export function InterdicaoDecisionCard({
       <Text style={styles.label}>Justificativa técnica</Text>
       <TextInput
         accessibilityLabel="Justificativa técnica da Interdição Oficial"
-        editable={!isSubmitting && isOnline}
+        editable={!isSubmitting}
         multiline
         placeholder="Descreva a justificativa técnica..."
         placeholderTextColor="#6B7280"
@@ -117,14 +111,16 @@ export function InterdicaoDecisionCard({
       <Pressable
         accessibilityLabel={isSubmitting ? "Confirmando interdição" : "Confirmar interdição"}
         accessibilityRole="button"
-        accessibilityState={{ disabled: !canSubmit, busy: isSubmitting }}
-        disabled={!canSubmit}
+        accessibilityState={{ disabled: !isFormValid, busy: isSubmitting }}
+        disabled={!isFormValid}
         style={({ pressed }) => [
           styles.submitButton,
-          !canSubmit && styles.submitButtonDisabled,
-          pressed && canSubmit && styles.pressed,
+          !isFormValid && styles.submitButtonDisabled,
+          pressed && isFormValid && styles.pressed,
         ]}
-        onPress={confirmSubmit}
+        onPress={() => {
+          void confirmSubmit();
+        }}
       >
         {isSubmitting ? (
           <ActivityIndicator color="#FEE2E2" size="small" />

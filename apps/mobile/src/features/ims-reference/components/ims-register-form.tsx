@@ -20,7 +20,7 @@ export function ImsRegisterForm({ value, error, isOnline, onChange }: ImsRegiste
         accessibilityLabel={IMS_REFERENCE_COPY.codeLabel}
         autoCapitalize="characters"
         autoCorrect={false}
-        editable={isOnline}
+        editable
         placeholder={IMS_REFERENCE_COPY.placeholder}
         placeholderTextColor="#6B7280"
         style={[styles.input, error ? styles.inputError : null]}
@@ -28,6 +28,7 @@ export function ImsRegisterForm({ value, error, isOnline, onChange }: ImsRegiste
         onChangeText={onChange}
       />
       <Text style={styles.formatHint}>{IMS_REFERENCE_COPY.formatHint}</Text>
+      {!isOnline ? <Text style={styles.offline}>{IMS_REFERENCE_COPY.offlineToast}</Text> : null}
       {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
@@ -50,11 +51,11 @@ export function ImsRegisterFooter({ isOnline, isRegistering, onRegister }: ImsRe
           isRegistering ? IMS_REFERENCE_COPY.registering : IMS_REFERENCE_COPY.registerCta
         }
         accessibilityRole="button"
-        disabled={!isOnline || isRegistering}
+        disabled={isRegistering}
         style={({ pressed }) => [
           styles.registerButton,
-          (!isOnline || isRegistering) && styles.buttonDisabled,
-          pressed && isOnline && !isRegistering && styles.pressed,
+          isRegistering && styles.buttonDisabled,
+          pressed && !isRegistering && styles.pressed,
         ]}
         onPress={onRegister}
       >
