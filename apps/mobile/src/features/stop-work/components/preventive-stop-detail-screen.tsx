@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import type { OccurrenceTimelineItem } from "@safestop/types";
+import { shouldShowActionPlanSection } from "@safestop/types";
 
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { EvidencePreviewModal, EvidenceSection, type EvidenceListItem } from "@/features/evidence";
@@ -35,6 +36,7 @@ import {
   shouldShowImsReferenceSection,
   type ImsRegisterFooterState,
 } from "@/features/ims-reference";
+import { ActionPlanSection } from "@/features/action-plan";
 import { MdhoSection } from "@/features/mdho";
 import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
 
@@ -151,6 +153,7 @@ export function PreventiveStopDetailScreen({
         : null;
 
     const showImsSection = shouldShowImsReferenceSection(preventiveStop);
+    const showActionPlanSection = shouldShowActionPlanSection(preventiveStop);
 
     return (
       <View style={styles.headerContent}>
@@ -174,7 +177,7 @@ export function PreventiveStopDetailScreen({
 
         {shouldShowInterdicaoBanner(preventiveStop.status) ? <InterdicaoBanner /> : null}
 
-        <FlowDeadEndBanner status={preventiveStop.status} />
+        <FlowDeadEndBanner hideTratativa={showActionPlanSection} status={preventiveStop.status} />
 
         <Text style={styles.sectionTitle}>Localização</Text>
         <DetailField label="Área" value={preventiveStop.areaName ?? "—"} />
@@ -234,6 +237,13 @@ export function PreventiveStopDetailScreen({
           isRefreshing={isFetching}
           occurrence={preventiveStop}
           onRegisterFooterChange={setImsRegisterFooter}
+          onRefresh={refetch}
+        />
+
+        <ActionPlanSection
+          isOnline={isOnline}
+          isRefreshing={isFetching}
+          occurrence={preventiveStop}
           onRefresh={refetch}
         />
       </View>

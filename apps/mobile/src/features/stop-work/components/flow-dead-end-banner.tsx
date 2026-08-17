@@ -5,9 +5,10 @@ import { CONSOLIDATION_COPY } from "../utils/consolidation-copy";
 
 type FlowDeadEndBannerProps = {
   status: OccurrenceStatus;
+  hideTratativa?: boolean;
 };
 
-export function FlowDeadEndBanner({ status }: FlowDeadEndBannerProps) {
+export function FlowDeadEndBanner({ status, hideTratativa = false }: FlowDeadEndBannerProps) {
   if (status === "VER_E_AGIR") {
     return (
       <View accessibilityRole="text" style={styles.banner}>
@@ -18,6 +19,10 @@ export function FlowDeadEndBanner({ status }: FlowDeadEndBannerProps) {
   }
 
   if (status === "EM_TRATATIVA") {
+    if (hideTratativa) {
+      return null;
+    }
+
     return (
       <View accessibilityRole="text" style={styles.banner}>
         <Text style={styles.icon}>ℹ</Text>
