@@ -73,8 +73,13 @@ WEB/MOBILE implementam sem ambiguidade; **sem** novas features de produto (plano
 
 ## CON-BANNER-TRATATIVA — status `EM_TRATATIVA` (PO-CON-3)
 
-**Posição:** abaixo do header (e abaixo do banner IO vermelho se ainda visível — preferir **um** banner de fase dominante).  
-Se coexistirem banner IO “Atividade formalmente interditada” + tratativa: manter IO como contexto permanente; banner tratativa comunica o **próximo passo futuro**.
+> **Superseded (Sprint 3.0):** com IMS no ramo IO, a seção real [`ACTION-PLAN-UI-SPEC.md`](./ACTION-PLAN-UI-SPEC.md) **substitui** este banner.  
+> - Com `action_plan.create` e sem plano → AP-EMPTY + CTA (não CON-C03).  
+> - Sem create → banner **AP-C02** “Aguardando Plano de Ação”.  
+> - Com plano → seção funcional; CON-C03 **removido**.  
+> Manter CON-C03 só como referência 2.9 / fallback se feature plano indisponível.
+
+**Posição (2.9 legado):** abaixo do header (e abaixo do banner IO vermelho se ainda visível — preferir **um** banner de fase dominante).
 
 ```text
 ┌──────────────────────────────────────┐
@@ -87,11 +92,11 @@ Se coexistirem banner IO “Atividade formalmente interditada” + tratativa: ma
 |---|---|
 | Variante | Information / neutro |
 | CTA | **Nenhum** |
-| Visível | `status === EM_TRATATIVA` |
+| Visível (2.9) | `status === EM_TRATATIVA` **e** seção Plano de Ação **não** montada |
 | IMS card | **Mantido** read-only (2.8) |
-| Copy | **CON-C03** |
+| Copy | **CON-C03** (legado) → ver AP-C02 / AP-SECTION na 3.0 |
 
-**Não** mostrar CTA Plano de Ação / Liberação.
+**Não** mostrar CTA Liberação. CTA Plano → apenas via `ACTION-PLAN-UI-SPEC` (3.0).
 
 ---
 
@@ -153,22 +158,23 @@ Ordem vertical **obrigatória** no detalhe canônico `/stop-work/[id]`:
  2. Banner de fase (quando aplicável):
       - IO confirmada: “Atividade formalmente interditada” (2.5)
       - VER_E_AGIR: CON-BANNER-VA (2.9)
-      - EM_TRATATIVA: CON-BANNER-TRATATIVA (2.9)
+      - EM_TRATATIVA: CON-BANNER-TRATATIVA (2.9) — **omitir** se ActionPlanSection (3.0) montada
  3. Grid info — área, local, atividade, autor, datas
  4. Condição insegura (+ medida imediata se houver)
  5. Evidências — EvidenceSection 2.2
  6. Decisão da Liderança — VA / IO (2.4–2.5) + summaries
  7. Avaliação Técnica (MDHO) — start / form / HSE review / summary (2.6–2.7)
  8. Referência IMS — form / card (2.8)
- 9. Linha do Tempo — OccurrenceTimeline (2.3)
-10. Carregar mais (se houver)
-11. CommentComposer (2.3)
+ 9. Plano de Ação — ActionPlanSection (3.0) quando IO+IMS+EM_TRATATIVA
+10. Linha do Tempo — OccurrenceTimeline (2.3)
+11. Carregar mais (se houver)
+12. CommentComposer (2.3)
 ```
 
 ### Resumo mnemônico (aceite usuário)
 
 ```text
-Evidence → Decisão → MDHO → IMS → Timeline → Composer
+Evidence → Decisão → MDHO → IMS → Plano → Timeline → Composer
 ```
 
 (+ Header/Info/Condição/Banners acima de Evidence.)
@@ -184,7 +190,7 @@ Evidence → Decisão → MDHO → IMS → Timeline → Composer
 | `MDHO_EM_PREENCHIMENTO` | MdhoForm |
 | `AGUARDANDO_APROVACAO_HSE` | HseReview |
 | `AGUARDANDO_REGISTRO_IMS` | MdhoSummary + ImsForm |
-| `EM_TRATATIVA` | ImsCard + **CON-BANNER-TRATATIVA** |
+| `EM_TRATATIVA` | ImsCard + **ActionPlanSection (3.0)** — CON-BANNER-TRATATIVA só se plano indisponível |
 
 Composer e Timeline: sempre que `occurrence.read` (exceto erros/404).
 
@@ -229,7 +235,7 @@ Composer e Timeline: sempre que `occurrence.read` (exceto erros/404).
 |---|---|---|
 | **CON-C01** | Banner VA (título/corpo) | `Aguardando validação e liberação — em versão futura` |
 | **CON-C02** | Banner VA (ajuda opcional) | `A decisão Ver e Agir foi registrada. As próximas etapas operacionais ainda não estão disponíveis neste aplicativo.` |
-| **CON-C03** | Banner tratativa | `Em tratativa — Plano de Ação em versão futura` |
+| **CON-C03** | Banner tratativa (legado 2.9) | `Em tratativa — Plano de Ação em versão futura` — **superseded** por AP-C02 / AP-SECTION (3.0) |
 | **CON-C04** | Banner tratativa (ajuda opcional) | `A referência IMS foi registrada. O plano de ação será disponibilizado em versão futura.` |
 | **CON-C05** | Nav item | `Paralisações` |
 | **CON-C06** | Título listagem | `Paralisações` |
@@ -255,10 +261,10 @@ Composer e Timeline: sempre que `occurrence.read` (exceto erros/404).
 # Critérios de aceite
 
 1. Em `VER_E_AGIR`: banner CON-C01 visível; **sem** CTA operacional futuro.
-2. Em `EM_TRATATIVA`: banner CON-C03; IMS card read-only mantido; **sem** CTA plano.
+2. Em `EM_TRATATIVA` (2.9): banner CON-C03; IMS RO; sem CTA. **(3.0)** ActionPlanSection substitui CON-C03 — ver `ACTION-PLAN-UI-SPEC.md`.
 3. Nav principal usa **Paralisações** → `/stop-work` (web/mobile).
 4. Detalhe/criação legados redirect para `stop-work`.
-5. Hierarquia detalhe: Evidence → Decisão → MDHO → IMS → Timeline → Composer (com header/info/banners acima).
+5. Hierarquia detalhe: Evidence → Decisão → MDHO → IMS → **Plano (3.0)** → Timeline → Composer.
 6. Checklist Base44 respeitado — sem reintroduzir Liberar/Notificados/merge decide.
 7. WEB e MOBILE implementáveis sem ambiguidade de copy/posição.
 
@@ -268,7 +274,7 @@ Composer e Timeline: sempre que `occurrence.read` (exceto erros/404).
 
 ### Banners
 - [ ] CON-BANNER-VA em `VER_E_AGIR`  
-- [ ] CON-BANNER-TRATATIVA em `EM_TRATATIVA`  
+- [ ] CON-BANNER-TRATATIVA em `EM_TRATATIVA` (2.9; omitir se ActionPlanSection 3.0)  
 - [ ] Sem CTAs fake  
 
 ### Navegação
@@ -291,7 +297,7 @@ Composer e Timeline: sempre que `occurrence.read` (exceto erros/404).
 | Tema | PO | Spec | Status |
 |---|---|---|---|
 | Banner VER_E_AGIR | PO-CON-2 | CON-BANNER-VA · CON-C01 | Alinhado |
-| Banner EM_TRATATIVA | PO-CON-3 | CON-BANNER-TRATATIVA · CON-C03 | Alinhado |
+| Banner EM_TRATATIVA | PO-CON-3 | CON-BANNER-TRATATIVA · CON-C03 | Alinhado 2.9; **superseded 3.0** por AP-SECTION |
 | Detalhe canônico | PO-CON-5 | Navegação + hierarquia | Alinhado |
 | Criação canônica | PO-CON-6 | `/stop-work/new` | Alinhado |
 | Sem plano/liberação | PO-CON-1 | Escopo + proibidos | Alinhado |

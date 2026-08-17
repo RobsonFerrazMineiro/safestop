@@ -405,36 +405,58 @@ O projeto poderá futuramente permitir avanço sem código IMS em situações au
 
 A ocorrência possui ações corretivas em andamento.
 
-Ações permitidas (fluxo oficial completo — Plano de Ação / Sprint futura):
+### Plano de Ação estruturado (Sprint 3.0 — ramo IO)
 
-- criar ações;
-- atribuir responsáveis;
-- definir prazos;
-- anexar evidências;
-- registrar atualizações;
-- concluir ações;
-- rejeitar correções;
-- solicitar complementos.
+Pré-condições para criar plano (`docs/decisions/ACTION-PLAN-DECISIONS.md` PO-AP-1):
 
-Próximo status (fluxo oficial completo):
+- `decision_type = INTERDICAO_OFICIAL`;
+- `status = EM_TRATATIVA`;
+- `ims_reference_code` **preenchido** (registro **manual** — sem integração IMS).
+
+Ações permitidas na 3.0:
+
+- criar plano de ação (`action_plan.create`);
+- adicionar/editar ações (`action_plan.manage`);
+- iniciar e concluir ações (responsável ou manage);
+- submeter para validação HSE (`action_plan.validate`);
+- anexar evidências por ação (regras 2.2 / PO-AP-16);
+- concluir plano (`complete_action_plan`).
+
+Fluxo do plano (3.0):
+
+```text
+create_action_plan → OPEN
+  → itens PENDING / IN_PROGRESS / AWAITING_VALIDATION
+  → validate (COMPLETED | REJECTED → IN_PROGRESS)
+  → complete_action_plan → plano COMPLETED
+```
+
+**Ver e Agir:** plano estruturado **não** se aplica — correção simplificada (§16).
+
+### Dead-end pós-plano concluído (PO-AP-12)
+
+Após `complete_action_plan`, a ocorrência **permanece** `EM_TRATATIVA`. A transição para `AGUARDANDO_VALIDACAO` **não** existe na 3.0.
+
+| Item | Regra |
+|---|---|
+| Status ocorrência após plano `COMPLETED` | **`EM_TRATATIVA`** (sem mudança) |
+| RPC `submit_action_plan_for_occurrence_validation` | **Fora** 3.0 |
+| UX | *Plano concluído — validação da ocorrência em versão futura* |
+| CTA validação/liberação ocorrência | **Ausente** — Sprint Liberação |
+| Referência IMS | Card read-only (2.8); correção via `ims_reference.update` |
+| Integração IMS | **Proibida** |
+
+### Próximo status (fluxo oficial completo — Sprint Liberação)
 
 ```text
 AGUARDANDO_VALIDACAO
 ```
 
-### Dead-end operacional — entrega incremental (Sprint 2.9)
+Quando implementado: validação da **ocorrência** (não confundir com validação de **itens** do plano na 3.0).
 
-Após o registro **manual** da referência IMS (2.8), o ramo **Interdição Oficial** **encerra operacionalmente** em `EM_TRATATIVA` até o Plano de Ação (PO-CON-3).
+### Histórico — dead-end 2.9 (superseded)
 
-| Item | Regra |
-|---|---|
-| Status terminal operacional atual | `EM_TRATATIVA` |
-| CTA Plano de Ação / tratativa estruturada | **Ausente** — sem botão fake |
-| UX | Banner: *Em tratativa — Plano de Ação em versão futura* |
-| Referência IMS | Card read-only mantido (2.8); correção de código conforme `ims_reference.update` |
-| Continua permitido | Leitura, timeline, comentários, evidências segundo regras vigentes |
-| Transição `→ AGUARDANDO_VALIDACAO` | **Fora** da entrega 2.0–2.9 — permanece no mapa oficial §18 para sprint futura |
-| Integração IMS | **Proibida** — o código continua sendo digitado manualmente |
+Antes da 3.0, `EM_TRATATIVA` era dead-end operacional sem Plano de Ação (PO-CON-3). Banner *Em tratativa — Plano de Ação em versão futura* substituído por `ActionPlanSection` quando elegível.
 
 ---
 

@@ -226,9 +226,9 @@ Utilizar quando existir:
 - cálculos;
 - validações próximas ao banco.
 
-### Catálogo RPC operacional (Sprints 2.0–2.9)
+### Catálogo RPC operacional (Sprints 2.0–3.0)
 
-Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberação/plano/notificação **não** existem nesta entrega (permissões reservadas — `docs/database.md` §6.2).
+Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberação/encerramento ocorrência e notificações **não** existem nesta entrega (permissões reservadas — `docs/database.md` §6.2).
 
 | RPC | Sprint | Permissão (típica) | Contrato detalhado |
 |---|---|---|---|
@@ -252,10 +252,24 @@ Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberaçã
 | `list_mdho_pending_approvals` | 2.7 | `mdho.approve` | abaixo |
 | `register_ims_reference` | 2.8 | `ims_reference.register` | abaixo — **manual**, sem integração |
 | `update_ims_reference` | 2.8 | `ims_reference.update` | abaixo — **manual**, sem integração |
+| `create_action_plan` | 3.0 | `action_plan.create` | abaixo — Plano de Ação |
+| `update_action_plan` | 3.0 | `action_plan.create` / `manage` | abaixo |
+| `add_action_item` | 3.0 | `action_plan.manage` | abaixo |
+| `update_action_item` | 3.0 | `action_plan.manage` | abaixo |
+| `start_action_item` | 3.0 | manage **ou** responsável | abaixo |
+| `submit_action_item` | 3.0 | manage **ou** responsável | abaixo |
+| `validate_action_item` | 3.0 | `action_plan.validate` | abaixo |
+| `cancel_action_item` | 3.0 | `action_plan.manage` | abaixo |
+| `complete_action_plan` | 3.0 | `action_plan.manage` | abaixo |
+| `prepare_action_item_attachment_upload` | 3.0 | manage **ou** responsável | abaixo |
+| `complete_action_item_attachment_upload` | 3.0 | idem | abaixo |
+| `fail_action_item_attachment_upload` | 3.0 | idem | abaixo |
+| `delete_action_item_attachment` | 3.0 | manage **ou** responsável | abaixo |
+| `get_action_item_attachment_signed_url` | 3.0 | `occurrence.read` + escopo | abaixo |
 
 \*Remoção de comentário por supervisor usa `occurrence.cancel` na matriz RBAC aprovada — a permissão permanece **reservada** para cancelamento formal de ocorrência (PO-CON-20); não implica RPC `cancel_occurrence` na 2.9.
 
-**Fora do catálogo operacional 2.9:** `submit_correction`, `validate_correction`, `release_occurrence`, `close_occurrence`, `cancel_occurrence`, RPCs de `action_plan.*`, criação de `notification_events`.
+**Fora do catálogo operacional 3.0:** `submit_action_plan_for_occurrence_validation`, `submit_correction`, `validate_correction`, `release_occurrence`, `close_occurrence`, `cancel_occurrence`, criação de `notification_events`.
 
 ### Fundação / avaliação — referências rápidas
 
@@ -475,6 +489,157 @@ Registro **manual** do código emitido em plataforma externa. **Sem** integraç�
 Tipos: `RegisterImsReferenceResult`, `UpdateImsReferenceResult` em `@safestop/types`. Helper: `isImsRegisterEligible(occurrence)`.
 
 **Listagem:** `OccurrenceListFilters.imsReferenceCode` — filtro contains (PO-IMS-10).
+
+---
+
+### RPCs — Plano de Ação (Sprint 3.0)
+
+Plano estruturado pós-IMS no ramo IO. Contrato: `docs/decisions/ACTION-PLAN-DECISIONS.md`.
+
+#### `create_action_plan(p_payload jsonb)`
+
+```json
+{
+  "occurrence_id": "uuid",
+  "summary": "string opcional, max 4000"
+}
+```
+
+- Permissão: `action_plan.create`
+- Pré-condição: `INTERDICAO_OFICIAL` + `EM_TRATATIVA` + `ims_reference_code` preenchido
+- Idempotente se plano ativo existe (`data.idempotent: true`)
+
+#### `update_action_plan(p_payload jsonb)`
+
+```json
+{
+  "plan_id": "uuid",
+  "summary": "string opcional, max 4000"
+}
+```
+
+- Permissão: `action_plan.create` **ou** `action_plan.manage`
+- Plano editável (`OPEN` / `IN_PROGRESS` / `AWAITING_VALIDATION`)
+
+#### `submit_action_item(p_payload jsonb)`
+
+```json
+{
+  "item_id": "uuid",
+  "completion_description": "string opcional, max 4000"
+}
+```
+
+- Permissão: `action_plan.manage` **ou** responsável da ação
+- `PENDING` / `IN_PROGRESS` → `AWAITING_VALIDATION`
+- **PO-AP-16:** prioridade `HIGH` / `CRITICAL` exige ≥1 evidência `COMPLETED`
+
+#### `validate_action_item(p_payload jsonb)`
+
+```json
+{
+  "item_id": "uuid",
+  "outcome": "COMPLETED | REJECTED",
+  "note": "string opcional; obrigatório 10–4000 se REJECTED"
+}
+```
+
+- Permissão: `action_plan.validate`
+- `COMPLETED` → item `COMPLETED`
+- `REJECTED` → item volta `IN_PROGRESS` (não `REJECTED`)
+- **PO-AP-17:** `completed_by = auth.uid()` → `SELF_VALIDATION_FORBIDDEN`
+
+#### `cancel_action_item(p_payload jsonb)`
+
+```json
+{
+  "item_id": "uuid",
+  "reason": "string 10–4000"
+}
+```
+
+- Permissão: `action_plan.manage`
+- Item → `CANCELLED`
+
+#### `add_action_item(p_payload jsonb)`
+
+```json
+{
+  "plan_id": "uuid",
+  "title": "string 3–200",
+  "description": "string opcional, max 4000",
+  "priority": "LOW | MEDIUM | HIGH | CRITICAL",
+  "due_at": "ISO 8601",
+  "responsible_member_id": "uuid",
+  "responsible_organization_id": "uuid opcional"
+}
+```
+
+- Permissão: `action_plan.manage`
+- Plano editável (`OPEN` / `IN_PROGRESS` / `AWAITING_VALIDATION`)
+- **PO-AP-13:** `due_at` obrigatório
+- **PO-AP-14:** responsável = membro ativo da org da ocorrência
+
+#### `update_action_item(p_payload jsonb)`
+
+```json
+{
+  "item_id": "uuid",
+  "title": "string opcional",
+  "description": "string opcional",
+  "priority": "LOW | MEDIUM | HIGH | CRITICAL opcional",
+  "due_at": "ISO 8601 opcional",
+  "responsible_member_id": "uuid opcional",
+  "responsible_organization_id": "uuid opcional"
+}
+```
+
+- Permissão: `action_plan.manage`
+- Conforme status do item (não terminal)
+
+#### `start_action_item(p_item_id uuid)`
+
+- Permissão: `action_plan.manage` **ou** responsável da ação
+- `PENDING` → `IN_PROGRESS`
+
+#### `complete_action_plan(p_plan_id uuid)`
+
+- Permissão: `action_plan.manage`
+- **PO-AP-11:** todas as ações `COMPLETED` ou `CANCELLED`; ≥1 `COMPLETED`
+- Plano → `COMPLETED` + `closed_at`
+- **PO-AP-12:** ocorrência **permanece** `EM_TRATATIVA` — sem transição para `AGUARDANDO_VALIDACAO`
+
+#### Anexos por ação (espelho evidências 2.2)
+
+| RPC | Permissão | Notas |
+|---|---|---|
+| `prepare_action_item_attachment_upload` | manage **ou** responsável | Bucket subpath por item |
+| `complete_action_item_attachment_upload` | idem | Timeline `ACTION_ITEM_EVIDENCE_ADDED` |
+| `fail_action_item_attachment_upload` | idem | |
+| `delete_action_item_attachment` | manage **ou** responsável | Soft delete |
+| `get_action_item_attachment_signed_url` | `occurrence.read` + escopo | |
+
+Limites: **PO-AP-15** — 10 MiB, 20 ativas, MIME permitidos (`EVIDENCE-DECISIONS`).
+
+**Erros Plano de Ação:** `UNAUTHORIZED` | `FORBIDDEN` | `NOT_FOUND` | `STATUS_MISMATCH` | `VALIDATION_ERROR` | `ALREADY_EXISTS` | `CONFLICT` | `SELF_VALIDATION_FORBIDDEN` | `INTERNAL_ERROR`.
+
+**Fora 3.0:** `submit_action_plan_for_occurrence_validation`, `release_occurrence`, `close_occurrence`, `add_action_item_note` (P1 opcional).
+
+**Schemas client (`@safestop/validation`):**
+
+| Operação | Schema | Campos client (camelCase) |
+|---|---|---|
+| Criar plano | `createActionPlanSchema` | `occurrenceId`, `summary?` |
+| Atualizar plano | `updateActionPlanSchema` | `planId`, `summary?` |
+| Concluir ação | `submitActionItemSchema` | `itemId`, `completionDescription?` |
+| Validar ação | `validateActionItemSchema` | `itemId`, `outcome`, `note?` |
+| Cancelar ação | `cancelActionItemSchema` | `itemId`, `reason` |
+
+Tipos: `ActionPlan`, `ActionItem`, guards em `@safestop/types`. Helper: `shouldShowActionPlanSection(occurrence)`.
+
+**Query keys:** `actionPlanKeys.byOccurrence(orgId, occurrenceId)`, `items`, `item`, `attachments`.
+
+**Timeline kinds:** `ACTION_PLAN_CREATED` · `ACTION_ITEM_CREATED` · `ACTION_ITEM_ASSIGNED` · `ACTION_ITEM_DUE_CHANGED` · `ACTION_ITEM_STATUS_CHANGED` · `ACTION_PLAN_COMPLETED` · `ACTION_ITEM_EVIDENCE_ADDED`.
 
 ---
 

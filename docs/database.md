@@ -405,7 +405,7 @@ Catálogo no seed pode incluir códigos **ainda sem fluxo de produto** nas sub-s
 | `occurrence.validate_correction` | **Reservada** — validação/correção futura |
 | `occurrence.release` | **Reservada** — liberação futura |
 | `occurrence.cancel` | **Reservada** — cancelamento formal futuro (sem RPC operacional 2.9) |
-| `action_plan.create` · `action_plan.manage` · `action_plan.validate` | **Reservadas** — Plano de Ação (Sprint futura) |
+| `action_plan.create` · `action_plan.manage` · `action_plan.validate` | **Operacional** (Sprint 3.0 — Plano de Ação IO) |
 | `notification.read` · `notification.confirm_awareness` | **Reservadas** — Notificações (Sprint 3); ciência permanece no catálogo |
 | `user.manage` · `organization.manage` · `area.manage` · `contract.manage` · `settings.manage` | Administração — fora do fluxo operacional de ocorrência |
 | `report.read` · `audit.read` | Consulta / auditoria — fora do fluxo operacional 2.9 |
@@ -2259,8 +2259,17 @@ Antes das migrations, definir:
 11. política de retenção;
 12. formato final da referência IMS;
 13. quem poderá registrar ou corrigir a referência IMS;
-14. se o registro IMS será obrigatório antes do plano de ação;
-15. se o fluxo poderá seguir mesmo sem o código IMS informado.
+14. ~~se o registro IMS será obrigatório antes do plano de ação;~~ **Fechado (Sprint 3.0)** — ver abaixo;
+15. ~~se o fluxo poderá seguir mesmo sem o código IMS informado;~~ **Fechado (Sprint 3.0)** — ver abaixo.
+
+### Fechadas — IMS → Plano de Ação (Sprint 3.0)
+
+Decisões oficiais: `docs/decisions/ACTION-PLAN-DECISIONS.md` PO-AP-1, PO-AP-12; `docs/decisions/IMS-REFERENCE-DECISIONS.md` PO-IMS-2.
+
+| # | Pendência | Decisão fechada |
+|---|---|---|
+| **14** | IMS obrigatório antes do plano? | **Sim** — `create_action_plan` exige `ims_reference_code IS NOT NULL` + `EM_TRATATIVA` + ramo IO (PO-AP-1). Registro IMS continua **manual**; SafeStop **não** consulta IMS externo. |
+| **15** | Fluxo sem código IMS? | **Acompanhamento** (leitura, timeline, comentários) pode continuar em `AGUARDANDO_REGISTRO_IMS`. **Plano de Ação** exige IMS registrado. Transição ocorrência `→ AGUARDANDO_VALIDACAO` **fora** 3.0 (PO-AP-12). Exceção futura “avanço sem IMS” permanece **fora** MVP (`workflow.md` §5.7 nota). |
 
 ---
 

@@ -217,6 +217,16 @@ A **sub-sprint 2.9** **não** entrega domínio novo: consolida o fluxo operacion
 
 Decisões oficiais: `docs/decisions/CONSOLIDATION-DECISIONS.md` (PO-CON-1…PO-CON-22).
 
+### Nota — Sub-sprint 3.0 (Plano de Ação)
+
+A **sub-sprint 3.0** antecipa o **Plano de Ação estruturado** no ramo IO (`EM_TRATATIVA` + IMS registrado manualmente): `action_plans` / `action_items`, RPCs create→validate→complete plano — **sem** transição da ocorrência para `AGUARDANDO_VALIDACAO` (PO-AP-12), **sem** liberação/encerramento e **sem** notificações. Após `complete_action_plan`, ocorrência permanece `EM_TRATATIVA` até Sprint Liberação.
+
+**Relação Sprint 7 (roadmap):** Sprint 7 lista Plano de Ação completo (dashboard SLA, filas HSE, offline avançado). A **3.0** entrega o núcleo operacional IO — mesma lógica das sub-sprints 2.6–2.8 ante Sprint 6.
+
+Decisões oficiais: `docs/decisions/ACTION-PLAN-DECISIONS.md` (PO-AP-1…PO-AP-19).  
+Especificação UI: `docs/decisions/ACTION-PLAN-UI-SPEC.md`.  
+Verificação: `docs/decisions/VERIFICATION-sprint-3.0-action-plan.md`.
+
 ---
 
 # Sprint 3
@@ -326,6 +336,8 @@ Entregas
 Critério
 
 Plano funcionando.
+
+**Nota:** núcleo operacional IO (create → itens → validate → complete plano) entregue na **sub-sprint 3.0**. Sprint 7 permanece como entrega ampliada (SLA, dashboard, filas, offline avançado) conforme roadmap macro.
 
 ---
 
