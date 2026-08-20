@@ -38,6 +38,11 @@ import {
 } from "@/features/ims-reference";
 import { ActionPlanSection } from "@/features/action-plan";
 import { MdhoSection } from "@/features/mdho";
+import {
+  NotificationAwarenessBanner,
+  usePendingAwarenessForOccurrence,
+} from "@/features/notifications";
+import { OccurrenceParticipantsSection } from "@/features/occurrence-participants";
 import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
 
 import { FlowDeadEndBanner } from "./flow-dead-end-banner";
@@ -111,6 +116,8 @@ export function PreventiveStopDetailScreen({
   const [hseFooter, setHseFooter] = useState<HseActionsFooterState | null>(null);
   const [imsRegisterFooter, setImsRegisterFooter] = useState<ImsRegisterFooterState | null>(null);
   const isOnline = useIsOnline();
+  const { notification: pendingAwarenessNotification, refetch: refetchPendingAwareness } =
+    usePendingAwarenessForOccurrence(occurrenceId);
 
   const listRef = useRef<FlatList<OccurrenceTimelineItem>>(null);
   const reviewSectionRef = useRef<View>(null);
@@ -177,6 +184,16 @@ export function PreventiveStopDetailScreen({
 
         {shouldShowInterdicaoBanner(preventiveStop.status) ? <InterdicaoBanner /> : null}
 
+        {pendingAwarenessNotification ? (
+          <NotificationAwarenessBanner
+            isOnline={isOnline}
+            notificationId={pendingAwarenessNotification.id}
+            onConfirmed={() => {
+              void refetchPendingAwareness();
+            }}
+          />
+        ) : null}
+
         <FlowDeadEndBanner hideTratativa={showActionPlanSection} status={preventiveStop.status} />
 
         <Text style={styles.sectionTitle}>Localização</Text>
@@ -205,6 +222,8 @@ export function PreventiveStopDetailScreen({
             value={formatOccurrenceDate(preventiveStop.stoppedAt)}
           />
         ) : null}
+
+        <OccurrenceParticipantsSection occurrenceId={occurrenceId} />
 
         <EvidenceSection occurrenceId={occurrenceId} />
 
@@ -248,7 +267,16 @@ export function PreventiveStopDetailScreen({
         />
       </View>
     );
-  }, [isFetching, isOnline, occurrenceId, preventiveStop, refetch, router]);
+  }, [
+    isFetching,
+    isOnline,
+    occurrenceId,
+    pendingAwarenessNotification,
+    preventiveStop,
+    refetch,
+    refetchPendingAwareness,
+    router,
+  ]);
 
   function handlePreviewEvidence(attachmentId: string, item: OccurrenceTimelineItem) {
     const fileName =

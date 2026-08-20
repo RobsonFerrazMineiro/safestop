@@ -10,6 +10,7 @@ export const authRoutes = {
   stopWork: "/(app)/stop-work" as Href,
   stopWorkNew: "/(app)/stop-work/new" as Href,
   hseApprovalQueue: "/(app)/approvals/mdho" as Href,
+  notifications: "/(app)/notifications" as Href,
   forbidden: "/(app)/forbidden" as Href,
   root: "/" as Href,
 } as const;
@@ -26,3 +27,4 @@ export function stopWorkDetailRoute(occurrenceId: string): Href {
 }
 
 export const hseApprovalQueueRoute = authRoutes.hseApprovalQueue;
+export const notificationsRoute = authRoutes.notifications;

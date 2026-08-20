@@ -1,15 +1,31 @@
+import { useCallback, useState } from "react";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { Can } from "@/features/authorization/components/can";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
+import { MobileHomePendingSection, useHomePendingData } from "@/features/dashboard";
 import { showHseApprovalQueue } from "@/features/hse-approval";
+import {
+  getNotificationAccessibilityLabel,
+  NotificationTabBadge,
+  useNotificationBadgeCounts,
+} from "@/features/notifications";
 import { useAuth } from "@/hooks/use-auth";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import {
   authRoutes,
   hseApprovalQueueRoute,
+  notificationsRoute,
   stopWorkNewRoute,
   stopWorkRoute,
 } from "@/lib/auth/routes";
@@ -19,6 +35,13 @@ export default function AuthenticatedHomeScreen() {
   const { user, signOut, isRefreshing } = useAuth();
   const { can, isPlatformAdmin } = useAuthorization();
   const { activeOrganization, hasMultipleOrganizations } = useActiveOrganization();
+  const pendingData = useHomePendingData();
+  const {
+    refresh: refreshPendingData,
+    isFetching: isPendingFetching,
+    ...pendingSectionProps
+  } = pendingData;
+  const [isRefreshingHome, setIsRefreshingHome] = useState(false);
 
   const canViewHseQueue = showHseApprovalQueue({
     currentUserId: user?.id ?? "",
@@ -28,6 +51,22 @@ export default function AuthenticatedHomeScreen() {
       mdhoReturn: can("mdho.return"),
     },
   });
+  const canViewNotifications = can("notification.read");
+  const { unreadCount, pendingAwarenessCount } = useNotificationBadgeCounts();
+  const notificationBadgeLabel = getNotificationAccessibilityLabel({
+    unreadCount,
+    pendingAwarenessCount,
+  });
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshingHome(true);
+
+    try {
+      await refreshPendingData();
+    } finally {
+      setIsRefreshingHome(false);
+    }
+  }, [refreshPendingData]);
 
   async function handleSignOut() {
     await signOut();
@@ -36,7 +75,19 @@ export default function AuthenticatedHomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            colors={["#F97316"]}
+            refreshing={isRefreshingHome || isPendingFetching}
+            tintColor="#F97316"
+            onRefresh={() => {
+              void handleRefresh();
+            }}
+          />
+        }
+      >
         <Text style={styles.title}>SafeStop</Text>
         <Text style={styles.subtitle}>Sessão autenticada</Text>
         <Text style={styles.email}>{user?.email ?? "Usuário autenticado"}</Text>
@@ -71,6 +122,17 @@ export default function AuthenticatedHomeScreen() {
           </View>
         ) : null}
 
+        <MobileHomePendingSection
+          {...pendingSectionProps}
+          onRetry={() => {
+            void refreshPendingData();
+          }}
+        />
+
+        <Text accessibilityRole="header" style={styles.shortcutsTitle}>
+          Atalhos
+        </Text>
+
         <Can permission="occurrence.read">
           <Pressable
             accessibilityLabel="Ver paralisações"
@@ -96,6 +158,22 @@ export default function AuthenticatedHomeScreen() {
             <Text style={styles.createButtonText}>Nova Paralisação</Text>
           </Pressable>
         </Can>
+
+        {canViewNotifications ? (
+          <Pressable
+            accessibilityLabel={notificationBadgeLabel}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.notificationsButton, pressed && styles.buttonPressed]}
+            onPress={() => {
+              router.push(notificationsRoute);
+            }}
+          >
+            <View style={styles.notificationsButtonInner}>
+              <Text style={styles.notificationsButtonText}>Notificações</Text>
+              <NotificationTabBadge counts={{ unreadCount, pendingAwarenessCount }} />
+            </View>
+          </Pressable>
+        ) : null}
 
         {canViewHseQueue ? (
           <Pressable
@@ -131,107 +209,33 @@ export default function AuthenticatedHomeScreen() {
         >
           <Text style={styles.buttonText}>Sair</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0F1115",
-  },
-  content: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 12,
-    paddingHorizontal: 24,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#F97316",
-  },
-  subtitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#F9FAFB",
-    textAlign: "center",
-  },
-  email: {
-    fontSize: 14,
-    color: "#9CA3AF",
-    textAlign: "center",
-  },
-  organizationBadge: {
-    alignItems: "center",
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 4,
-    marginTop: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    width: "100%",
-  },
-  organizationLabel: {
-    color: "#9CA3AF",
-    fontSize: 12,
-    fontWeight: "600",
-    textTransform: "uppercase",
-  },
-  organizationName: {
-    color: "#F9FAFB",
-    fontSize: 16,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  organizationCode: {
-    color: "#6B7280",
-    fontSize: 13,
-    textAlign: "center",
-  },
-  switchOrgButton: {
+  button: {
     alignItems: "center",
     backgroundColor: "#374151",
     borderRadius: 8,
     justifyContent: "center",
-    marginTop: 4,
-    minHeight: 44,
-    minWidth: 200,
-    paddingHorizontal: 20,
-  },
-  switchOrgButtonText: {
-    color: "#F9FAFB",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  refreshing: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 8,
-  },
-  refreshingText: {
-    color: "#9CA3AF",
-    fontSize: 13,
-  },
-  occurrencesButton: {
-    alignItems: "center",
-    backgroundColor: "#F97316",
-    borderRadius: 8,
-    justifyContent: "center",
-    marginTop: 8,
+    marginTop: 16,
     minHeight: 48,
     minWidth: 200,
     paddingHorizontal: 24,
   },
-  occurrencesButtonText: {
-    color: "#0F1115",
+  buttonPressed: {
+    opacity: 0.85,
+  },
+  buttonText: {
+    color: "#F9FAFB",
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "600",
+  },
+  container: {
+    backgroundColor: "#0F1115",
+    flex: 1,
   },
   createButton: {
     alignItems: "center",
@@ -248,6 +252,11 @@ const styles = StyleSheet.create({
     color: "#DBEAFE",
     fontSize: 16,
     fontWeight: "700",
+  },
+  email: {
+    color: "#9CA3AF",
+    fontSize: 14,
+    textAlign: "center",
   },
   hseButton: {
     alignItems: "center",
@@ -266,6 +275,73 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
+  notificationsButton: {
+    alignItems: "center",
+    backgroundColor: "#1E3A5F",
+    borderColor: "#2563EB",
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    marginTop: 8,
+    minHeight: 48,
+    minWidth: 200,
+    paddingHorizontal: 24,
+  },
+  notificationsButtonInner: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    position: "relative",
+  },
+  notificationsButtonText: {
+    color: "#DBEAFE",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  occurrencesButton: {
+    alignItems: "center",
+    backgroundColor: "#F97316",
+    borderRadius: 8,
+    justifyContent: "center",
+    marginTop: 8,
+    minHeight: 48,
+    minWidth: 200,
+    paddingHorizontal: 24,
+  },
+  occurrencesButtonText: {
+    color: "#0F1115",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  organizationBadge: {
+    alignItems: "center",
+    backgroundColor: "#1F2937",
+    borderColor: "#374151",
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 4,
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    width: "100%",
+  },
+  organizationCode: {
+    color: "#6B7280",
+    fontSize: 13,
+    textAlign: "center",
+  },
+  organizationLabel: {
+    color: "#9CA3AF",
+    fontSize: 12,
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  organizationName: {
+    color: "#F9FAFB",
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+  },
   profileButton: {
     alignItems: "center",
     backgroundColor: "#374151",
@@ -273,7 +349,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 8,
     minHeight: 48,
-    minWidth: 160,
+    minWidth: 200,
     paddingHorizontal: 24,
   },
   profileButtonText: {
@@ -281,22 +357,55 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  button: {
+  refreshing: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 8,
+  },
+  refreshingText: {
+    color: "#9CA3AF",
+    fontSize: 13,
+  },
+  scrollContent: {
+    alignItems: "center",
+    gap: 12,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+  },
+  shortcutsTitle: {
+    alignSelf: "stretch",
+    color: "#D1D5DB",
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 8,
+    textTransform: "uppercase",
+  },
+  subtitle: {
+    color: "#F9FAFB",
+    fontSize: 18,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  switchOrgButton: {
     alignItems: "center",
     backgroundColor: "#374151",
     borderRadius: 8,
     justifyContent: "center",
-    marginTop: 16,
-    minHeight: 48,
-    minWidth: 160,
-    paddingHorizontal: 24,
+    marginTop: 4,
+    minHeight: 44,
+    minWidth: 200,
+    paddingHorizontal: 20,
   },
-  buttonPressed: {
-    opacity: 0.85,
-  },
-  buttonText: {
+  switchOrgButtonText: {
     color: "#F9FAFB",
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "600",
+  },
+  title: {
+    color: "#F97316",
+    fontSize: 32,
+    fontWeight: "700",
   },
 });

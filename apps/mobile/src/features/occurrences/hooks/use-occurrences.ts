@@ -9,6 +9,7 @@ import { occurrenceQueryKeys } from "../types";
 
 type UseOccurrencesOptions = {
   filters?: OccurrenceListFilters;
+  enabled?: boolean;
 };
 
 export function useOccurrences(options: UseOccurrencesOptions = {}) {
@@ -17,6 +18,8 @@ export function useOccurrences(options: UseOccurrencesOptions = {}) {
 
   const organizationId = activeOrganization?.id;
   const canRead = can("occurrence.read");
+  const queryEnabled =
+    (options.enabled ?? true) && isReady && organizationId !== undefined && canRead;
 
   const query = useQuery({
     queryKey: occurrenceQueryKeys.list(organizationId ?? "", options.filters),
@@ -25,7 +28,7 @@ export function useOccurrences(options: UseOccurrencesOptions = {}) {
         organizationId: organizationId!,
         filters: options.filters,
       }),
-    enabled: isReady && organizationId !== undefined && canRead,
+    enabled: queryEnabled,
   });
 
   return {
