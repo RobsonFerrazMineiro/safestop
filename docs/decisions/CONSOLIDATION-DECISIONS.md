@@ -269,35 +269,44 @@ Ordem oficial: **Etapa 0 DOCS → UIUX ∥ (DATABASE + BUILD + SECURITY) → BAC
 
 ---
 
-### PO-CON-21 — Contrato eventos para Notificações futuras
+### PO-CON-21 — Contrato eventos para Notificações
 
 | Item | Decisão |
 |---|---|
-| **Entrega DOCS** | Tabela evento → permissão/papel → timeline kind/metadata (abaixo) |
-| **Implementação** | **Fora** 2.9 — Sprint 3 |
-| **Achado** | Bloqueador Notificações Sprint 3 |
+| **Entrega DOCS (2.9)** | Tabela evento → permissão/papel → timeline kind/metadata |
+| **Implementação** | **Implementado — Sprint 3.1** |
+| **Migrations** | `20260817180000_create_notifications_foundation.sql` · `20260817190000_notification_rpcs.sql` · `20260817200000_notification_dispatch_occurrence_patch.sql` · `20260817210000_notification_dispatch_mdho_patch.sql` · `20260817220000_notification_dispatch_ims_patch.sql` · `20260817230000_notification_dispatch_action_plan_patch.sql` |
+| **Decisões** | `docs/decisions/NOTIFICATIONS-DECISIONS.md` (PO-NOTIF-1…8) |
+| **Achado original** | Bloqueador Notificações Sprint 3 |
 
-#### Tabela evento → destinatários (contrato Sprint 3)
+#### Tabela evento → destinatários (contrato — implementado na 3.1)
 
 Fonte de tipos: `docs/database.md` §17.2 · `docs/notifications.md` §11.  
 Timeline: enriquecer `STATUS_CHANGED` / kinds 2.3 — **sem** kind de notificação.  
-**Não** implementar push/ciência nesta sprint. **Não** sugerir integração IMS.
+Push / `notification_deliveries`: **fora** 3.1. **Sem** integração IMS.
 
-| Evento (`notification_events.event_type`) | Gatilho operacional (RPC / status) | Destinatários-alvo (papéis típicos) | Permissão p/ agir após aviso | Timeline (título / metadata) |
-|---|---|---|---|---|
-| `OCCURRENCE_CREATED` | `create_occurrence` → PP | Fiscal, Supervisor HSE, Liderança HSE, responsáveis do escopo | `occurrence.read` / `occurrence.evaluate` | `OCCURRENCE_CREATED` · “Paralisação Preventiva registrada” |
-| `DECISION_REQUIRED` | `start_occurrence_evaluation` → `EM_AVALIACAO` | Fiscal, Supervisor HSE, Liderança HSE | `occurrence.evaluate` | `STATUS_CHANGED` · “Avaliação iniciada” |
-| `VER_AND_ACT_REQUIRED` | `record_occurrence_decision(VER_E_AGIR)` | Escopo leitura + quem trata correção (futuro) | `occurrence.read` (ação correção = reservada) | `STATUS_CHANGED` · “Decisão: Ver e Agir” |
-| `INTERDICTION_CONFIRMED` | `record_occurrence_decision(INTERDICAO_OFICIAL)` | Supervisor HSE, Liderança HSE, Fiscal (ciência) | `mdho.fill` / `occurrence.read` | `STATUS_CHANGED` · “Interdição Oficial confirmada” |
-| `MDHO_APPROVAL_REQUIRED` | `submit_mdho_assessment` | Liderança HSE | `mdho.approve` / `mdho.return` | `STATUS_CHANGED` · “MDHO enviado” |
-| `MDHO_RETURNED` | `return_mdho_assessment` | Supervisor HSE (preenchedor) | `mdho.fill` / `mdho.submit` | `STATUS_CHANGED` · “MDHO devolvido” · `returnReason` |
-| *(MDHO aprovado — comunicar)* | `approve_mdho_assessment` | Supervisor HSE + quem registra IMS | `ims_reference.register` | `STATUS_CHANGED` · “MDHO aprovado” |
-| `IMS_REFERENCE_REGISTERED` | `register_ims_reference` | Escopo leitura operacional | `occurrence.read` / `ims_reference.update` | `STATUS_CHANGED` · “Referência IMS registrada” |
-| `OCCURRENCE_ASSIGNED` | Futuro (participantes) | Atribuído | conforme papel | — fora 2.9 |
-| `ACTION_DUE` · `CORRECTION_SUBMITTED` · `RELEASE_REQUIRED` · `OCCURRENCE_RELEASED` | Plano / validação / liberação | Conforme sprint futura | `action_plan.*` / `occurrence.validate_correction` / `occurrence.release` (**reservadas**) | Fora 2.9 |
+| Evento (`notification_events.event_type`) | Gatilho operacional (RPC / status) | Destinatários-alvo (papéis típicos) | Permissão p/ agir após aviso | Timeline (título / metadata) | 3.1 |
+|---|---|---|---|---|---|
+| `OCCURRENCE_CREATED` | `create_occurrence` → PP | Fiscal, Supervisor HSE, Liderança HSE, responsáveis do escopo | `occurrence.read` / `occurrence.evaluate` | `OCCURRENCE_CREATED` · “Paralisação Preventiva registrada” | ✅ |
+| `DECISION_REQUIRED` | `start_occurrence_evaluation` → `EM_AVALIACAO` | Fiscal, Supervisor HSE, Liderança HSE | `occurrence.evaluate` | `STATUS_CHANGED` · “Avaliação iniciada” | ✅ |
+| `VER_AND_ACT_REQUIRED` | `record_occurrence_decision(VER_E_AGIR)` | Escopo leitura + quem trata correção | `occurrence.read` | `STATUS_CHANGED` · “Decisão: Ver e Agir” | ✅ |
+| `INTERDICTION_CONFIRMED` | `record_occurrence_decision(INTERDICAO_OFICIAL)` | Supervisor HSE, Liderança HSE, Fiscal (ciência) | `mdho.fill` / `occurrence.read` | `STATUS_CHANGED` · “Interdição Oficial confirmada” | ✅ |
+| `MDHO_APPROVAL_REQUIRED` | `submit_mdho_assessment` | Liderança HSE | `mdho.approve` / `mdho.return` | `STATUS_CHANGED` · “MDHO enviado” | ✅ |
+| `MDHO_RETURNED` | `return_mdho_assessment` | Supervisor HSE (preenchedor) | `mdho.fill` / `mdho.submit` | `STATUS_CHANGED` · “MDHO devolvido” · `returnReason` | ✅ |
+| `MDHO_APPROVED` | `approve_mdho_assessment` | Supervisor HSE + quem registra IMS | `ims_reference.register` | `STATUS_CHANGED` · “MDHO aprovado” | ✅ |
+| `IMS_REFERENCE_REGISTERED` | `register_ims_reference` | Escopo leitura operacional | `occurrence.read` / `ims_reference.update` | `STATUS_CHANGED` · “Referência IMS registrada” | ✅ |
+| `ACTION_PLAN_CREATED` | `create_action_plan` | Supervisor HSE, Liderança HSE | `action_plan.manage` | `ACTION_PLAN_CREATED` | ✅ |
+| `ACTION_ITEM_ASSIGNED` | `add_action_item` / update responsável | Responsável da ação | manage ou responsável | `ACTION_ITEM_ASSIGNED` | ✅ |
+| `ACTION_ITEM_SUBMITTED` | `submit_action_item` | Liderança HSE (validação) | `action_plan.validate` | `ACTION_ITEM_STATUS_CHANGED` | ✅ |
+| `ACTION_ITEM_VALIDATED` | `validate_action_item(COMPLETED)` | Supervisor HSE | `action_plan.manage` | `ACTION_ITEM_STATUS_CHANGED` | ✅ |
+| `ACTION_ITEM_RETURNED` | `validate_action_item(REJECTED)` | Responsável da ação | manage ou responsável | `ACTION_ITEM_STATUS_CHANGED` | ✅ |
+| `ACTION_PLAN_COMPLETED` | `complete_action_plan` | Fiscal, Supervisor HSE (+ autor PP conforme NOTIF) | `occurrence.read` | `ACTION_PLAN_COMPLETED` | ✅ |
+| `OCCURRENCE_ASSIGNED` | Futuro (participantes) | Atribuído | conforme papel | — | ⏳ |
+| `ACTION_DUE` | Cron / item vencido (PO-NOTIF-6) | Responsável da ação | manage ou responsável | — | ⏳ |
+| `CORRECTION_SUBMITTED` · `RELEASE_REQUIRED` · `OCCURRENCE_RELEASED` | Plano / validação / liberação | Conforme sprint futura | `occurrence.validate_correction` / `occurrence.release` (**reservadas**) | Fora escopo | ⏳ |
 
-**Ciência:** `notification.confirm_awareness` (reservada) — leitura ≠ ciência (`docs/notifications.md`).  
-**Fila HSE:** `list_mdho_pending_approvals` é UX operacional 2.7 — **não** substitui `notification_events` na Sprint 3.
+**Ciência (3.1):** `confirm_notification_awareness` — leitura ≠ ciência (`docs/notifications.md`).  
+**Fila HSE:** `list_mdho_pending_approvals` é UX operacional 2.7 — **complementa**, não substitui, notificações in-app.
 
 ---
 
@@ -442,7 +451,7 @@ S29-SVC-02, S29-TYP-03, S29-BLD-02, S29-PRV-02
 1. VERIFICATION 2.9 _(QA)_
 2. ~~Roadmap nota 2.9~~ **Concluído**
 3. ~~api.md catálogo RPC~~ **Concluído**
-4. ~~Mapa eventos → notificações futuras (PO-CON-21)~~ **Concluído**
+4. ~~Mapa eventos → notificações (PO-CON-21)~~ **Implementado — Sprint 3.1**
 5. ~~workflow dead-ends + database permissões reservadas~~ **Concluído**
 
 ---

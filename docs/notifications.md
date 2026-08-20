@@ -2,6 +2,8 @@
 
 > Documento de referência para toda a estratégia de comunicação, notificações, confirmação de ciência, escalonamento, auditoria e rastreabilidade do SafeStop.
 
+**Estado (Sprint 3.1):** notificações **in-app** implementadas (`notification_events`, `notifications`, RPCs de leitura/ciência/listagem). Destinatários automáticos via `organization_contacts` + patches de dispatch. **Push**, `notification_deliveries` e canais externos permanecem **fora** desta entrega. Decisões: `docs/decisions/NOTIFICATIONS-DECISIONS.md` · contrato eventos: PO-CON-21 (fechado na 3.1).
+
 ---
 
 # 1. Objetivo
@@ -168,10 +170,13 @@ Isso permite controlar:
 
 Cada notificação poderá ser entregue por um ou mais canais.
 
-No MVP:
+**Sprint 3.1 (implementado):**
 
-- Push
-- Notificação interna
+- Notificação interna (`IN_APP`) — persistida em `notifications`; listagem via `list_my_notifications`; leitura/ciência via RPC
+
+**Roadmap / pós-3.1:**
+
+- Push (requer `device_tokens` + `notification_deliveries`)
 
 Futuro:
 
@@ -238,7 +243,7 @@ Exemplos:
 
 ## Push
 
-Principal canal do aplicativo.
+Principal canal do aplicativo **(fora Sprint 3.1 — pendente `device_tokens` + entrega push)**.
 
 Características:
 
@@ -369,10 +374,10 @@ O SafeStop apenas comunica que o código foi registrado.
 
 Ele não consulta o IMS.
 
-### Contrato evento → destinatário (Sprint 3 — pré-implementação)
+### Contrato evento → destinatário (implementado — Sprint 3.1)
 
-Mapa oficial gatilho → papéis → permissão → timeline: `docs/decisions/CONSOLIDATION-DECISIONS.md` **PO-CON-21**.  
-Implementação de `notification_events` / push / ciência: **Sprint 3** — fora da 2.9. Sem integração IMS.
+Mapa oficial gatilho → papéis → permissão → timeline: `docs/decisions/CONSOLIDATION-DECISIONS.md` **PO-CON-21** (fechado).  
+Implementação: migrations `20260817180000` … `20260817230000` · RPCs cliente `list_my_notifications`, `mark_notification_read`, `mark_all_notifications_read`, `confirm_notification_awareness`. **Sem** integração IMS.
 
 ---
 
@@ -427,21 +432,21 @@ LOW
 # 12. Fluxo das Notificações
 
 ```
-Evento
+Evento (RPC de domínio / dispatch server-side)
       ↓
-Selecionar destinatários
+Selecionar destinatários (resolve_occurrence_notification_recipients)
       ↓
 Criar Notification Event
       ↓
-Criar Notifications
+Criar Notifications (IN_APP)
       ↓
-Entregar Push
+[Push — fora 3.1]
       ↓
-Registrar entrega
+[Registrar entrega — fora 3.1]
       ↓
-Registrar leitura
+Registrar leitura (mark_notification_read)
       ↓
-Registrar ciência
+Registrar ciência (confirm_notification_awareness — quando exigida)
 ```
 
 Todo o fluxo deve ser auditável.

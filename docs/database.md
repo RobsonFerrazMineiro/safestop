@@ -390,11 +390,11 @@ report.read
 audit.read
 ```
 
-### Operacionais vs reservadas (Sprint 2.9 — PO-CON-20)
+### Operacionais vs reservadas (Sprints 2.9–3.2 — PO-CON-20)
 
-Catálogo no seed pode incluir códigos **ainda sem fluxo de produto** nas sub-sprints 2.0–2.9. Marcar como **reservadas** evita tratar seed como feature entregue.
+Catálogo no seed pode incluir códigos **ainda sem fluxo de produto** nas sub-sprints anteriores. Marcar como **reservadas** evita tratar seed como feature entregue.
 
-| Código | Estado na entrega 2.0–2.9 |
+| Código | Estado |
 |---|---|
 | `occurrence.create` | **Operacional** |
 | `occurrence.read` | **Operacional** |
@@ -402,15 +402,16 @@ Catálogo no seed pode incluir códigos **ainda sem fluxo de produto** nas sub-s
 | `occurrence.confirm_interdiction` | **Operacional** |
 | `mdho.fill` · `mdho.submit` · `mdho.approve` · `mdho.return` | **Operacional** |
 | `ims_reference.register` · `ims_reference.update` | **Operacional** (registro **manual** — sem integração IMS) |
+| `action_plan.create` · `action_plan.manage` · `action_plan.validate` | **Operacional** (Sprint 3.0 — Plano de Ação IO) |
+| `notification.read` · `notification.confirm_awareness` | **Operacional** (Sprint 3.1 — notificações in-app + ciência) |
+| `report.read` | **Operacional** (Sprint 3.2 — seção `pendingAwarenessOrg` em `get_dashboard_kpis`) |
 | `occurrence.validate_correction` | **Reservada** — validação/correção futura |
 | `occurrence.release` | **Reservada** — liberação futura |
-| `occurrence.cancel` | **Reservada** — cancelamento formal futuro (sem RPC operacional 2.9) |
-| `action_plan.create` · `action_plan.manage` · `action_plan.validate` | **Operacional** (Sprint 3.0 — Plano de Ação IO) |
-| `notification.read` · `notification.confirm_awareness` | **Reservadas** — Notificações (Sprint 3); ciência permanece no catálogo |
+| `occurrence.cancel` | **Reservada** — cancelamento formal futuro (sem RPC operacional) |
 | `user.manage` · `organization.manage` · `area.manage` · `contract.manage` · `settings.manage` | Administração — fora do fluxo operacional de ocorrência |
-| `report.read` · `audit.read` | Consulta / auditoria — fora do fluxo operacional 2.9 |
+| `audit.read` | Consulta / auditoria — fora do fluxo operacional |
 
-**Regra:** permissão **reservada** pode existir em `permissions` / `role_permissions` no seed, mas **não** implica RPC, UI ou transição disponível. Não inventar integração IMS nem ativar `action_plan.*` / `notification.*` sem sprint dedicada.
+**Regra:** permissão **reservada** pode existir em `permissions` / `role_permissions` no seed, mas **não** implica RPC, UI ou transição disponível. Não inventar integração IMS.
 
 ---
 
@@ -1409,6 +1410,10 @@ Caso esse fluxo se torne mais complexo, uma entidade específica poderá ser cri
 
 # 17. Notificações
 
+**Estado (Sprint 3.1):** `notification_events` e `notifications` **implementadas** — migrations `20260817180000_create_notifications_foundation.sql`, `20260817190000_notification_rpcs.sql` e patches de dispatch (`20260817200000` … `20260817230000`). Escrita de eventos/notificações: somente funções `SECURITY DEFINER` (`create_occurrence_notification_event`, patches nas RPCs de domínio). Cliente: leitura/ciência via RPC + `SELECT` RLS; badge via contagem client-side.
+
+**Fora 3.1:** `notification_deliveries`, `device_tokens`, Push, e-mail, WhatsApp — ver §17.4–17.5.
+
 ## 17.1 Princípio
 
 O sistema deve separar:
@@ -1423,17 +1428,31 @@ O sistema deve separar:
 
 Representa um evento que exige comunicação.
 
-### Exemplos
+### `event_type` (implementado — Sprint 3.1)
 
 ```text
 OCCURRENCE_CREATED
-OCCURRENCE_ASSIGNED
 DECISION_REQUIRED
 VER_AND_ACT_REQUIRED
 INTERDICTION_CONFIRMED
 MDHO_APPROVAL_REQUIRED
 MDHO_RETURNED
+MDHO_APPROVED
 IMS_REFERENCE_REGISTERED
+ACTION_PLAN_CREATED
+ACTION_ITEM_ASSIGNED
+ACTION_ITEM_SUBMITTED
+ACTION_ITEM_VALIDATED
+ACTION_ITEM_RETURNED
+ACTION_PLAN_COMPLETED
+```
+
+Contrato destinatários/ciência: `docs/decisions/NOTIFICATIONS-DECISIONS.md` · `docs/decisions/CONSOLIDATION-DECISIONS.md` PO-CON-21 (fechado na 3.1).
+
+### Exemplos (roadmap / sprints futuras — ainda sem dispatch)
+
+```text
+OCCURRENCE_ASSIGNED
 ACTION_DUE
 CORRECTION_SUBMITTED
 RELEASE_REQUIRED
@@ -1491,7 +1510,7 @@ expires_at
 
 ## 17.4 `notification_deliveries`
 
-Representa cada tentativa de entrega por canal.
+**Fora Sprint 3.1** — tabela ainda **não** migrada. Representa cada tentativa de entrega por canal.
 
 ### Campos
 
@@ -1543,7 +1562,7 @@ CANCELLED
 
 ## 17.5 `device_tokens`
 
-Armazena tokens para notificações push.
+**Fora Sprint 3.1** — tabela ainda **não** migrada. Armazena tokens para notificações push.
 
 ### Campos
 
@@ -1970,17 +1989,20 @@ Esses dados devem ser carregados na tela de detalhes.
 
 ## 25.2 Dashboard
 
-Consultas do dashboard devem evitar processamento excessivo no cliente.
+**Implementado (Sprint 3.2):** agregações via RPC `get_dashboard_kpis` — migration `20260820182000_create_dashboard_kpis_rpc.sql`. Cliente **não** recalcula KPIs de estoque/fluxo.
 
-Poderão ser utilizadas futuramente:
+### Índices (Sprint 3.2)
 
-- views;
-- funções SQL;
-- agregações;
-- materialized views;
-- cache.
+Migration `20260820180000_dashboard_indexes.sql`:
 
-No MVP, priorizar consultas simples.
+| Índice | Tabela | Colunas / filtro | Métricas |
+|---|---|---|---|
+| `action_items_org_due_open_idx` | `action_items` | `(organization_id, due_at)` WHERE status ∉ (`COMPLETED`, `CANCELLED`) | `overdueActionItems`, `dueSoonActionItems` |
+| `notifications_org_pending_awareness_idx` | `notifications` | `(organization_id, requires_awareness, awareness_confirmed_at)` WHERE `requires_awareness` AND `awareness_confirmed_at IS NULL` | `pendingAwarenessOrg` |
+
+**Não criados (EXPLAIN não justificou na escala de teste):** índice composto adicional em `occurrences(organization_id, status)` — índices existentes (`organization_id_status_idx`, `occurrences_status_idx`) já cobrem consultas relevantes; demais métricas usam índices pré-existentes (`action_items_responsible_member_idx`, `action_plans_org_status_idx`, `idx_mdho_assessments_org_status`, `notifications_recipient_read_created_idx`).
+
+Views / materialized views / cache: **fora** 3.2 — priorizar RPC única antes de otimizações adicionais.
 
 ---
 
@@ -2143,9 +2165,16 @@ occurrence_attachments
 
 ## Fase 4 — Comunicação
 
+**Parcial (Sprint 3.1):**
+
 ```text
-notification_events
-notifications
+notification_events      ← implementado
+notifications            ← implementado
+```
+
+**Pendente (Push / canais externos):**
+
+```text
 notification_deliveries
 device_tokens
 ```

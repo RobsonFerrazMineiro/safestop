@@ -226,7 +226,7 @@ Utilizar quando existir:
 - cálculos;
 - validações próximas ao banco.
 
-### Catálogo RPC operacional (Sprints 2.0–3.0)
+### Catálogo RPC operacional (Sprints 2.0–3.2)
 
 Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberação/encerramento ocorrência e notificações **não** existem nesta entrega (permissões reservadas — `docs/database.md` §6.2).
 
@@ -266,10 +266,21 @@ Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberaçã
 | `fail_action_item_attachment_upload` | 3.0 | idem | abaixo |
 | `delete_action_item_attachment` | 3.0 | manage **ou** responsável | abaixo |
 | `get_action_item_attachment_signed_url` | 3.0 | `occurrence.read` + escopo | abaixo |
+| `mark_notification_read` | 3.1 | `notification.read` (destinatário) | abaixo |
+| `mark_all_notifications_read` | 3.1 | `notification.read` | abaixo |
+| `confirm_notification_awareness` | 3.1 | `notification.confirm_awareness` (destinatário) | abaixo |
+| `list_my_notifications` | 3.1 | `notification.read` | abaixo |
+| `get_dashboard_kpis` | 3.2 | gates internos (`occurrence.read`, `report.read`, `action_plan.*`, …) | abaixo |
 
 \*Remoção de comentário por supervisor usa `occurrence.cancel` na matriz RBAC aprovada — a permissão permanece **reservada** para cancelamento formal de ocorrência (PO-CON-20); não implica RPC `cancel_occurrence` na 2.9.
 
-**Fora do catálogo operacional 3.0:** `submit_action_plan_for_occurrence_validation`, `submit_correction`, `validate_correction`, `release_occurrence`, `close_occurrence`, `cancel_occurrence`, criação de `notification_events`.
+**Escrita de `notification_events` / `notifications`:** somente server-side (`create_occurrence_notification_event` + patches de dispatch) — **sem** RPC client para criar eventos.
+
+**Leitura auxiliar (client):** contadores de badge (`unreadCount`, `pendingAwarenessCount`) via `SELECT` head count em `notifications` com RLS — ver `getNotificationBadgeCounts` nos apps.
+
+**Dashboard (3.2):** KPIs agregados **somente** via `get_dashboard_kpis` — drill-down de ações usa listagens client-side filtradas; **sem** RPC `get_dashboard_action_items_attention`.
+
+**Fora do catálogo operacional 3.2:** `submit_action_plan_for_occurrence_validation`, `submit_correction`, `validate_correction`, `release_occurrence`, `close_occurrence`, `cancel_occurrence`, Push/`notification_deliveries`, `upsert_organization_contact` (contatos: `INSERT`/`UPDATE` direto em `organization_contacts` via RLS), `get_dashboard_action_items_attention`.
 
 ### Fundação / avaliação — referências rápidas
 
@@ -640,6 +651,100 @@ Tipos: `ActionPlan`, `ActionItem`, guards em `@safestop/types`. Helper: `shouldS
 **Query keys:** `actionPlanKeys.byOccurrence(orgId, occurrenceId)`, `items`, `item`, `attachments`.
 
 **Timeline kinds:** `ACTION_PLAN_CREATED` · `ACTION_ITEM_CREATED` · `ACTION_ITEM_ASSIGNED` · `ACTION_ITEM_DUE_CHANGED` · `ACTION_ITEM_STATUS_CHANGED` · `ACTION_PLAN_COMPLETED` · `ACTION_ITEM_EVIDENCE_ADDED`.
+
+---
+
+### RPCs — Notificações in-app (Sprint 3.1)
+
+Notificações internas, leitura e ciência. Contrato: `docs/decisions/NOTIFICATIONS-DECISIONS.md`. Eventos gerados server-side — cliente **não** insere em `notification_events`/`notifications`.
+
+#### `mark_notification_read(p_notification_id uuid)`
+
+- Permissão: `notification.read`
+- Destinatário: `recipient_member_id` = membro ativo do `auth.uid()`
+- Idempotente se já lida
+- **Não** grava ciência (leitura ≠ ciência)
+
+#### `mark_all_notifications_read(p_organization_id uuid)`
+
+- Permissão: `notification.read`
+- Marca `read_at` em todas não lidas do membro na organização
+- **Não** confirma ciência
+
+#### `confirm_notification_awareness(p_notification_id uuid)`
+
+- Permissão: `notification.confirm_awareness`
+- Exige `requires_awareness = true`
+- Idempotente; também preenche `read_at` se ausente
+
+#### `list_my_notifications(p_organization_id uuid, p_cursor timestamptz default null, p_limit integer default 20)`
+
+- Permissão: `notification.read`
+- Paginação cursor (`created_at` desc); `p_limit` 1–100
+- Retorno: `{ success, items[], nextCursor }` — itens em camelCase (`eventType`, `occurrenceId`, `requiresAwareness`, …)
+
+**Erros Notificações:** `UNAUTHORIZED` | `FORBIDDEN` | `NOT_FOUND` | `VALIDATION_ERROR` | `INTERNAL_ERROR`.
+
+**Schemas / tipos client:** `@safestop/types` — `NotificationListItem`, `NotificationBadgeCounts`; services em `features/notifications/`.
+
+**Query keys:** `notificationKeys` em `@safestop/query-keys` — list, badge, invalidation matrix.
+
+---
+
+### RPCs — Dashboard (Sprint 3.2)
+
+KPIs agregados de estoque e fluxo. Contrato: `docs/decisions/DASHBOARD-DECISIONS.md` (PO-DASH-1…4). Fórmulas: `@safestop/types` `dashboard-formulas.ts` — **não** duplicar no client.
+
+#### `get_dashboard_kpis(p_organization_id uuid, p_due_soon_days integer default 3, p_period_start timestamptz default null, p_period_end timestamptz default null)`
+
+- Permissão: autenticado + vínculo ativo na organização; gates **internos** por seção (`has_permission`)
+- `SECURITY DEFINER` — agregação org-wide em `notifications` exige bypass RLS controlado (`pendingAwarenessOrg` → `report.read`)
+- `p_due_soon_days`: 1–30 (default 3) — janela `dueSoonActionItems`
+- `p_period_start` / `p_period_end`: opcionais — métricas de fluxo retornam `null` quando ausentes (não agregam “todo o histórico”)
+- Spoof de org: `ORGANIZATION_NOT_ALLOWED` (`42501`)
+
+**Retorno (jsonb — sucesso):**
+
+```json
+{
+  "personal": {
+    "myPendingActions": 0,
+    "myOverdueActions": 0,
+    "myPendingAwareness": 0
+  },
+  "operational": {
+    "scopedOpenOccurrences": null,
+    "scopedPendingAwareness": null
+  },
+  "managerial": {
+    "activeOccurrences": null,
+    "pendingEvaluation": null,
+    "activeInterdictions": null,
+    "awaitingValidation": null,
+    "mdhoPendingApproval": null,
+    "overdueActionItems": null,
+    "dueSoonActionItems": null,
+    "openActionPlans": null,
+    "pendingAwarenessOrg": null,
+    "newOccurrencesInPeriod": null,
+    "avgEvaluationTimeMinutes": null,
+    "avgReleaseTimeMinutes": null,
+    "actionCompletionRate": null,
+    "occurrencesByStatusFamily": null,
+    "occurrencesByArea": null
+  }
+}
+```
+
+**Regra de nulidade:** `null` = sem permissão para o indicador; `0` = permissão concedida, valor real zero.
+
+**Erros:** envelope `{ success: false, error: { code, message } }` para `UNAUTHORIZED` / `VALIDATION_ERROR`; exceção SQL `ORGANIZATION_NOT_ALLOWED` para org inválida.
+
+**Schemas / tipos client:** `buildDashboardKpisRpcArgs`, `mapDashboardKpisRpcPayload` em `@safestop/types/dashboard-rpc.ts`.
+
+**Query keys:** `dashboardKeys` em `@safestop/query-keys`.
+
+**Filtros de escopo (área/contrato/contratada):** **client-side** na 3.2 — RPC **não** recebe parâmetros de escopo além de organização e período.
 
 ---
 

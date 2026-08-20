@@ -576,6 +576,12 @@ src/features/occurrences/
 ├── schemas/
 ├── types/
 └── utils/
+
+src/features/dashboard/   ← Sprint 3.2 (KPIs via get_dashboard_kpis)
+├── components/
+├── hooks/
+├── services/
+└── queries/
 ```
 
 Evitar criar uma pasta global enorme com arquivos de funcionalidades não relacionadas.
@@ -709,6 +715,21 @@ O sistema será dividido conceitualmente nos seguintes domínios:
 * áreas;
 * recorrências.
 
+## 10.9 Dashboard operacional (Sprint 3.2)
+
+Módulo oficial de **visão gerencial e operacional** — feature `features/dashboard/` (web + mobile).
+
+| Plataforma | Escopo 3.2 |
+|---|---|
+| **Web** | Página `/` (dashboard) — KPIs N1/N2/N3, gráficos, filtros locais (área/contrato/contratada), drill-down para listagens |
+| **Mobile** | Home — seção “Pendências” (KPIs pessoais + atalhos); **sem** página dashboard completa |
+
+**Contrato de dados:** RPC `get_dashboard_kpis` (`SECURITY DEFINER` + gates `has_permission()` explícitos) — **única** fonte de KPIs agregados; cliente **não** recalcula fórmulas. Tipos: `@safestop/types` (`dashboard-metrics.ts`, `dashboard-rpc.ts`). Query keys: `@safestop/query-keys` (`dashboardKeys`).
+
+**Drill-down ações (atraso/prazo):** listagens client-side filtradas — **sem** RPC `get_dashboard_action_items_attention` na 3.2.
+
+Decisões: `docs/decisions/DASHBOARD-DECISIONS.md` · UI: `docs/decisions/DASHBOARD-UI-SPEC.md`.
+
 ---
 
 # 11. Fluxo de Dados
@@ -725,6 +746,8 @@ Exemplos:
 * listar empresas;
 * consultar histórico;
 * consultar notificações.
+
+**Exceção (Sprint 3.2):** KPIs agregados do dashboard **não** são calculados via SELECT client-side — usar RPC `get_dashboard_kpis` (ver §10.9).
 
 O acesso será limitado pelas políticas de Row Level Security.
 
@@ -745,7 +768,8 @@ Exemplos:
 * registrar IMS;
 * liberar atividade;
 * encerrar ocorrência;
-* enviar notificações.
+* enviar notificações;
+* consultar KPIs agregados do dashboard (`get_dashboard_kpis`).
 
 Essas operações devem ser atômicas sempre que possível.
 

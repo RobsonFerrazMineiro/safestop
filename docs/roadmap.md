@@ -227,6 +227,14 @@ Decisões oficiais: `docs/decisions/ACTION-PLAN-DECISIONS.md` (PO-AP-1…PO-AP-1
 Especificação UI: `docs/decisions/ACTION-PLAN-UI-SPEC.md`.  
 Verificação: `docs/decisions/VERIFICATION-sprint-3.0-action-plan.md`.
 
+### Nota — Sub-sprint 3.1 (Notificações in-app)
+
+A **sub-sprint 3.1** entrega o núcleo de **Comunicação in-app** do roadmap Sprint 3: `notification_events` + `notifications`, dispatch automático nos fluxos 2.0–3.0, central/sino web + mobile, leitura e ciência explícita. **Push**, `notification_deliveries` e `device_tokens` permanecem **fora**. Gestão de `organization_contacts` (web) usa `INSERT`/`UPDATE` RLS — **sem** RPC `upsert_organization_contact`.
+
+Decisões: `docs/decisions/NOTIFICATIONS-DECISIONS.md` · UI: `docs/decisions/NOTIFICATIONS-UI-SPEC.md` · PO-CON-21 fechado em `CONSOLIDATION-DECISIONS.md`.
+
+**Gates:** implementação e contratos documentados; **VERIFICATION-sprint-3.1** (QA G5) ainda **não** registrado — Sprint 3 macro permanece **parcial** até Push e verificação formal, se exigidos pelo critério de gate.
+
 ---
 
 # Sprint 3
@@ -249,6 +257,17 @@ Entregas
 Critério
 
 Todos recebem automaticamente.
+
+**Nota:** sub-sprint **3.1** entrega Notification Events + Notificações internas + Ciência + Histórico + Destinatários automáticos (IN_APP). **Push** permanece pendente na Sprint 3 macro.
+
+### Nota — Sub-sprint 3.2 (Dashboard operacional)
+
+A **sub-sprint 3.2** antecipa o núcleo de **Dashboard** do roadmap Sprint 9: RPC `get_dashboard_kpis`, KPIs pessoais/operacionais/gerenciais, gráficos web, home mobile com pendências, drill-down para listagens. **Sem** materialized views, ranking avançado ou RPC dedicada de atenção a ações.
+
+Decisões: `docs/decisions/DASHBOARD-DECISIONS.md` · UI: `docs/decisions/DASHBOARD-UI-SPEC.md`.  
+Migrations: `20260820180000_dashboard_indexes.sql` · `20260820182000_create_dashboard_kpis_rpc.sql`.
+
+**Gates:** scripts QA `qa-dashboard-3.2.mjs` / `smoke-dashboard-kpis.mjs` existem; **`VERIFICATION-sprint-3.2`** (DOCS pós-G5) **não** registrado — sub-sprint documentada como **entregue (contratos)**; gate QA formal pendente se exigido pelo fluxo de release.
 
 ---
 
@@ -383,6 +402,8 @@ Entregas
 Critério
 
 Dashboard completo.
+
+**Nota:** núcleo operacional (RPC `get_dashboard_kpis`, KPIs N1–N3, gráficos web, home mobile) entregue na **sub-sprint 3.2**. Sprint 9 permanece como escopo ampliado (ranking, views/materialized, métricas avançadas).
 
 ---
 
