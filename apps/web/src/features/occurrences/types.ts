@@ -36,6 +36,10 @@ export type OccurrenceSummaryEnriched = {
   status: OccurrenceStatus;
   severity: OccurrenceSeverity;
   areaName: string | null;
+  areaId: string;
+  unitId: string | null;
+  contractId: string | null;
+  managementDepartmentId: string | null;
   createdAt: string;
   createdByName: string | null;
   contractorOrganizationName: string | null;

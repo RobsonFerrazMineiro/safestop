@@ -26,6 +26,10 @@ type OccurrenceListRow = {
   status: string;
   severity: string;
   created_at: string;
+  area_id: string;
+  unit_id: string | null;
+  contract_id: string | null;
+  management_department_id: string | null;
   areas: AreaJoin | AreaJoin[] | null;
   profiles: ProfileJoin | ProfileJoin[] | null;
   contractor_organizations: OrganizationJoin | OrganizationJoin[] | null;
@@ -130,6 +134,10 @@ function mapSummaryFields(row: OccurrenceListRow): OccurrenceSummaryEnriched | n
     status: row.status,
     severity: row.severity,
     areaName: area?.name ?? null,
+    areaId: row.area_id,
+    unitId: row.unit_id,
+    contractId: row.contract_id,
+    managementDepartmentId: row.management_department_id,
     createdAt: row.created_at,
     createdByName: profile?.full_name ?? null,
     contractorOrganizationName: mapContractorOrganizationName(row),

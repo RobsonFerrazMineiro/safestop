@@ -20,13 +20,21 @@ import {
   OCCURRENCE_STATUS_HISTORY_STALE_TIME_MS,
 } from "../types";
 
-export function useOccurrences(filters: OccurrenceListFilters = {}) {
+export function useOccurrences(
+  filters: OccurrenceListFilters = {},
+  options?: { enabled?: boolean },
+) {
   const { can, isReady: isAuthzReady } = useAuthorization();
   const { activeOrganization, isReady: isOrgReady } = useActiveOrganization();
 
   const organizationId = activeOrganization?.id;
   const canRead = can("occurrence.read");
-  const enabled = isOrgReady && isAuthzReady && organizationId !== undefined && canRead;
+  const enabled =
+    (options?.enabled ?? true) &&
+    isOrgReady &&
+    isAuthzReady &&
+    organizationId !== undefined &&
+    canRead;
 
   const query = useQuery({
     queryKey: occurrenceQueryKeys.list(organizationId ?? "", filters),

@@ -11,6 +11,10 @@ const LIST_SELECT = `
   status,
   severity,
   created_at,
+  area_id,
+  unit_id,
+  contract_id,
+  management_department_id,
   areas ( name ),
   profiles!occurrences_created_by_fkey ( full_name ),
   contractor_organizations:organizations!occurrences_contractor_organization_id_fkey ( name )
