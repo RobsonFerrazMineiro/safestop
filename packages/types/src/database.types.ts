@@ -34,6 +34,266 @@ export type Database = {
   }
   public: {
     Tables: {
+      action_item_attachments: {
+        Row: {
+          action_item_id: string
+          caption: string | null
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          file_size: number
+          id: string
+          mime_type: string
+          organization_id: string
+          original_file_name: string
+          storage_bucket: string
+          storage_path: string
+          updated_at: string
+          upload_status: string
+          uploaded_by: string
+        }
+        Insert: {
+          action_item_id: string
+          caption?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_size: number
+          id?: string
+          mime_type: string
+          organization_id: string
+          original_file_name: string
+          storage_bucket?: string
+          storage_path: string
+          updated_at?: string
+          upload_status?: string
+          uploaded_by: string
+        }
+        Update: {
+          action_item_id?: string
+          caption?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_size?: number
+          id?: string
+          mime_type?: string
+          organization_id?: string
+          original_file_name?: string
+          storage_bucket?: string
+          storage_path?: string
+          updated_at?: string
+          upload_status?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_item_attachments_deleted_by_fkey"
+            columns: ["deleted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_item_attachments_item_org_fk"
+            columns: ["action_item_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "action_items"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "action_item_attachments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_item_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      action_items: {
+        Row: {
+          action_plan_id: string
+          completed_at: string | null
+          completed_by: string | null
+          completion_description: string | null
+          created_at: string
+          description: string | null
+          due_at: string
+          id: string
+          organization_id: string
+          priority: string
+          responsible_member_id: string
+          responsible_organization_id: string
+          status: string
+          title: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+          validation_note: string | null
+        }
+        Insert: {
+          action_plan_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_description?: string | null
+          created_at?: string
+          description?: string | null
+          due_at: string
+          id?: string
+          organization_id: string
+          priority: string
+          responsible_member_id: string
+          responsible_organization_id: string
+          status?: string
+          title: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_note?: string | null
+        }
+        Update: {
+          action_plan_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          completion_description?: string | null
+          created_at?: string
+          description?: string | null
+          due_at?: string
+          id?: string
+          organization_id?: string
+          priority?: string
+          responsible_member_id?: string
+          responsible_organization_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_items_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_items_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_items_plan_org_fk"
+            columns: ["action_plan_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "action_plans"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "action_items_responsible_member_org_fk"
+            columns: ["responsible_member_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "action_items_responsible_organization_id_fkey"
+            columns: ["responsible_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_items_validated_by_fkey"
+            columns: ["validated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      action_plans: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          closed_at: string | null
+          created_at: string
+          created_by: string
+          id: string
+          occurrence_id: string
+          organization_id: string
+          status: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          closed_at?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          occurrence_id: string
+          organization_id: string
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          occurrence_id?: string
+          organization_id?: string
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "action_plans_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_plans_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "action_plans_occurrence_org_fk"
+            columns: ["occurrence_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "occurrences"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "action_plans_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       areas: {
         Row: {
           code: string | null
@@ -516,6 +776,128 @@ export type Database = {
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          event_type: string
+          id: string
+          occurrence_id: string
+          organization_id: string
+          payload: Json
+          priority: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          event_type: string
+          id?: string
+          occurrence_id: string
+          organization_id: string
+          payload?: Json
+          priority: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          event_type?: string
+          id?: string
+          occurrence_id?: string
+          organization_id?: string
+          payload?: Json
+          priority?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_events_occurrence_id_fkey"
+            columns: ["occurrence_id"]
+            isOneToOne: false
+            referencedRelation: "occurrences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          awareness_confirmed_at: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          message: string
+          notification_event_id: string
+          organization_id: string
+          priority: string
+          read_at: string | null
+          recipient_member_id: string
+          requires_awareness: boolean
+          title: string
+        }
+        Insert: {
+          awareness_confirmed_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message: string
+          notification_event_id: string
+          organization_id: string
+          priority: string
+          read_at?: string | null
+          recipient_member_id: string
+          requires_awareness?: boolean
+          title: string
+        }
+        Update: {
+          awareness_confirmed_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message?: string
+          notification_event_id?: string
+          organization_id?: string
+          priority?: string
+          read_at?: string | null
+          recipient_member_id?: string
+          requires_awareness?: boolean
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_notification_event_id_fkey"
+            columns: ["notification_event_id"]
+            isOneToOne: false
+            referencedRelation: "notification_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_member_id_fkey"
+            columns: ["recipient_member_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
             referencedColumns: ["id"]
           },
         ]
@@ -1497,6 +1879,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_action_item: { Args: { p_payload: Json }; Returns: Json }
       approve_mdho_assessment: {
         Args: { p_assessment_id: string }
         Returns: Json
@@ -1509,23 +1892,61 @@ export type Database = {
         Args: { p_organization_id: string }
         Returns: boolean
       }
+      cancel_action_item: { Args: { p_payload: Json }; Returns: Json }
+      complete_action_item_attachment_upload: {
+        Args: { target_attachment_id: string }
+        Returns: Json
+      }
+      complete_action_plan: { Args: { p_plan_id: string }; Returns: Json }
       complete_occurrence_attachment_upload: {
         Args: { target_attachment_id: string }
         Returns: Json
       }
+      confirm_notification_awareness: {
+        Args: { p_notification_id: string }
+        Returns: Json
+      }
+      create_action_plan: { Args: { p_payload: Json }; Returns: Json }
       create_occurrence: { Args: { payload: Json }; Returns: Json }
       create_occurrence_comment: {
         Args: { p_content: string; p_occurrence_id: string }
         Returns: Json
       }
+      create_occurrence_notification_event: {
+        Args: {
+          p_created_by: string
+          p_direct_recipients?: Json
+          p_event_type: string
+          p_exclude_member_id: string
+          p_message: string
+          p_occurrence_id: string
+          p_payload?: Json
+          p_priority: string
+          p_requires_awareness: boolean
+          p_title: string
+        }
+        Returns: string
+      }
       current_organization_ids: { Args: never; Returns: string[] }
+      current_organization_member_id: {
+        Args: { p_organization_id: string }
+        Returns: string
+      }
       current_profile_id: { Args: never; Returns: string }
+      delete_action_item_attachment: {
+        Args: { target_attachment_id: string }
+        Returns: Json
+      }
       delete_occurrence_attachment: {
         Args: { target_attachment_id: string }
         Returns: Json
       }
       delete_occurrence_comment: {
         Args: { p_comment_id: string }
+        Returns: Json
+      }
+      fail_action_item_attachment_upload: {
+        Args: { failure_reason?: string; target_attachment_id: string }
         Returns: Json
       }
       fail_occurrence_attachment_upload: {
@@ -1535,6 +1956,19 @@ export type Database = {
       format_occurrence_status_label: {
         Args: { p_status: string }
         Returns: string
+      }
+      get_action_item_attachment_signed_url: {
+        Args: { target_attachment_id: string }
+        Returns: Json
+      }
+      get_dashboard_kpis: {
+        Args: {
+          p_due_soon_days?: number
+          p_organization_id: string
+          p_period_end?: string
+          p_period_start?: string
+        }
+        Returns: Json
       }
       get_occurrence_attachment_signed_url: {
         Args: { target_attachment_id: string }
@@ -1548,9 +1982,17 @@ export type Database = {
         Args: { permission_code: string; target_organization_id: string }
         Returns: boolean
       }
+      is_action_item_responsible_member: {
+        Args: { p_item_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_platform_admin: { Args: never; Returns: boolean }
       list_mdho_pending_approvals: {
         Args: { p_cursor?: Json; p_limit?: number; p_organization_id: string }
+        Returns: Json
+      }
+      list_my_notifications: {
+        Args: { p_cursor?: string; p_limit?: number; p_organization_id: string }
         Returns: Json
       }
       list_organization_contractors: {
@@ -1564,14 +2006,46 @@ export type Database = {
         }
         Returns: Json
       }
+      lookup_organization_member_id: {
+        Args: { p_organization_id: string; p_profile_id: string }
+        Returns: string
+      }
+      map_contact_type_to_participant_type: {
+        Args: { p_contact_type: string }
+        Returns: string
+      }
+      mark_all_notifications_read: {
+        Args: { p_organization_id: string }
+        Returns: Json
+      }
+      mark_notification_read: {
+        Args: { p_notification_id: string }
+        Returns: Json
+      }
+      prepare_action_item_attachment_upload: {
+        Args: { payload: Json }
+        Returns: Json
+      }
       prepare_occurrence_attachment_upload: {
         Args: { payload: Json }
         Returns: Json
       }
       record_occurrence_decision: { Args: { p_payload: Json }; Returns: Json }
       register_ims_reference: { Args: { p_payload: Json }; Returns: Json }
+      resolve_occurrence_notification_recipients: {
+        Args: {
+          p_event_type: string
+          p_exclude_member_id?: string
+          p_occurrence_id: string
+        }
+        Returns: {
+          organization_member_id: string
+          participant_type: string
+        }[]
+      }
       return_mdho_assessment: { Args: { p_payload: Json }; Returns: Json }
       save_mdho_draft: { Args: { p_payload: Json }; Returns: Json }
+      start_action_item: { Args: { p_item_id: string }; Returns: Json }
       start_mdho_assessment: {
         Args: { p_occurrence_id: string }
         Returns: Json
@@ -1580,15 +2054,19 @@ export type Database = {
         Args: { p_occurrence_id: string }
         Returns: Json
       }
+      submit_action_item: { Args: { p_payload: Json }; Returns: Json }
       submit_mdho_assessment: {
         Args: { p_assessment_id: string }
         Returns: Json
       }
+      update_action_item: { Args: { p_payload: Json }; Returns: Json }
+      update_action_plan: { Args: { p_payload: Json }; Returns: Json }
       update_ims_reference: { Args: { p_payload: Json }; Returns: Json }
       update_occurrence_comment: {
         Args: { p_comment_id: string; p_content: string }
         Returns: Json
       }
+      validate_action_item: { Args: { p_payload: Json }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

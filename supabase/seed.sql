@@ -5,7 +5,7 @@
 --   - catálogo oficial de papéis (docs/database.md §6.1, docs/workflow.md §3);
 --   - catálogo oficial de permissões (docs/database.md §6.2);
 --   - usuários Auth de QA local com perfil via trigger on_auth_user_created;
---   - organizações, unidades, áreas, contratos e vínculos organization_members para cenários QA;
+--   - organizações, unidades, áreas, contratos, organization_contacts e vínculos organization_members para cenários QA;
 --
 -- Stop Work / PP (Sprint 2.1 — A-R2): IDs de teste documentados ao final deste arquivo.
 --
@@ -84,7 +84,7 @@ do update set description = excluded.description;
 -- Matriz oficial papel-permissão (role_permissions)
 -- ----------------------------------------------------------------------------
 -- Aprovada em docs/decisions/RBAC-MATRIX-APPROVED.md (2026-07-15).
--- notification.read omitido (decisão #6) até módulo de notificações.
+-- notification.read atribuído na Sprint 3.1 (ver bloco abaixo após matriz oficial).
 
 insert into public.role_permissions (role_id, permission_id)
 select r.id, p.id
@@ -212,6 +212,15 @@ where r.organization_id is null
   and r.name = 'Administrador da Plataforma'
 on conflict (role_id, permission_id) do nothing;
 
+-- Sprint 3.1: notification.read para todos os papéis oficiais do catálogo (RBAC #6).
+insert into public.role_permissions (role_id, permission_id)
+select r.id, p.id
+from public.roles r
+inner join public.permissions p on p.code = 'notification.read'
+where r.organization_id is null
+  and r.is_system_role = true
+on conflict (role_id, permission_id) do nothing;
+
 -- ----------------------------------------------------------------------------
 -- Organizações de QA local (somente desenvolvimento — 127.0.0.1:54321)
 -- ----------------------------------------------------------------------------
@@ -299,6 +308,13 @@ values
     'QA Unidade Beta',
     'QA-BETA',
     true
+  ),
+  (
+    'e0000000-0000-4000-8000-000000000003',
+    'b0000000-0000-4000-8000-000000000003',
+    'QA Unidade Gamma',
+    'QA-GAMMA',
+    true
   )
 on conflict (id) do update set
   name = excluded.name,
@@ -328,6 +344,14 @@ values
     'e0000000-0000-4000-8000-000000000002',
     'QA Área Beta Operacional',
     'QA-BETA-01',
+    true
+  ),
+  (
+    'f0000000-0000-4000-8000-000000000003',
+    'b0000000-0000-4000-8000-000000000003',
+    'e0000000-0000-4000-8000-000000000003',
+    'QA Área Gamma Operacional',
+    'QA-GAMMA-01',
     true
   )
 on conflict (id) do update set
@@ -805,6 +829,90 @@ where om.id = 'c0000000-0000-4000-8000-000000000012'
 on conflict (organization_member_id, role_id) do nothing;
 
 -- ----------------------------------------------------------------------------
+-- organization_contacts de QA local (Sprint 3.1 / 3.2 — notificações + dashboard)
+-- ----------------------------------------------------------------------------
+-- Habilita resolve_occurrence_notification_recipients e KPIs operacionais
+-- (scopedOpenOccurrences / scopedPendingAwareness) após db reset.
+-- Escopo Alpha: área f...001 + contrato 0100...001 (QA-AB-001).
+
+insert into public.organization_contacts (
+  id,
+  organization_id,
+  organization_member_id,
+  unit_id,
+  area_id,
+  contract_id,
+  contact_type,
+  priority,
+  is_active
+)
+values
+  (
+    '02000000-0000-4000-8000-000000000001',
+    'b0000000-0000-4000-8000-000000000001',
+    'c0000000-0000-4000-8000-000000000010',
+    'e0000000-0000-4000-8000-000000000001',
+    'f0000000-0000-4000-8000-000000000001',
+    '01000000-0000-4000-8000-000000000001',
+    'CONTRACT_INSPECTOR',
+    1,
+    true
+  ),
+  (
+    '02000000-0000-4000-8000-000000000002',
+    'b0000000-0000-4000-8000-000000000001',
+    'c0000000-0000-4000-8000-000000000009',
+    'e0000000-0000-4000-8000-000000000001',
+    'f0000000-0000-4000-8000-000000000001',
+    '01000000-0000-4000-8000-000000000001',
+    'HSE_SUPERVISOR',
+    1,
+    true
+  ),
+  (
+    '02000000-0000-4000-8000-000000000003',
+    'b0000000-0000-4000-8000-000000000001',
+    'c0000000-0000-4000-8000-000000000011',
+    'e0000000-0000-4000-8000-000000000001',
+    'f0000000-0000-4000-8000-000000000001',
+    '01000000-0000-4000-8000-000000000001',
+    'HSE_LEADERSHIP',
+    1,
+    true
+  ),
+  (
+    '02000000-0000-4000-8000-000000000004',
+    'b0000000-0000-4000-8000-000000000001',
+    'c0000000-0000-4000-8000-000000000008',
+    'e0000000-0000-4000-8000-000000000001',
+    'f0000000-0000-4000-8000-000000000001',
+    '01000000-0000-4000-8000-000000000001',
+    'AREA_MANAGER',
+    1,
+    true
+  ),
+  (
+    '02000000-0000-4000-8000-000000000005',
+    'b0000000-0000-4000-8000-000000000003',
+    'c0000000-0000-4000-8000-000000000003',
+    'e0000000-0000-4000-8000-000000000003',
+    'f0000000-0000-4000-8000-000000000003',
+    null,
+    'AREA_MANAGER',
+    1,
+    true
+  )
+on conflict (id) do update set
+  organization_id = excluded.organization_id,
+  organization_member_id = excluded.organization_member_id,
+  unit_id = excluded.unit_id,
+  area_id = excluded.area_id,
+  contract_id = excluded.contract_id,
+  contact_type = excluded.contact_type,
+  priority = excluded.priority,
+  is_active = true;
+
+-- ----------------------------------------------------------------------------
 -- Catálogo MDHO global (Sprint 2.6 — docs/database.md §14.2–14.3)
 -- ----------------------------------------------------------------------------
 -- organization_id NULL = catálogo global (PO-MDHO-8).
@@ -900,13 +1008,23 @@ on conflict (id) do update set
 -- Organizações:
 --   b0000000-0000-4000-8000-000000000001  QA Alpha Contratante (CLIENT)
 --   b0000000-0000-4000-8000-000000000002  QA Beta Contratada (CONTRACTOR)
+--   b0000000-0000-4000-8000-000000000003  QA Gamma Cliente (CLIENT — qa-multi Gestor)
 --   b0000000-0000-4000-8000-000000000006  QA Epsilon Serviços (CONTRACTOR)
 --
--- Unidades / áreas (A2 — intactas):
+-- Unidades / áreas (A2 — intactas + Gamma para MT):
 --   e0000000-0000-4000-8000-000000000001  QA Unidade Alpha
 --   f0000000-0000-4000-8000-000000000001  QA Área Alpha Operacional
 --   e0000000-0000-4000-8000-000000000002  QA Unidade Beta
 --   f0000000-0000-4000-8000-000000000002  QA Área Beta Operacional
+--   e0000000-0000-4000-8000-000000000003  QA Unidade Gamma
+--   f0000000-0000-4000-8000-000000000003  QA Área Gamma Operacional
+--
+-- organization_contacts (Sprint 3.1/3.2 — notificações + dashboard operacional):
+--   02000000-…001  qa-fiscal     (Alpha, CONTRACT_INSPECTOR, área/contrato Alpha)
+--   02000000-…002  qa-supervisor (Alpha, HSE_SUPERVISOR)
+--   02000000-…003  qa-lideranca  (Alpha, HSE_LEADERSHIP)
+--   02000000-…004  qa-gestor     (Alpha, AREA_MANAGER — DASH scoped KPIs)
+--   02000000-…005  qa-multi      (Gamma, AREA_MANAGER — MT org Gamma)
 --
 -- Contratos (A-R2 — empresa envolvida):
 --   01000000-0000-4000-8000-000000000001  Alpha → Beta (contractor_organization_id Beta)
@@ -916,6 +1034,11 @@ on conflict (id) do update set
 --   SW-01 Alpha + qa-field: org Alpha, area f...001, contractor b...002, contract 0100...001 (opcional)
 --   SW-01 Beta + qa-multi:  org Beta,  area f...002, contractor b...006, contract 0100...002 (opcional)
 --   SW-02 qa-gestor: occurrence.read sem occurrence.create (Alpha)
+--
+-- Cenários Dashboard QA (Sprint 3.2 — DASH-*):
+--   DASH-01 qa-gestor + org Alpha: operational.scopedOpenOccurrences = 0 (não null) via contact 020…004
+--   DASH-02 qa-multi + org Gamma: área f...003 disponível; scoped KPIs via contact 020…005
+--   DASH-03 qa-field + org Alpha: operational.* = null (sem organization_contacts)
 --
 -- Cenários Timeline QA (Sprint 2.3 — TL-*; fixtures via RPC/scripts, não seed estático):
 --   TL-01 qa-field + org Alpha: timeline com OCCURRENCE_CREATED após create_occurrence
