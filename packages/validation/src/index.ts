@@ -76,3 +76,9 @@ export {
   type UpdateActionPlanInput,
   type ValidateActionItemInput,
 } from "./action-plan";
+export {
+  createOrganizationContactSchema,
+  updateOrganizationContactSchema,
+  type CreateOrganizationContactInput,
+  type UpdateOrganizationContactInput,
+} from "./organization-contact";

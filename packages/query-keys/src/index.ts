@@ -6,6 +6,22 @@ export { hseApprovalQueryKeys } from "./hse-approval";
 
 export { actionPlanKeys, ACTION_PLAN_SCOPE } from "./action-plan";
 
+export { notificationQueryKeys, NOTIFICATIONS_SCOPE } from "./notification";
+
+export { organizationContactQueryKeys, ORGANIZATION_CONTACTS_SCOPE } from "./organization-contact";
+
+export {
+  getNotificationInvalidationTargets,
+  NOTIFICATION_INVALIDATION_MATRIX,
+  NOTIFICATION_INVALIDATION_TARGETS,
+  NOTIFICATION_MUTATION_DOMAINS,
+  resolveNotificationInvalidationKeys,
+} from "./notification-invalidation";
+export type {
+  NotificationInvalidationTarget,
+  NotificationMutationDomain,
+} from "./notification-invalidation";
+
 export {
   getActionPlanInvalidationTargets,
   ACTION_PLAN_INVALIDATION_MATRIX,
@@ -27,3 +43,5 @@ export {
   resolveOccurrenceInvalidationKeys,
 } from "./invalidation-matrix";
 export type { OccurrenceInvalidationTarget, OccurrenceMutationDomain } from "./invalidation-matrix";
+
+export { DASHBOARD_SCOPE, dashboardKeys } from "./dashboard";
