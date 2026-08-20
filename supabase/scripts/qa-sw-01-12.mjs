@@ -194,15 +194,26 @@ async function main() {
       history.length === 1 &&
       history[0].from_status === null &&
       history[0].to_status === "PARALISACAO_PREVENTIVA";
-    const detailSrc = readFileSync(
-      join(REPO_ROOT, "apps/web/src/features/stop-work/components/stop-work-detail-container.tsx"),
+    const leadershipSrc = readFileSync(
+      join(REPO_ROOT, "apps/web/src/features/stop-work/components/leadership-decision-section.tsx"),
       "utf8",
     );
-    const readOnly = !/decis|liber|cancel|ciência|foto/i.test(detailSrc);
-    if (detail.length === 1 && timelineOk && readOnly) {
-      record("SW-06", "PASS", "detalhe 1 linha; timeline 1 entrada; UI read-only");
+    const decisionUiGated =
+      leadershipSrc.includes("if (!shouldRenderSection)") &&
+      leadershipSrc.includes("vaContext.canRecordVerEAgir") &&
+      leadershipSrc.includes("ioContext.canConfirmInterdiction");
+    if (detail.length === 1 && timelineOk && decisionUiGated) {
+      record(
+        "SW-06",
+        "PASS",
+        "detalhe 1 linha; timeline 1 entrada; CTAs de decisão gated por permissão",
+      );
     } else {
-      record("SW-06", "FAIL", `detail=${detail.length} history=${JSON.stringify(history)} readOnly=${readOnly}`);
+      record(
+        "SW-06",
+        "FAIL",
+        `detail=${detail.length} history=${JSON.stringify(history)} decisionUiGated=${decisionUiGated}`,
+      );
     }
   } else {
     record("SW-06", "FAIL", "sem PP de SW-01");
