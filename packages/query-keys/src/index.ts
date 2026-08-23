@@ -45,3 +45,5 @@ export {
 export type { OccurrenceInvalidationTarget, OccurrenceMutationDomain } from "./invalidation-matrix";
 
 export { DASHBOARD_SCOPE, dashboardKeys } from "./dashboard";
+
+export { REPORT_SCOPE, reportKeys } from "./report";

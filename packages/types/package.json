@@ -12,9 +12,11 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "clean": "node -e \"const fs=require('fs');['dist','tsconfig.tsbuildinfo'].forEach((p)=>fs.rmSync(p,{recursive:true,force:true}))\""
   },
   "devDependencies": {
-    "@safestop/config": "workspace:*"
+    "@safestop/config": "workspace:*",
+    "vitest": "^4.1.11"
   }
 }
