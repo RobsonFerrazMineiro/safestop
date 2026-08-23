@@ -1750,6 +1750,54 @@ export type Database = {
         }
         Relationships: []
       }
+      report_export_audit: {
+        Row: {
+          created_at: string
+          export_format: string
+          exported_by: string
+          filters: Json
+          id: string
+          organization_id: string
+          report_type: string
+          row_count: number
+        }
+        Insert: {
+          created_at?: string
+          export_format: string
+          exported_by: string
+          filters?: Json
+          id?: string
+          organization_id: string
+          report_type: string
+          row_count: number
+        }
+        Update: {
+          created_at?: string
+          export_format?: string
+          exported_by?: string
+          filters?: Json
+          id?: string
+          organization_id?: string
+          report_type?: string
+          row_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_export_audit_exported_by_fkey"
+            columns: ["exported_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_export_audit_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -1987,12 +2035,63 @@ export type Database = {
         Returns: boolean
       }
       is_platform_admin: { Args: never; Returns: boolean }
+      list_action_items_report: {
+        Args: {
+          p_cursor?: Json
+          p_due_soon_days?: number
+          p_due_soon_only?: boolean
+          p_limit?: number
+          p_organization_id: string
+          p_overdue_only?: boolean
+          p_period_end?: string
+          p_period_start?: string
+          p_responsible_member_id?: string
+          p_sort_direction?: string
+          p_sort_field?: string
+          p_status?: string[]
+        }
+        Returns: Json
+      }
+      list_awareness_report: {
+        Args: {
+          p_cursor?: Json
+          p_limit?: number
+          p_occurrence_id?: string
+          p_organization_id: string
+          p_pending_only?: boolean
+          p_period_end?: string
+          p_period_start?: string
+          p_recipient_member_id?: string
+          p_sort_direction?: string
+          p_sort_field?: string
+        }
+        Returns: Json
+      }
       list_mdho_pending_approvals: {
         Args: { p_cursor?: Json; p_limit?: number; p_organization_id: string }
         Returns: Json
       }
       list_my_notifications: {
         Args: { p_cursor?: string; p_limit?: number; p_organization_id: string }
+        Returns: Json
+      }
+      list_occurrences_report: {
+        Args: {
+          p_area_id?: string
+          p_contract_id?: string
+          p_contractor_organization_id?: string
+          p_cursor?: Json
+          p_has_ims?: boolean
+          p_limit?: number
+          p_organization_id: string
+          p_period_end?: string
+          p_period_start?: string
+          p_search?: string
+          p_severity?: string[]
+          p_sort_direction?: string
+          p_sort_field?: string
+          p_status?: string[]
+        }
         Returns: Json
       }
       list_organization_contractors: {
@@ -2005,6 +2104,16 @@ export type Database = {
           target_organization_id: string
         }
         Returns: Json
+      }
+      log_report_export: {
+        Args: {
+          p_export_format: string
+          p_filters: Json
+          p_organization_id: string
+          p_report_type: string
+          p_row_count: number
+        }
+        Returns: undefined
       }
       lookup_organization_member_id: {
         Args: { p_organization_id: string; p_profile_id: string }
@@ -2032,6 +2141,10 @@ export type Database = {
       }
       record_occurrence_decision: { Args: { p_payload: Json }; Returns: Json }
       register_ims_reference: { Args: { p_payload: Json }; Returns: Json }
+      resolve_member_display_name: {
+        Args: { p_organization_member_id: string }
+        Returns: string
+      }
       resolve_occurrence_notification_recipients: {
         Args: {
           p_event_type: string
@@ -2042,6 +2155,14 @@ export type Database = {
           organization_member_id: string
           participant_type: string
         }[]
+      }
+      resolve_organization_display_name: {
+        Args: { p_organization_id: string }
+        Returns: string
+      }
+      resolve_profile_display_name: {
+        Args: { p_profile_id: string }
+        Returns: string
       }
       return_mdho_assessment: { Args: { p_payload: Json }; Returns: Json }
       save_mdho_draft: { Args: { p_payload: Json }; Returns: Json }
