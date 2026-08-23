@@ -1,11 +1,52 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useState, useSyncExternalStore } from "react";
 
 import { AuthServiceError } from "@/lib/auth/errors";
 import { useAuth } from "@/hooks/use-auth";
 
-export default function LoginPage() {
+function subscribeToClientMount(): () => void {
+  return () => undefined;
+}
+
+function getClientSnapshot(): boolean {
+  return true;
+}
+
+function getServerSnapshot(): boolean {
+  return false;
+}
+
+function useIsClientMounted(): boolean {
+  return useSyncExternalStore(subscribeToClientMount, getClientSnapshot, getServerSnapshot);
+}
+
+function LoginPageShell() {
+  return (
+    <main className="flex flex-col gap-6">
+      <header className="text-center">
+        <h1 className="text-3xl font-bold sm:text-4xl">SafeStop</h1>
+        <p className="mt-2 text-base text-gray-300">
+          Entre com suas credenciais para acessar o painel.
+        </p>
+      </header>
+
+      <div aria-hidden="true" className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2 text-left">
+          <span className="text-sm font-medium text-gray-200">E-mail</span>
+          <div className="h-10 animate-pulse rounded-lg border border-gray-700 bg-gray-900" />
+        </div>
+        <div className="flex flex-col gap-2 text-left">
+          <span className="text-sm font-medium text-gray-200">Senha</span>
+          <div className="h-10 animate-pulse rounded-lg border border-gray-700 bg-gray-900" />
+        </div>
+        <div className="h-10 animate-pulse rounded-lg bg-orange-500/60" />
+      </div>
+    </main>
+  );
+}
+
+function LoginForm() {
   const { signIn, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,9 +88,11 @@ export default function LoginPage() {
           <input
             autoComplete="email"
             className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
+            data-testid="login-email"
             disabled={isLoading || isSubmitting}
             id="email"
             name="email"
+            suppressHydrationWarning
             onChange={(event) => setEmail(event.target.value)}
             required
             type="email"
@@ -64,9 +107,11 @@ export default function LoginPage() {
           <input
             autoComplete="current-password"
             className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
+            data-testid="login-password"
             disabled={isLoading || isSubmitting}
             id="password"
             name="password"
+            suppressHydrationWarning
             onChange={(event) => setPassword(event.target.value)}
             required
             type="password"
@@ -75,13 +120,18 @@ export default function LoginPage() {
         </div>
 
         {errorMessage ? (
-          <p className="rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+          <p
+            className="rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-200"
+            data-testid="login-error"
+            role="alert"
+          >
             {errorMessage}
           </p>
         ) : null}
 
         <button
           className="rounded-lg bg-orange-500 px-4 py-2 text-base font-semibold text-white transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
+          data-testid="login-submit"
           disabled={isLoading || isSubmitting}
           type="submit"
         >
@@ -90,4 +140,14 @@ export default function LoginPage() {
       </form>
     </main>
   );
+}
+
+export default function LoginPage() {
+  const mounted = useIsClientMounted();
+
+  if (!mounted) {
+    return <LoginPageShell />;
+  }
+
+  return <LoginForm />;
 }

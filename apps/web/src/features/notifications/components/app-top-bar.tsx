@@ -64,6 +64,11 @@ export function AppTopBar() {
                 Responsáveis
               </Link>
             ) : null}
+            {can("report.read") ? (
+              <Link className={navLinkClass(pathname.startsWith("/reports"))} href="/reports">
+                Relatórios
+              </Link>
+            ) : null}
           </nav>
         </div>
 
