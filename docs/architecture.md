@@ -44,8 +44,8 @@ O painel web é complementar e será direcionado principalmente para:
 * gestão;
 * acompanhamento;
 * administração;
-* indicadores;
-* relatórios.
+* indicadores (Dashboard 3.2);
+* relatórios gerenciais (Relatórios 3.3 — Web).
 
 ---
 
@@ -201,8 +201,8 @@ O painel web será utilizado para:
 * administrar empresas;
 * administrar áreas;
 * administrar listas do MDHO;
-* visualizar indicadores;
-* emitir relatórios.
+* visualizar indicadores (Dashboard 3.2 — implementado);
+* emitir relatórios gerenciais (Relatórios 3.3 — Web, `report.read`).
 
 ---
 
@@ -410,7 +410,8 @@ Responsável pela experiência de gestão.
 
 Principais funcionalidades:
 
-* dashboard;
+* dashboard (KPIs — Sprint 3.2);
+* relatórios gerenciais (Sprint 3.3 — `/reports/*`);
 * fila de ocorrências;
 * avaliação da liderança;
 * acompanhamento de Ver e Agir;
@@ -428,7 +429,7 @@ Principais funcionalidades:
 * contratos;
 * configurações;
 * listas configuráveis;
-* relatórios.
+* relatórios gerenciais (Sprint 3.3 — `/reports/*`, gate `report.read`).
 
 A versão web também deverá funcionar em navegadores mobile, mas não substituirá o aplicativo de campo.
 
@@ -732,6 +733,27 @@ Decisões: `docs/decisions/DASHBOARD-DECISIONS.md` · UI: `docs/decisions/DASHBO
 
 ---
 
+## 10.10 Relatórios gerenciais (Sprint 3.3)
+
+Módulo oficial de **relatórios exportáveis** — feature `features/reports/` (**Web only**).
+
+| Rota | Relatório |
+|---|---|
+| `/reports` | Hub |
+| `/reports/occurrences` | Ocorrências / Paralisações |
+| `/reports/action-items` | Plano de Ação |
+| `/reports/awareness` | Ciência |
+
+**Gate:** `report.read` — sem permissão → forbidden.
+
+**Contrato de dados:** RPCs `list_occurrences_report`, `list_action_items_report`, `list_awareness_report` (paginação keyset); exportação CSV/XLSX no client + `log_report_export` → `report_export_audit`.
+
+**Tipos:** `@safestop/types/report.ts` — `OccurrenceReportFilters`, `ActionItemReportFilters`, `AwarenessReportFilters`, `OccurrenceReportRow`, `ActionItemReportRow`, `AwarenessReportRow`, `ReportCursor`.
+
+Decisões: `docs/decisions/REPORTS-DECISIONS.md` · UI: `docs/decisions/REPORTS-UI-SPEC.md`.
+
+---
+
 # 11. Fluxo de Dados
 
 ## 11.1 Consultas simples
@@ -748,6 +770,8 @@ Exemplos:
 * consultar notificações.
 
 **Exceção (Sprint 3.2):** KPIs agregados do dashboard **não** são calculados via SELECT client-side — usar RPC `get_dashboard_kpis` (ver §10.9).
+
+**Exceção (Sprint 3.3):** listagens de relatórios gerenciais **não** usam SELECT ad hoc — usar RPCs `list_*_report` (ver §10.10).
 
 O acesso será limitado pelas políticas de Row Level Security.
 
@@ -769,7 +793,9 @@ Exemplos:
 * liberar atividade;
 * encerrar ocorrência;
 * enviar notificações;
-* consultar KPIs agregados do dashboard (`get_dashboard_kpis`).
+* consultar KPIs agregados do dashboard (`get_dashboard_kpis`);
+* listar relatórios gerenciais (`list_*_report`);
+* registrar auditoria de exportação (`log_report_export`).
 
 Essas operações devem ser atômicas sempre que possível.
 

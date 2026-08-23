@@ -226,7 +226,7 @@ Utilizar quando existir:
 - cálculos;
 - validações próximas ao banco.
 
-### Catálogo RPC operacional (Sprints 2.0–3.2)
+### Catálogo RPC operacional (Sprints 2.0–3.3)
 
 Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberação/encerramento ocorrência e notificações **não** existem nesta entrega (permissões reservadas — `docs/database.md` §6.2).
 
@@ -271,6 +271,10 @@ Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberaçã
 | `confirm_notification_awareness` | 3.1 | `notification.confirm_awareness` (destinatário) | abaixo |
 | `list_my_notifications` | 3.1 | `notification.read` | abaixo |
 | `get_dashboard_kpis` | 3.2 | gates internos (`occurrence.read`, `report.read`, `action_plan.*`, …) | abaixo |
+| `list_occurrences_report` | 3.3 | `report.read` + escopo ocorrência | abaixo |
+| `list_action_items_report` | 3.3 | `report.read` + escopo plano | abaixo |
+| `list_awareness_report` | 3.3 | `report.read` (gate explícito) | abaixo |
+| `log_report_export` | 3.3 | `report.read` | abaixo |
 
 \*Remoção de comentário por supervisor usa `occurrence.cancel` na matriz RBAC aprovada — a permissão permanece **reservada** para cancelamento formal de ocorrência (PO-CON-20); não implica RPC `cancel_occurrence` na 2.9.
 
@@ -280,7 +284,9 @@ Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberaçã
 
 **Dashboard (3.2):** KPIs agregados **somente** via `get_dashboard_kpis` — drill-down de ações usa listagens client-side filtradas; **sem** RPC `get_dashboard_action_items_attention`.
 
-**Fora do catálogo operacional 3.2:** `submit_action_plan_for_occurrence_validation`, `submit_correction`, `validate_correction`, `release_occurrence`, `close_occurrence`, `cancel_occurrence`, Push/`notification_deliveries`, `upsert_organization_contact` (contatos: `INSERT`/`UPDATE` direto em `organization_contacts` via RLS), `get_dashboard_action_items_attention`.
+**Relatórios (3.3):** listagens paginadas via `list_*_report`; exportação CSV/XLSX montada no client + `log_report_export` após sucesso; **sem** RPC de exportação server-side.
+
+**Fora do catálogo operacional 3.3:** `submit_action_plan_for_occurrence_validation`, `submit_correction`, `validate_correction`, `release_occurrence`, `close_occurrence`, `cancel_occurrence`, Push/`notification_deliveries`, `upsert_organization_contact`, `get_dashboard_action_items_attention`, export PDF.
 
 ### Fundação / avaliação — referências rápidas
 
@@ -745,6 +751,93 @@ KPIs agregados de estoque e fluxo. Contrato: `docs/decisions/DASHBOARD-DECISIONS
 **Query keys:** `dashboardKeys` em `@safestop/query-keys`.
 
 **Filtros de escopo (área/contrato/contratada):** **client-side** na 3.2 — RPC **não** recebe parâmetros de escopo além de organização e período.
+
+---
+
+### RPCs — Relatórios gerenciais (Sprint 3.3)
+
+Listagens paginadas e auditoria de exportação. Contrato: `docs/decisions/REPORTS-DECISIONS.md` (PO-REP-1…6). Tipos: `@safestop/types/report.ts`.
+
+**Permissão comum:** `report.read` na organização (Gate G — migration `20260823200000_fix_report_rpc_require_report_read.sql`). Escopo de linhas: `can_access_occurrence` (Ocorrências/Plano) ou agregação controlada (Ciência).
+
+**Paginação:** cursor keyset jsonb `{ "sortValue": string, "id": uuid }` — **não** offset. Retorno:
+
+```json
+{
+  "items": [],
+  "nextCursor": { "sortValue": "...", "id": "uuid" } | null,
+  "hasNext": false
+}
+```
+
+**Erros (exceções SQL):** `UNAUTHORIZED` (`28000`) · `VALIDATION_ERROR` (`22023`) · `ORGANIZATION_NOT_ALLOWED` / `PERMISSION_DENIED` (`42501`) · `INVALID_SORT_FIELD` · `INVALID_SORT_DIRECTION`
+
+#### `list_occurrences_report(...)`
+
+| Parâmetro | Tipo | Default | Notas |
+|---|---|---|---|
+| `p_organization_id` | uuid | — | obrigatório |
+| `p_period_start` / `p_period_end` | timestamptz | null | filtra `occurred_at` |
+| `p_area_id` / `p_contract_id` / `p_contractor_organization_id` | uuid | null | escopo |
+| `p_status` / `p_severity` | text[] | null | arrays |
+| `p_has_ims` | boolean | null | true/false/null |
+| `p_search` | text | null | contains em `public_code` |
+| `p_sort_field` | text | `occurred_at` | allowlist: `public_code`, `occurred_at`, `status`, `severity`, `area` |
+| `p_sort_direction` | text | `desc` | `asc` \| `desc` |
+| `p_cursor` | jsonb | null | keyset |
+| `p_limit` | integer | 20 | 1–100 |
+
+- Modo: `SECURITY INVOKER`
+- Item: `OccurrenceReportRow` (camelCase — 19 campos incl. `statusFamily`, `createdByName`, …)
+
+#### `list_action_items_report(...)`
+
+| Parâmetro | Tipo | Default | Notas |
+|---|---|---|---|
+| `p_organization_id` | uuid | — | obrigatório |
+| `p_period_start` / `p_period_end` | timestamptz | null | filtra `due_at` |
+| `p_responsible_member_id` | uuid | null | |
+| `p_status` | text[] | null | |
+| `p_overdue_only` / `p_due_soon_only` | boolean | null | flags |
+| `p_due_soon_days` | integer | 3 | 1–30 |
+| `p_sort_field` | text | `due_at` | allowlist: `due_at`, `status`, `title` |
+| `p_sort_direction` | text | `asc` | |
+| `p_cursor` / `p_limit` | jsonb / integer | null / 20 | |
+
+- Modo: `SECURITY INVOKER`
+- Item: `ActionItemReportRow` — **sem** `publicCode` da ocorrência (apenas `occurrenceId`)
+
+#### `list_awareness_report(...)`
+
+| Parâmetro | Tipo | Default | Notas |
+|---|---|---|---|
+| `p_organization_id` | uuid | — | obrigatório |
+| `p_period_start` / `p_period_end` | timestamptz | null | filtra `created_at` |
+| `p_occurrence_id` / `p_recipient_member_id` | uuid | null | |
+| `p_pending_only` | boolean | null | ciência pendente |
+| `p_sort_field` | text | `created_at` | allowlist: `created_at`, `event_type` |
+| `p_sort_direction` | text | `desc` | |
+| `p_cursor` / `p_limit` | jsonb / integer | null / 20 | |
+
+- Modo: `SECURITY DEFINER` — gate `report.read` na **primeira** linha
+- Item: `AwarenessReportRow` — leitura (`readAt`) ≠ ciência (`awarenessConfirmedAt`)
+
+#### `log_report_export(p_organization_id uuid, p_report_type text, p_export_format text, p_filters jsonb, p_row_count integer)`
+
+- Permissão: `report.read`
+- Modo: `SECURITY DEFINER`
+- Retorno: `void` (sucesso silencioso)
+- `p_report_type`: `OCCURRENCES` \| `ACTION_ITEMS` \| `AWARENESS`
+- `p_export_format`: `CSV` \| `XLSX`
+- Chamada **após** montar arquivo; falha de log **não** bloqueia download (PO-REP-6)
+
+**Exportação client:** `REPORT_EXPORT_MAX_ROWS` = 10.000 — acima disso, erro tratado na UI.
+
+**Schemas client:** `buildListOccurrencesReportRpcArgs`, `buildListActionItemsReportRpcArgs`, `buildListAwarenessReportRpcArgs`, `buildLogReportExportRpcArgs` em `@safestop/types/report.ts`.
+
+**Query keys:** `reportKeys` em `@safestop/query-keys`.
+
+**Rotas Web:** `/reports`, `/reports/occurrences`, `/reports/action-items`, `/reports/awareness` — feature `features/reports/`.
 
 ---
 

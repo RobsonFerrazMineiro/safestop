@@ -21,6 +21,8 @@ CONTRIBUTING.md
 # Arquivos gerados automaticamente — não formatar manualmente.
 **/expo-env.d.ts
 packages/types/src/database.types.ts
+**/test-results/**
+**/playwright-report/**
 
 # Arquivos especiais do Cursor (rules/agents/prompts) podem usar formatação
 # própria não compatível com Prettier.

@@ -176,6 +176,7 @@ notification_deliveries
 device_tokens
 
 audit_events
+report_export_audit
 ```
 
 ---
@@ -390,7 +391,7 @@ report.read
 audit.read
 ```
 
-### Operacionais vs reservadas (Sprints 2.9–3.2 — PO-CON-20)
+### Operacionais vs reservadas (Sprints 2.9–3.3 — PO-CON-20)
 
 Catálogo no seed pode incluir códigos **ainda sem fluxo de produto** nas sub-sprints anteriores. Marcar como **reservadas** evita tratar seed como feature entregue.
 
@@ -404,7 +405,7 @@ Catálogo no seed pode incluir códigos **ainda sem fluxo de produto** nas sub-s
 | `ims_reference.register` · `ims_reference.update` | **Operacional** (registro **manual** — sem integração IMS) |
 | `action_plan.create` · `action_plan.manage` · `action_plan.validate` | **Operacional** (Sprint 3.0 — Plano de Ação IO) |
 | `notification.read` · `notification.confirm_awareness` | **Operacional** (Sprint 3.1 — notificações in-app + ciência) |
-| `report.read` | **Operacional** (Sprint 3.2 — seção `pendingAwarenessOrg` em `get_dashboard_kpis`) |
+| `report.read` | **Operacional** (Sprint 3.2 — `pendingAwarenessOrg` em `get_dashboard_kpis`; Sprint 3.3 — `list_*_report`, `log_report_export`, SELECT em `report_export_audit`) |
 | `occurrence.validate_correction` | **Reservada** — validação/correção futura |
 | `occurrence.release` | **Reservada** — liberação futura |
 | `occurrence.cancel` | **Reservada** — cancelamento formal futuro (sem RPC operacional) |
@@ -1651,6 +1652,50 @@ OCCURRENCE_CANCELLED
 
 ---
 
+## 18.2 `report_export_audit` (Sprint 3.3)
+
+Auditoria **dedicada** a exportações de relatório — **não** substitui `audit_events` genérico.
+
+**Migration:** `20260822194000_create_report_export_audit.sql`
+
+### Campos
+
+```text
+id
+organization_id
+exported_by
+report_type
+export_format
+filters
+row_count
+created_at
+```
+
+### Domínios (`CHECK`)
+
+| Coluna | Valores |
+|---|---|
+| `report_type` | `OCCURRENCES` · `ACTION_ITEMS` · `AWARENESS` |
+| `export_format` | `CSV` · `XLSX` |
+| `row_count` | `>= 0` |
+
+### Regras
+
+- Escrita **somente** via RPC `log_report_export` (`SECURITY DEFINER`) — cliente **não** faz `INSERT` direto.
+- SELECT: `report.read` na organização (ou platform admin).
+- Trilha **não apagável** nesta sprint (sem `DELETE` para authenticated).
+- `filters`: snapshot jsonb dos filtros ativos no momento da exportação.
+
+### Índice
+
+| Índice | Colunas | Uso |
+|---|---|---|
+| `report_export_audit_organization_id_created_at_idx` | `(organization_id, created_at desc)` | Histórico por org |
+
+Decisões: `docs/decisions/REPORTS-DECISIONS.md` (PO-REP-6).
+
+---
+
 # 19. Relacionamentos Principais
 
 ```text
@@ -1670,7 +1715,8 @@ organizations
     ├── contracts
     ├── occurrences
     ├── mdho_categories
-    └── audit_events
+    ├── audit_events
+    └── report_export_audit
 
 units
     └── areas
@@ -2003,6 +2049,35 @@ Migration `20260820180000_dashboard_indexes.sql`:
 **Não criados (EXPLAIN não justificou na escala de teste):** índice composto adicional em `occurrences(organization_id, status)` — índices existentes (`organization_id_status_idx`, `occurrences_status_idx`) já cobrem consultas relevantes; demais métricas usam índices pré-existentes (`action_items_responsible_member_idx`, `action_plans_org_status_idx`, `idx_mdho_assessments_org_status`, `notifications_recipient_read_created_idx`).
 
 Views / materialized views / cache: **fora** 3.2 — priorizar RPC única antes de otimizações adicionais.
+
+---
+
+## 25.3 Relatórios gerenciais (Sprint 3.3)
+
+**Implementado:** três relatórios paginados (Web) + auditoria de exportação. Contrato: `docs/decisions/REPORTS-DECISIONS.md` · tipos: `@safestop/types/report.ts` (`OccurrenceReportFilters`, `ActionItemReportFilters`, `AwarenessReportFilters`, `*ReportRow`, `ReportCursor`).
+
+### RPCs operacionais
+
+| RPC | Modo | Permissão gate | Notas |
+|---|---|---|---|
+| `list_occurrences_report` | `SECURITY INVOKER` | `report.read` + escopo `can_access_occurrence` | Paginação keyset; 19 colunas camelCase |
+| `list_action_items_report` | `SECURITY INVOKER` | `report.read` + escopo plano | `isOverdue`/`isDueSoon` = fórmulas dashboard |
+| `list_awareness_report` | `SECURITY DEFINER` | `report.read` (1ª linha) | Agregação org-wide de `notifications` |
+| `log_report_export` | `SECURITY DEFINER` | `report.read` | Após montar arquivo; retorno `void` |
+
+**Helpers (exibição cross-tenant, não expõem PII além de nome):** `resolve_profile_display_name`, `resolve_organization_display_name`, `resolve_member_display_name` — usados pelas RPCs de listagem; **não** são contrato client direto.
+
+**Paginação comum:** retorno `{ items, nextCursor: { sortValue, id }, hasNext }`; `p_limit` 1–100 (default 20). Exportação client-side até `REPORT_EXPORT_MAX_ROWS` (10.000).
+
+### Índices (Sprint 3.3)
+
+Migration `20260822180000_reports_indexes.sql`:
+
+| Índice | Tabela | Colunas | Uso |
+|---|---|---|---|
+| `occurrences_organization_id_contract_id_created_at_idx` | `occurrences` | `(organization_id, contract_id, created_at)` | Filtro por contrato em `list_occurrences_report` |
+
+---
 
 ---
 

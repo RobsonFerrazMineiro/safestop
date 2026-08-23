@@ -2407,6 +2407,69 @@ Encerradas
 
 ---
 
+# Tabelas de Relatório
+
+Relatórios gerenciais (Web) usam tabela densa — não lista de cards operacionais.
+
+**Implementado — Sprint 3.3:** hub `/reports` + três telas; feature `features/reports/`.
+
+Referência de implementação: `organization-contacts-table` + `docs/decisions/REPORTS-UI-SPEC.md`.
+
+## Princípios
+
+- Uma linha = um registro do domínio (ocorrência, ação ou notificação de ciência).
+- Colunas classificadas: visíveis por padrão, opcionais, somente exportação.
+- Não exibir 15+ colunas ao mesmo tempo.
+- Ordenação apenas em campos allowlisted pela API.
+- Status e flags críticos usam texto e/ou ícone — nunca só cor.
+- Tema dark; ações e links no accent laranja do produto (`#F97316`).
+
+## Estrutura
+
+```text
+Caption (sr-only)
+thead → th scope=col
+tbody → tr (drill-down quando houver rota)
+```
+
+Container com `overflow-x-auto` e borda discreta. Em tablet, esconder opcionais primeiro e permitir scroll horizontal antes de quebrar o layout.
+
+## Estados da tabela
+
+- Loading: skeleton de linhas (não spinner de tela cheia).
+- Empty: nenhum registro no sistema.
+- No-results: filtros ativos sem correspondência (copy distinta).
+- Error / Forbidden: conforme spec do relatório.
+
+---
+
+# Exportação
+
+Exportação de relatórios é ação explícita do usuário com auditoria (Sprint 3.3 — `log_report_export` / `report_export_audit`).
+
+## Formatos
+
+- CSV
+- XLSX
+
+Sempre duas opções nomeadas no menu — nunca um único botão “Exportar” ambíguo.
+
+## Estados
+
+- Idle
+- Gerando arquivo (loading no controle, não fullscreen)
+- Erro recuperável com nova tentativa
+- Sucesso: download no navegador
+
+## Regras de produto
+
+- Respeitar o mesmo filtro da tela.
+- Colunas export-only entram no arquivo mesmo se ocultas na tabela.
+- Limite máximo de linhas definido pelo contrato técnico (não inventar na UI).
+- PDF fora do catálogo aprovado nesta fase.
+
+---
+
 # Formulários
 
 Todo formulário deve seguir os princípios:

@@ -269,6 +269,18 @@ Migrations: `20260820180000_dashboard_indexes.sql` · `20260820182000_create_das
 
 **Gates:** scripts QA `qa-dashboard-3.2.mjs` / `smoke-dashboard-kpis.mjs` existem; **`VERIFICATION-sprint-3.2`** (DOCS pós-G5) **não** registrado — sub-sprint documentada como **entregue (contratos)**; gate QA formal pendente se exigido pelo fluxo de release.
 
+### Nota — Sub-sprint 3.3 (Relatórios gerenciais) — **concluída**
+
+A **sub-sprint 3.3** entrega três relatórios Web P0 (Ocorrências, Plano de Ação, Ciência): RPCs paginadas, exportação CSV/XLSX, auditoria `report_export_audit`, hub `/reports`. **Mobile fora** (PO-REP-5).
+
+Decisões: [`docs/decisions/REPORTS-DECISIONS.md`](decisions/REPORTS-DECISIONS.md) · UI: [`docs/decisions/REPORTS-UI-SPEC.md`](decisions/REPORTS-UI-SPEC.md).
+
+Migrations: `20260822190000_reports_indexes.sql` · `20260822191000_list_occurrences_report_rpc.sql` · `20260822192000_list_action_items_report_rpc.sql` · `20260822193000_list_awareness_report_rpc.sql` · `20260822194000_create_report_export_audit.sql` · `20260823180000_fix_report_resolve_helpers_authorization.sql` · `20260823200000_fix_report_rpc_require_report_read.sql`.
+
+Validação: smokes `smoke-list-*-report.mjs`, `smoke-report-export-audit.mjs`, `qa-reports-3.3-web.mjs`, E2E `apps/web/e2e/reports.spec.ts`.
+
+**Gate I (DOCS):** contratos documentados em `database.md`, `api.md`, `architecture.md` — liberado para commit da sprint.
+
 ---
 
 # Sprint 4
