@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { CollapsibleSection } from "@/components/collapsible-section";
 import type { OccurrenceDetailsEnriched } from "@/features/occurrences/types";
 import { useMdhoAssessment } from "@/features/mdho/hooks/use-mdho-assessment";
 import { shouldShowMdhoSection } from "@/features/mdho/types";
@@ -88,15 +89,23 @@ export function ImsReferenceSection({
       ) : null}
 
       {!showConflict && hasRegisteredCode ? (
-        <ImsReferenceCard
-          canUpdate={context.canUpdate}
-          isOffline={context.isOffline}
-          occurrence={occurrence}
-          organizationId={organizationId}
-          onConflict={() => {
-            setShowConflict(true);
-          }}
-        />
+        <CollapsibleSection
+          summary={
+            <span className="font-mono text-sm font-medium text-gray-200">
+              {occurrence.imsReferenceCode}
+            </span>
+          }
+        >
+          <ImsReferenceCard
+            canUpdate={context.canUpdate}
+            isOffline={context.isOffline}
+            occurrence={occurrence}
+            organizationId={organizationId}
+            onConflict={() => {
+              setShowConflict(true);
+            }}
+          />
+        </CollapsibleSection>
       ) : null}
 
       {!context.canRegister && !context.canUpdate && !hasRegisteredCode ? (

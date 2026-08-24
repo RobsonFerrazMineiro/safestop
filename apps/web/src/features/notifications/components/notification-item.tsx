@@ -19,6 +19,7 @@ type NotificationItemProps = {
   compact?: boolean;
   canConfirmAwareness: boolean;
   isOffline: boolean;
+  isConfirming: boolean;
   onMarkRead: (notificationId: string) => void;
   onConfirmAwareness: (notificationId: string) => void;
   onAwarenessForbidden?: () => void;
@@ -42,6 +43,7 @@ export function NotificationItem({
   compact = false,
   canConfirmAwareness,
   isOffline,
+  isConfirming,
   onMarkRead,
   onConfirmAwareness,
   onAwarenessForbidden,
@@ -134,7 +136,7 @@ export function NotificationItem({
       {pendingAwareness && canConfirmAwareness ? (
         <button
           className="w-full rounded-md bg-orange-500 px-3 py-2 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50 sm:w-auto sm:self-start"
-          disabled={isOffline}
+          disabled={isOffline || isConfirming}
           type="button"
           onClick={() => {
             setActionError(null);
@@ -145,7 +147,7 @@ export function NotificationItem({
             handleConfirmAwareness();
           }}
         >
-          Confirmar ciência
+          {isConfirming ? "Confirmando…" : "Confirmar ciência"}
         </button>
       ) : null}
 
@@ -184,10 +186,10 @@ export function NotificationItem({
             </button>
             <button
               className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50"
-              disabled={isOffline}
+              disabled={isOffline || isConfirming}
               type="submit"
             >
-              Confirmar ciência
+              {isConfirming ? "Confirmando…" : "Confirmar ciência"}
             </button>
           </div>
         </form>

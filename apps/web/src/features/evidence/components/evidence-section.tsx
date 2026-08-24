@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+
+import { useOnlineStatus } from "@/hooks/use-online-status";
 
 import { useDeleteEvidence, useOccurrenceEvidence, useUploadEvidence } from "../hooks/use-evidence";
 import type { EvidenceListItem } from "../types";
@@ -22,27 +24,7 @@ export function EvidenceSection({ occurrenceId }: EvidenceSectionProps) {
   const [deleteItem, setDeleteItem] = useState<EvidenceListItem | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
-  const [isOffline, setIsOffline] = useState(
-    typeof navigator !== "undefined" ? !navigator.onLine : false,
-  );
-
-  useEffect(() => {
-    function handleOnline() {
-      setIsOffline(false);
-    }
-
-    function handleOffline() {
-      setIsOffline(true);
-    }
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
+  const { isOffline } = useOnlineStatus();
 
   const handleSelectFiles = useCallback(
     async (files: FileList | File[]) => {

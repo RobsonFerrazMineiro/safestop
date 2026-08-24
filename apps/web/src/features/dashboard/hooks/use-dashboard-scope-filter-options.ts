@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { TENANT_QUERY_KEY_PREFIX } from "@safestop/query-keys";
 import { DASHBOARD_STALE_TIME_MS } from "@safestop/types";
 
 import { getOrganizationAreas } from "@/features/occurrences/services/get-organization-areas";
@@ -14,21 +15,31 @@ export function useDashboardScopeFilterOptions() {
   const enabled = organizationId.length > 0;
 
   const areasQuery = useQuery({
-    queryKey: ["dashboard", organizationId, "scope-filter-areas"] as const,
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "dashboard", "scope-filter-areas"] as const,
     queryFn: () => getOrganizationAreas(organizationId),
     enabled,
     staleTime: DASHBOARD_STALE_TIME_MS,
   });
 
   const contractsQuery = useQuery({
-    queryKey: ["dashboard", organizationId, "scope-filter-contracts"] as const,
+    queryKey: [
+      TENANT_QUERY_KEY_PREFIX,
+      organizationId,
+      "dashboard",
+      "scope-filter-contracts",
+    ] as const,
     queryFn: () => getOrganizationContracts(organizationId),
     enabled,
     staleTime: DASHBOARD_STALE_TIME_MS,
   });
 
   const contractorsQuery = useQuery({
-    queryKey: ["dashboard", organizationId, "scope-filter-contractors"] as const,
+    queryKey: [
+      TENANT_QUERY_KEY_PREFIX,
+      organizationId,
+      "dashboard",
+      "scope-filter-contractors",
+    ] as const,
     queryFn: () => getContractorOrganizations(organizationId),
     enabled,
     staleTime: DASHBOARD_STALE_TIME_MS,

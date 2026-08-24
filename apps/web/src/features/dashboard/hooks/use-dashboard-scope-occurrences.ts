@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { TENANT_QUERY_KEY_PREFIX } from "@safestop/query-keys";
 import { DASHBOARD_STALE_TIME_MS } from "@safestop/types";
 
 import { useAuthorization } from "@/features/authorization";
@@ -33,7 +34,7 @@ export function useDashboardScopeOccurrences(scopeFilters: DashboardScopeFilters
     hasActiveDashboardScopeFilters(scopeFilters);
 
   const query = useQuery({
-    queryKey: ["dashboard", organizationId, "scope-occurrences"] as const,
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "dashboard", "scope-occurrences"] as const,
     queryFn: () => getDashboardScopeOccurrences(organizationId),
     enabled,
     staleTime: DASHBOARD_STALE_TIME_MS,

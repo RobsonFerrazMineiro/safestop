@@ -26,6 +26,32 @@ export function MdhoConflictCard({ isRefreshing, onRefresh }: MdhoConflictCardPr
   );
 }
 
+type MdhoErrorStateProps = {
+  message?: string;
+  onRetry: () => void;
+};
+
+export function MdhoErrorState({
+  message = "Não foi possível carregar a Avaliação Técnica (MDHO).",
+  onRetry,
+}: MdhoErrorStateProps) {
+  return (
+    <div
+      className="flex flex-col items-start gap-2 rounded-lg border border-red-900/40 bg-red-950/20 p-4"
+      role="alert"
+    >
+      <p className="text-sm text-red-300">{message}</p>
+      <button
+        className="text-sm text-orange-400 hover:text-orange-300"
+        type="button"
+        onClick={onRetry}
+      >
+        Tentar novamente
+      </button>
+    </div>
+  );
+}
+
 type MdhoOfflineNoticeProps = {
   message?: string;
 };

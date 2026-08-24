@@ -1,5 +1,5 @@
 export { NotificationBell } from "./components/notification-bell";
-export { AppTopBar } from "./components/app-top-bar";
+export { NotificationAwarenessBanner } from "./components/notification-awareness-banner";
 export { NotificationCenterContainer } from "./components/notification-center-container";
 export { NotificationItem } from "./components/notification-item";
 

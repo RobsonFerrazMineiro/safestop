@@ -119,9 +119,18 @@ export function ActionPlanSection({
       {!showConflict && isLoading ? <ActionPlanLoadingSkeleton /> : null}
 
       {!showConflict && !isLoading && isPlanError ? (
-        <p className="text-sm text-red-400" role="alert">
-          Não foi possível carregar o Plano de Ação.
-        </p>
+        <div className="flex flex-col items-start gap-2" role="alert">
+          <p className="text-sm text-red-400">Não foi possível carregar o Plano de Ação.</p>
+          <button
+            className="text-sm text-orange-400 hover:text-orange-300"
+            type="button"
+            onClick={() => {
+              void refetchPlan();
+            }}
+          >
+            Tentar novamente
+          </button>
+        </div>
       ) : null}
 
       {!showConflict && !isLoading && !isPlanError && !hasPlan && fullContext.canCreate ? (

@@ -111,6 +111,7 @@ export function NotificationBell() {
 
       <NotificationPopover
         canConfirmAwareness={canConfirmAwareness}
+        isConfirming={confirmMutation.isPending}
         isError={isError}
         isLoading={isLoading}
         isMarkingAll={markAllMutation.isPending}

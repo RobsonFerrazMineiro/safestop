@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { TENANT_QUERY_KEY_PREFIX } from "@safestop/query-keys";
 import type { OccurrenceListFilters } from "@safestop/types";
 
 import { useAuthorization } from "@/features/authorization";
@@ -50,7 +51,12 @@ export function useStopWorkListView(params: StopWorkListViewParams) {
     params.dashboardScope === DASHBOARD_LIST_SCOPE.operational && !isAttentionView;
 
   const openActionPlanIdsQuery = useQuery({
-    queryKey: ["stop-work", organizationId, "open-action-plan-occurrence-ids"] as const,
+    queryKey: [
+      TENANT_QUERY_KEY_PREFIX,
+      organizationId,
+      "stop-work",
+      "open-action-plan-occurrence-ids",
+    ] as const,
     queryFn: () => getOpenActionPlanOccurrenceIds(organizationId),
     enabled: needsOpenActionPlanIds && organizationId.length > 0,
     staleTime: 30_000,
@@ -58,8 +64,9 @@ export function useStopWorkListView(params: StopWorkListViewParams) {
 
   const operationalScopeQuery = useQuery({
     queryKey: [
-      "stop-work",
+      TENANT_QUERY_KEY_PREFIX,
       organizationId,
+      "stop-work",
       organizationMemberId,
       "operational-contact-scopes",
     ] as const,

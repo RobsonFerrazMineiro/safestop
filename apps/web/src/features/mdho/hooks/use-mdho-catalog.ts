@@ -32,5 +32,6 @@ export function useMdhoCatalog(enabled: boolean) {
     isError: query.isError,
     error: query.error,
     isReady: queryEnabled && query.isSuccess,
+    refetch: query.refetch,
   };
 }

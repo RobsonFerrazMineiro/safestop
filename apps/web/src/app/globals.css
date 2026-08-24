@@ -1,9 +1,23 @@
 @import "tailwindcss";
 
 :root {
+  /* Color tokens — Seção O, UX-CONVERGENCE-UI-SPEC (espelha @safestop/ui/tokens/colors) */
   --background: #0f1115;
+  --surface: #171a21;
+  --surface-muted: #20242d;
+  --surface-elevated: #2a303b;
+  --border: #2e3440;
   --foreground: #f3f4f6;
+  --foreground-muted: #9ca3af;
   --primary: #f97316;
+  --primary-hover: #ea580c;
+  --primary-active: #c2410c;
+  --destructive: #dc2626;
+  --success: #16a34a;
+  --warning: #facc15;
+  --info: #2563eb;
+  /* Disabled: 40% opacidade sobre token base — usar com color-mix() ou rgba no consumidor */
+  --disabled-opacity: 0.4;
 }
 
 body {

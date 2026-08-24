@@ -20,6 +20,7 @@ type NotificationPopoverProps = {
   isError: boolean;
   isOffline: boolean;
   canConfirmAwareness: boolean;
+  isConfirming: boolean;
   isMarkingAll: boolean;
   onMarkAllRead: () => void;
   onMarkRead: (notificationId: string) => void;
@@ -35,6 +36,7 @@ export function NotificationPopover({
   isError,
   isOffline,
   canConfirmAwareness,
+  isConfirming,
   isMarkingAll,
   onMarkAllRead,
   onMarkRead,
@@ -106,6 +108,7 @@ export function NotificationPopover({
                 key={item.id}
                 canConfirmAwareness={canConfirmAwareness}
                 compact
+                isConfirming={isConfirming}
                 isOffline={isOffline}
                 item={item}
                 onConfirmAwareness={onConfirmAwareness}

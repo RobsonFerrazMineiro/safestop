@@ -27,6 +27,7 @@
   "dependencies": {
     "@safestop/query-keys": "workspace:*",
     "@safestop/types": "workspace:*",
+    "@safestop/ui": "workspace:*",
     "@safestop/validation": "workspace:*",
     "@supabase/ssr": "0.6.1",
     "@supabase/supabase-js": "2.110.2",

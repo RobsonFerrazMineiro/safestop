@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { CollapsibleSection } from "@/components/collapsible-section";
 import { shouldShowImsReferenceSection } from "@/features/ims-reference";
 import type { OccurrenceDetailsEnriched } from "@/features/occurrences/types";
 import { useInvalidateMdhoCaches } from "../hooks/use-invalidate-mdho-caches";
@@ -12,7 +13,12 @@ import { shouldShowMdhoSection } from "../types";
 import { MdhoForm } from "./mdho-form";
 import { MdhoReviewPanel } from "./mdho-review-panel";
 import { MdhoStartCard } from "./mdho-start-card";
-import { MdhoConflictCard, MdhoLoadingSkeleton, MdhoReturnedBanner } from "./mdho-states";
+import {
+  MdhoConflictCard,
+  MdhoErrorState,
+  MdhoLoadingSkeleton,
+  MdhoReturnedBanner,
+} from "./mdho-states";
 import { MdhoSummary } from "./mdho-summary";
 
 type MdhoSectionProps = {
@@ -29,11 +35,20 @@ export function MdhoSection({
   isRefreshing,
 }: MdhoSectionProps) {
   const sectionVisible = shouldShowMdhoSection(occurrence);
-  const { assessment, isLoading, isFetching, refetch } = useMdhoAssessment(
-    occurrence.id,
-    sectionVisible,
-  );
-  const { categories, isLoading: isCatalogLoading } = useMdhoCatalog(sectionVisible);
+  const {
+    assessment,
+    isLoading,
+    isError: isAssessmentError,
+    isFetching,
+    refetch,
+  } = useMdhoAssessment(occurrence.id, sectionVisible);
+  const {
+    categories,
+    isLoading: isCatalogLoading,
+    isError: isCatalogError,
+    refetch: refetchCatalog,
+  } = useMdhoCatalog(sectionVisible);
+  const isError = isAssessmentError || isCatalogError;
   const context = useMdhoContext(occurrence, assessment);
   const invalidateCaches = useInvalidateMdhoCaches();
   const [showConflict, setShowConflict] = useState(false);
@@ -71,7 +86,16 @@ export function MdhoSection({
 
       {!showConflict && (isLoading || isCatalogLoading) ? <MdhoLoadingSkeleton /> : null}
 
-      {!showConflict && !isLoading && !isCatalogLoading ? (
+      {!showConflict && !isLoading && !isCatalogLoading && isError ? (
+        <MdhoErrorState
+          onRetry={() => {
+            void refetch();
+            void refetchCatalog();
+          }}
+        />
+      ) : null}
+
+      {!showConflict && !isLoading && !isCatalogLoading && !isError ? (
         <>
           {!assessment && context.canStartMdho ? (
             <MdhoStartCard
@@ -120,11 +144,19 @@ export function MdhoSection({
           ) : null}
 
           {assessment?.status === "APPROVED" ? (
-            <MdhoSummary
-              assessment={assessment}
-              categories={categories}
-              hideImsHint={shouldShowImsReferenceSection(occurrence)}
-            />
+            <CollapsibleSection
+              summary={
+                <span className="text-sm font-medium text-green-300">
+                  MDHO aprovado — {assessment.approvedByName ?? "—"}
+                </span>
+              }
+            >
+              <MdhoSummary
+                assessment={assessment}
+                categories={categories}
+                hideImsHint={shouldShowImsReferenceSection(occurrence)}
+              />
+            </CollapsibleSection>
           ) : null}
         </>
       ) : null}

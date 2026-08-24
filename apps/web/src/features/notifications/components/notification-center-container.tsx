@@ -203,6 +203,7 @@ export function NotificationCenterContainer() {
             <NotificationItem
               key={item.id}
               canConfirmAwareness={canConfirmAwareness}
+              isConfirming={confirmMutation.isPending}
               isOffline={isOffline}
               item={item}
               onConfirmAwareness={handleConfirmAwareness}

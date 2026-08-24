@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { TENANT_QUERY_KEY_PREFIX } from "@safestop/query-keys";
 import { DASHBOARD_STALE_TIME_MS } from "@safestop/types";
 
 import { getOrganizationAreas } from "@/features/occurrences/services/get-organization-areas";
@@ -15,28 +16,28 @@ export function useReportScopeFilterOptions() {
   const enabled = organizationId.length > 0;
 
   const areasQuery = useQuery({
-    queryKey: ["reports", organizationId, "scope-areas"] as const,
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "reports", "scope-areas"] as const,
     queryFn: () => getOrganizationAreas(organizationId),
     enabled,
     staleTime: DASHBOARD_STALE_TIME_MS,
   });
 
   const contractsQuery = useQuery({
-    queryKey: ["reports", organizationId, "scope-contracts"] as const,
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "reports", "scope-contracts"] as const,
     queryFn: () => getOrganizationContracts(organizationId),
     enabled,
     staleTime: DASHBOARD_STALE_TIME_MS,
   });
 
   const contractorsQuery = useQuery({
-    queryKey: ["reports", organizationId, "scope-contractors"] as const,
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "reports", "scope-contractors"] as const,
     queryFn: () => getContractorOrganizations(organizationId),
     enabled,
     staleTime: DASHBOARD_STALE_TIME_MS,
   });
 
   const membersQuery = useQuery({
-    queryKey: ["reports", organizationId, "members"] as const,
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "reports", "members"] as const,
     queryFn: () => getOrganizationMembers(organizationId),
     enabled,
     staleTime: DASHBOARD_STALE_TIME_MS,

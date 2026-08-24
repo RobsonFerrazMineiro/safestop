@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+import { CollapsibleSection } from "@/components/collapsible-section";
 import { useRequirePermission } from "@/features/authorization";
 import { EvidenceSection } from "@/features/evidence";
 import {
@@ -12,6 +13,7 @@ import {
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { OccurrenceTimeline } from "@/features/timeline";
 import { InterdicaoBanner } from "@/features/interdicao-oficial";
+import { NotificationAwarenessBanner } from "@/features/notifications";
 import { ImsReferenceSection } from "@/features/ims-reference";
 import { ActionPlanSection, shouldShowActionPlanSection } from "@/features/action-plan";
 import { MdhoSection } from "@/features/mdho";
@@ -52,7 +54,14 @@ export function StopWorkDetailContainer() {
   }
 
   if (isError) {
-    return <StopWorkError message={error instanceof Error ? error.message : undefined} />;
+    return (
+      <StopWorkError
+        message={error instanceof Error ? error.message : undefined}
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
   }
 
   if (isNotFound || !stopWork) {
@@ -97,6 +106,9 @@ export function StopWorkDetailContainer() {
         <h1 className="text-3xl font-bold text-gray-100">{stopWork.title}</h1>
       </header>
 
+      {organizationId ? (
+        <NotificationAwarenessBanner occurrenceId={stopWork.id} organizationId={organizationId} />
+      ) : null}
       {stopWork.status === "INTERDICAO_CONFIRMADA" ? <InterdicaoBanner /> : null}
       {!(shouldShowActionPlanSection(stopWork) && stopWork.status === "EM_TRATATIVA") ? (
         <OperationalDeadEndBanner status={stopWork.status} />
@@ -121,13 +133,20 @@ export function StopWorkDetailContainer() {
         ) : null}
       </section>
 
-      <section className="flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/40 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Registro</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DetailField label="Registrado por" value={stopWork.createdByName ?? "—"} />
-          <DetailField label="Ocorrido em" value={formatDateTime(stopWork.occurredAt)} />
-          <DetailField label="Paralisado em" value={formatDateTime(stopWork.stoppedAt)} />
-        </div>
+      <section className="rounded-lg border border-gray-800 bg-gray-900/40 p-4">
+        <CollapsibleSection
+          summary={
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+              Registro
+            </h2>
+          }
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <DetailField label="Registrado por" value={stopWork.createdByName ?? "—"} />
+            <DetailField label="Ocorrido em" value={formatDateTime(stopWork.occurredAt)} />
+            <DetailField label="Paralisado em" value={formatDateTime(stopWork.stoppedAt)} />
+          </div>
+        </CollapsibleSection>
       </section>
 
       <EvidenceSection occurrenceId={stopWork.id} />

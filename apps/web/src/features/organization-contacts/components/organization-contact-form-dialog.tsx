@@ -8,6 +8,7 @@ import {
 } from "@safestop/types";
 
 import { useQuery } from "@tanstack/react-query";
+import { TENANT_QUERY_KEY_PREFIX } from "@safestop/query-keys";
 
 import { getOrganizationAreasForContacts } from "../services/get-organization-areas";
 import { getOrganizationContracts } from "../services/get-organization-contracts";
@@ -60,25 +61,25 @@ export function OrganizationContactFormDialog({
   const updateMutation = useUpdateOrganizationContact(organizationId);
 
   const membersQuery = useQuery({
-    queryKey: ["organization-contacts-form", organizationId, "members"],
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "organization-contacts-form", "members"],
     queryFn: () => getOrganizationMembersForContacts(organizationId),
     enabled: isOpen,
   });
 
   const unitsQuery = useQuery({
-    queryKey: ["organization-contacts-form", organizationId, "units"],
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "organization-contacts-form", "units"],
     queryFn: () => getOrganizationUnits(organizationId),
     enabled: isOpen,
   });
 
   const areasQuery = useQuery({
-    queryKey: ["organization-contacts-form", organizationId, "areas"],
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "organization-contacts-form", "areas"],
     queryFn: () => getOrganizationAreasForContacts(organizationId),
     enabled: isOpen,
   });
 
   const contractsQuery = useQuery({
-    queryKey: ["organization-contacts-form", organizationId, "contracts"],
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "organization-contacts-form", "contracts"],
     queryFn: () => getOrganizationContracts(organizationId),
     enabled: isOpen,
   });
