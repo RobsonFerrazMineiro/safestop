@@ -1,4 +1,14 @@
-// Intentionally empty. Cross-platform design tokens and shared UI contracts
-// will be added when they are actually reused by both apps/mobile and
-// apps/web, following docs/architecture.md (section 7.5) and 012-monorepo.mdc.
-export {};
+export { colors, DISABLED_OPACITY, withDisabledOpacity, type ColorToken } from "./tokens/colors";
+
+export { spacing, spacingScale, type SpacingToken } from "./tokens/spacing";
+
+export {
+  radius,
+  radiusScale,
+  type RadiusComponentToken,
+  type RadiusScaleToken,
+} from "./tokens/radius";
+
+export { typography, type TypographyStyle, type TypographyToken } from "./tokens/typography";
+
+export { componentStates, type ComponentState } from "./tokens/states";

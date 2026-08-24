@@ -255,6 +255,9 @@ importers:
       '@safestop/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@safestop/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@safestop/validation':
         specifier: workspace:*
         version: link:../../packages/validation
@@ -343,6 +346,9 @@ importers:
       '@safestop/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@safestop/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@safestop/validation':
         specifier: workspace:*
         version: link:../../packages/validation

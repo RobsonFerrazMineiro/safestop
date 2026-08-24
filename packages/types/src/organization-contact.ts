@@ -135,7 +135,7 @@ export function mapOrganizationContact(row: OrganizationContactRow): Organizatio
 
 export function canManageOrganizationContacts(context: OrganizationContactGuardContext): boolean {
   if (context.isPlatformAdmin) {
-    return false;
+    return true;
   }
 
   return context.permissions.organizationManage;
