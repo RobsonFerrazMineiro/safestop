@@ -1,7 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import {
   isMdhoRpcConflictError,
   isMdhoRpcSelfApprovalError,
@@ -44,8 +64,6 @@ export function HseApprovalActions({
   const [isReturnOpen, setIsReturnOpen] = useState(false);
   const [returnReason, setReturnReason] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
-  const approveDialogRef = useRef<HTMLDialogElement>(null);
-  const returnDialogRef = useRef<HTMLDialogElement>(null);
 
   const approveMutation = useHseApproveMdhoAssessment(occurrenceId, organizationId);
   const returnMutation = useHseReturnMdhoAssessment(occurrenceId, organizationId);
@@ -53,20 +71,6 @@ export function HseApprovalActions({
   const isPending = approveMutation.isPending || returnMutation.isPending;
   const trimmedReturnReason = returnReason.trim();
   const returnReasonLength = trimmedReturnReason.length;
-
-  useEffect(() => {
-    const dialog = approveDialogRef.current;
-    if (!dialog) return;
-    if (isApproveOpen && !dialog.open) dialog.showModal();
-    if (!isApproveOpen && dialog.open) dialog.close();
-  }, [isApproveOpen]);
-
-  useEffect(() => {
-    const dialog = returnDialogRef.current;
-    if (!dialog) return;
-    if (isReturnOpen && !dialog.open) dialog.showModal();
-    if (!isReturnOpen && dialog.open) dialog.close();
-  }, [isReturnOpen]);
 
   async function handleApprove() {
     setActionError(null);
@@ -141,21 +145,22 @@ export function HseApprovalActions({
       {canApprove || canReturn ? (
         <div className="flex flex-col gap-2 sm:flex-row">
           {canReturn ? (
-            <button
-              className="w-full rounded-md border border-red-700 px-4 py-3 text-sm font-medium text-red-200 hover:bg-red-950/40 disabled:opacity-50"
+            <Button
+              className="w-full"
               disabled={isPending || isOffline}
               type="button"
+              variant="outline"
               onClick={() => {
                 setActionError(null);
                 setIsReturnOpen(true);
               }}
             >
               Devolver MDHO
-            </button>
+            </Button>
           ) : null}
           {canApprove ? (
-            <button
-              className="w-full rounded-md bg-orange-500 px-4 py-3 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50"
+            <Button
+              className="w-full"
               disabled={isPending || isOffline}
               type="button"
               onClick={() => {
@@ -164,104 +169,89 @@ export function HseApprovalActions({
               }}
             >
               Aprovar MDHO
-            </button>
+            </Button>
           ) : null}
         </div>
       ) : null}
 
-      <dialog
-        ref={approveDialogRef}
-        className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsApproveOpen(false);
+      <AlertDialog
+        onOpenChange={(open) => {
+          setIsApproveOpen(open);
         }}
+        open={isApproveOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleApprove();
-          }}
-        >
-          <h2 className="text-lg font-semibold">Aprovar Avaliação Técnica (MDHO)?</h2>
-          <p className="text-sm text-gray-400">
-            A avaliação ficará imutável. A ocorrência seguirá para aguardar o registro da referência
-            IMS.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Aprovar Avaliação Técnica (MDHO)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A avaliação ficará imutável. A ocorrência seguirá para aguardar o registro da
+              referência IMS.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isPending}
               type="button"
-              onClick={() => {
-                setIsApproveOpen(false);
+              onClick={(event) => {
+                event.preventDefault();
+                void handleApprove();
               }}
             >
-              Cancelar
-            </button>
-            <button
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50"
-              disabled={isPending}
-              type="submit"
-            >
               Aprovar MDHO
-            </button>
-          </div>
-        </form>
-      </dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <dialog
-        ref={returnDialogRef}
-        className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsReturnOpen(false);
+      <Dialog
+        onOpenChange={(open) => {
+          setIsReturnOpen(open);
         }}
+        open={isReturnOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleReturn();
-          }}
-        >
-          <h2 className="text-lg font-semibold">Devolver Avaliação Técnica (MDHO)?</h2>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Devolver Avaliação Técnica (MDHO)?</DialogTitle>
+            <DialogDescription>Informe o motivo da devolução.</DialogDescription>
+          </DialogHeader>
           <label className="flex flex-col gap-2">
-            <span className="text-sm text-gray-300">Motivo da devolução *</span>
-            <textarea
-              className="min-h-24 w-full rounded-md border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-gray-100"
+            <span className="text-sm">Motivo da devolução *</span>
+            <Textarea
+              className="min-h-24"
               maxLength={RETURN_REASON_MAX_LENGTH}
               value={returnReason}
               onChange={(event) => {
                 setReturnReason(event.target.value);
               }}
             />
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-muted-foreground">
               {returnReasonLength}/{RETURN_REASON_MAX_LENGTH} (mín. {RETURN_REASON_MIN_LENGTH})
             </span>
           </label>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+          <DialogFooter>
+            <Button
               type="button"
+              variant="outline"
               onClick={() => {
                 setIsReturnOpen(false);
               }}
             >
               Cancelar
-            </button>
-            <button
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
+            </Button>
+            <Button
               disabled={isPending || returnReasonLength < RETURN_REASON_MIN_LENGTH}
-              type="submit"
+              type="button"
+              variant="destructive"
+              onClick={() => {
+                void handleReturn();
+              }}
             >
               Devolver MDHO
-            </button>
-          </div>
-        </form>
-      </dialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

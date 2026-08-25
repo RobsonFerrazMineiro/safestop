@@ -78,14 +78,16 @@ canReadNotifications = can("notification.read")
 
 canConfirmAwareness = can("notification.confirm_awareness")
 
-canManageContacts = can("organization.manage") && !isPlatformAdmin
+canManageContacts = can("organization.manage") || isPlatformAdmin
   // PO-NOTIF-1 — sem permissão nova
+  // Revisado na Sprint 3.4 (QA-B2): Platform Admin passa a ter acesso completo
+  // (gestão global), revertendo a exclusão original `&& !isPlatformAdmin`.
 ```
 
 | Papel | Ver notif | Confirmar ciência | Gerir contatos | Ver envolvidos |
 |---|---|---|---|---|
 | Papéis com `notification.read` | Sim | Se `confirm_awareness` | Se `organization.manage` | Se `occurrence.read` |
-| Platform Admin | Conforme permissões efetivas | Conforme wildcard | **Não** (`organization.manage` operacional) | RO se `occurrence.read` |
+| Platform Admin | Conforme permissões efetivas | Conforme wildcard | **Sim** — gestão global (revisado Sprint 3.4, QA-B2) | RO se `occurrence.read` |
 
 ---
 

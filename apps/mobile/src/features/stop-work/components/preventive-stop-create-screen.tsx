@@ -1,10 +1,11 @@
 import type { CreatePreventiveStopInput } from "@safestop/validation";
 import { createPreventiveStopSchema } from "@safestop/validation";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -15,13 +16,15 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { colors } from "@safestop/ui";
 
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
-import { OccurrenceSyncStatusBadge } from "@/features/occurrences/components/occurrence-sync-status-badge";
+import { usePreventiveStopDraftNavigation } from "@/features/navigation/context/preventive-stop-draft-navigation-context";
+import { confirmPreventiveStopDraftLeave } from "@/features/navigation/utils/confirm-preventive-stop-draft-leave";
 import { useOccurrenceAreas } from "@/features/occurrences/hooks/use-occurrence-areas";
 import { useOccurrenceContracts } from "@/features/occurrences/hooks/use-occurrence-contracts";
 import { useOccurrenceContractors } from "@/features/occurrences/hooks/use-occurrence-contractors";
@@ -35,6 +38,7 @@ import { SeveritySelector } from "./severity-selector";
 import { useCreatePreventiveStop } from "../hooks/use-create-preventive-stop";
 import { usePreventiveStopDraft } from "../hooks/use-preventive-stop-draft";
 import { usePreventiveStopGeo } from "../hooks/use-preventive-stop-geo";
+import { hasPreventiveStopDraftContent } from "../stores/preventive-stop-draft-store";
 
 const DEFAULT_VALUES: CreatePreventiveStopInput = {
   areaId: "",
@@ -100,6 +104,7 @@ export function PreventiveStopCreateScreen() {
   const {
     draft,
     updateDraft,
+    flushDraft,
     clearDraft,
     isHydrated,
     hasLocalDraft,
@@ -108,6 +113,7 @@ export function PreventiveStopCreateScreen() {
   } = usePreventiveStopDraft();
   const geo = usePreventiveStopGeo();
   const isOffline = useIsOffline();
+  const { registerDraftLeaveGuard } = usePreventiveStopDraftNavigation();
 
   const [formError, setFormError] = useState<string | null>(null);
   const [successResult, setSuccessResult] = useState<SuccessResult | null>(null);
@@ -175,6 +181,58 @@ export function PreventiveStopCreateScreen() {
   useEffect(() => {
     autoContractRef.current = null;
   }, [selectedContractorId]);
+
+  const leaveToStopWorkList = useCallback(() => {
+    router.replace(stopWorkRoute);
+  }, [router]);
+
+  const persistDraftBeforeLeave = useCallback(async () => {
+    await flushDraft(getValues());
+  }, [flushDraft, getValues]);
+
+  const confirmLeaveIfNeeded = useCallback(
+    (onConfirm: () => void) => {
+      if (!hasPreventiveStopDraftContent(getValues())) {
+        onConfirm();
+        return;
+      }
+
+      confirmPreventiveStopDraftLeave(async () => {
+        await persistDraftBeforeLeave();
+        onConfirm();
+      });
+    },
+    [getValues, persistDraftBeforeLeave],
+  );
+
+  useEffect(() => {
+    registerDraftLeaveGuard({
+      shouldConfirmLeave: () => hasPreventiveStopDraftContent(getValues()),
+      persistBeforeLeave: persistDraftBeforeLeave,
+    });
+
+    const onBackPress = () => {
+      if (!hasPreventiveStopDraftContent(getValues())) {
+        return false;
+      }
+
+      confirmLeaveIfNeeded(leaveToStopWorkList);
+      return true;
+    };
+
+    const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+
+    return () => {
+      registerDraftLeaveGuard(null);
+      subscription.remove();
+    };
+  }, [
+    confirmLeaveIfNeeded,
+    getValues,
+    leaveToStopWorkList,
+    persistDraftBeforeLeave,
+    registerDraftLeaveGuard,
+  ]);
 
   if (!isAuthReady || !isOrgReady) {
     return (
@@ -291,7 +349,7 @@ export function PreventiveStopCreateScreen() {
             accessibilityLabel="Voltar para listagem"
             accessibilityRole="button"
             onPress={() => {
-              router.replace(stopWorkRoute);
+              confirmLeaveIfNeeded(leaveToStopWorkList);
             }}
           >
             <Text style={styles.backLink}>Voltar</Text>
@@ -302,7 +360,11 @@ export function PreventiveStopCreateScreen() {
 
           <PreventiveStopCallout />
 
-          {hasLocalDraft ? <OccurrenceSyncStatusBadge status="saved_locally" /> : null}
+          {hasLocalDraft ? (
+            <View accessibilityRole="text" style={styles.draftBanner}>
+              <Text style={styles.draftBannerText}>Rascunho salvo neste dispositivo</Text>
+            </View>
+          ) : null}
           {isSaving ? <Text style={styles.savingHint}>Salvando rascunho…</Text> : null}
           {isOffline ? <Text style={styles.offlineBanner}>Você está offline.</Text> : null}
 
@@ -546,6 +608,18 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 16,
   },
+  draftBanner: {
+    alignSelf: "stretch",
+    backgroundColor: "#374151",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  draftBannerText: {
+    color: "#D1D5DB",
+    fontSize: 13,
+    fontWeight: "600",
+  },
   error: {
     color: "#F87171",
     fontSize: 14,
@@ -621,7 +695,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     alignItems: "center",
-    backgroundColor: "#F97316",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     minHeight: 52,
@@ -630,7 +704,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitButtonText: {
-    color: "#0F1115",
+    color: colors.background,
     fontSize: 16,
     fontWeight: "700",
   },

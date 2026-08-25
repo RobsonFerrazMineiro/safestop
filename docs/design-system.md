@@ -475,6 +475,65 @@ Disabled
 
 ---
 
+## `@safestop/ui` — Tokens implementados (Sprint 3.4)
+
+O pacote `packages/ui` exporta **somente tokens TypeScript** (`colors`, `spacing`, `radius`, `typography`, `componentStates`). Não há componentes visuais compartilhados nesta entrega.
+
+**Componentes visuais previstos para P1 (não implementados):** `Button`, `NavigationItem`, `Badge`, `Card`, `EmptyState`, `Skeleton`. Não documentar nem tratar esses componentes como existentes até uma sprint futura.
+
+### Cores (`colors.ts`)
+
+| Token | Valor |
+| --- | --- |
+| `background` | `#0F1115` |
+| `surface` | `#171A21` |
+| `surfaceMuted` | `#20242D` |
+| `surfaceElevated` | `#2A303B` |
+| `border` | `#2E3440` |
+| `foreground` | `#F3F4F6` |
+| `foregroundMuted` | `#9CA3AF` |
+| `primary` | `#F97316` |
+| `primaryHover` | `#EA580C` |
+| `primaryActive` | `#C2410C` |
+| `destructive` | `#DC2626` |
+| `success` | `#16A34A` |
+| `warning` | `#FACC15` |
+| `info` | `#2563EB` |
+
+Disabled: `DISABLED_OPACITY = 0.4` (helper `withDisabledOpacity`).
+
+**Web:** `apps/web/src/app/globals.css` espelha a paleta em CSS variables (`--background`, `--surface`, `--primary`, etc.).
+
+### Spacing (`spacing.ts`)
+
+Escala em px: **4 · 8 · 12 · 16 · 20 · 24 · 32 · 40 · 48 · 64 · 80 · 96** (chaves `1`…`24` no objeto exportado).
+
+### Radius (`radius.ts`)
+
+Escala base: **4 · 8 · 12 · 16 · 24** (`radiusScale`).
+
+Por componente (referência futura): `input`/`button` 8, `card` 12, `dialog`/`drawer` 16, `badge`/`chip` 999.
+
+### Tipografia (`typography.ts`)
+
+| Token | fontSize | fontWeight |
+| --- | --- | --- |
+| `pageTitle` | 32 | 700 |
+| `sectionTitle` | 28 | 700 |
+| `cardTitle` | 24 | 600 |
+| `body` | 16 | 400 |
+| `label` | 14 | 500 |
+| `helper` / `caption` | 12 | 400 |
+| `kpi` | 28–32 | 700 |
+
+Fonte oficial do produto: **Inter** (Web via `next/font`; Mobile conforme stack nativa).
+
+### Estados (`states.ts`)
+
+Enum de contrato: `default`, `hover`, `pressed`, `focused`, `disabled`, `loading`, `success` — sem implementação visual compartilhada ainda.
+
+---
+
 # Tipografia
 
 A tipografia deve favorecer leitura rápida.
@@ -1049,11 +1108,17 @@ Backdrop
 
 # Ícones
 
-Biblioteca oficial:
+### Web
 
-```text
-Lucide
-```
+Biblioteca oficial: **Lucide React** (`lucide-react`).
+
+Implementação atual: Sidebar e ações funcionais via `apps/web/src/features/navigation/components/nav-icons.tsx` (re-exporta ícones Lucide). Configuração shadcn: `"iconLibrary": "lucide"` em `apps/web/components.json`.
+
+### Mobile
+
+Ícones da Bottom Navigation: **placeholders tipográficos/emoji** (`▦`, `☰`, `🔔`, `👤`) — substituição por icon set formal (`lucide-react-native` ou equivalente) permanece **P1**.
+
+Não misturar bibliotecas **dentro da mesma plataforma**. Web = Lucide; Mobile = placeholders até adoção formal.
 
 ---
 
@@ -2053,15 +2118,48 @@ O usuário deve identificar facilmente:
 
 # Componentes Compartilhados
 
-Sempre reutilizar componentes entre:
+Evitar duplicação de **tokens** e **contratos de domínio** entre plataformas.
 
-apps/mobile
+| Camada | Local | Conteúdo |
+| --- | --- | --- |
+| **Tokens** | `packages/ui` | `colors`, `spacing`, `radius`, `typography`, `componentStates` — **sem React** |
+| **Primitives Web** | `apps/web/src/components/ui` | shadcn/ui seletivo (Button, Card, Badge, Input, Dialog, Table, …) tematizado via `globals.css` |
+| **UI Mobile** | `apps/mobile/src/**` | Componentes próprios + `StyleSheet`; importa `@safestop/ui` onde aplicável |
 
-apps/web
+**Não mover** primitives shadcn DOM para `packages/ui`. Mobile **não consome** arquivos de `components/ui`.
 
-packages/ui
+**Estado Sprint 3.4 — stack de apresentação:** ver seção [Stack de apresentação](#stack-de-apresentação-sprint-34) abaixo. Componentes React **cross-platform** (Button, NavigationItem, EmptyState compartilhados) permanecem **P1 — não implementados** em `packages/ui`.
 
-Evitar duplicação.
+---
+
+# Stack de apresentação (Sprint 3.4)
+
+Documenta o **código implementado** ([`UI-STACK-AUDIT.md`](decisions/UI-STACK-AUDIT.md) §16–17, [`ADR-002`](decisions/ADR-002-technology-stack.md)).
+
+## Web
+
+| Tecnologia | Escopo implementado | Regra |
+| --- | --- | --- |
+| **Tailwind CSS v4** | Layout/utilities em todo o painel | `@import "tailwindcss"` em `globals.css` |
+| **shadcn/ui** | Primitives em `apps/web/src/components/ui` | Lista seletiva: `alert-dialog`, `badge`, `button`, `card`, `checkbox`, `dialog`, `dropdown-menu`, `input`, `popover`, `radio-group`, `select`, `sheet`, `skeleton`, `table`, `textarea`, `tooltip`, `toaster` + `ui-providers`. Tema SafeStop dark/grafite + `#F97316` — **não** copiar new-york/light do Base44 |
+| **Lucide React** | Sidebar (spec C), sino, ações, chrome de gráficos | Via `nav-icons.tsx` e imports pontuais |
+| **Recharts** | **Somente Dashboard** — `dashboard-charts.tsx` | **Não** usar em Relatórios |
+| **Sonner** | Feedback **transitório** (ex.: “Marcadas como lidas”) | **Nunca** substituir confirmação de **ciência** — ciência = CTA/banner/`AlertDialog` explícitos |
+| **TanStack Table** | Relatórios (`*-report-table.tsx`) | Abordagem **tabela-first**; export CSV/XLSX separado (`write-excel-file`) |
+| **RHF + Zod + `@hookform/resolvers`** | Nova PP Web, Perfil Web | Demais fluxos podem usar estado local até migração pontual |
+
+**Sidebar Web:** arquitetura da spec C (lista plana, RBAC, org ativa, logout rodapé) — **não** substituir por template shadcn Sidebar genérico.
+
+## Mobile
+
+| Tecnologia | Estado |
+| --- | --- |
+| **StyleSheet** | Estilização oficial |
+| **NativeWind** | **Não adotado** (documentado em ADR-002 histórico; rejeitado Sprint 3.4) |
+| **`@safestop/ui`** | `colors` importado na Bottom Nav, Perfil e Nova PP |
+| **shadcn / Recharts / TanStack Table / Sonner** | **Ausentes** — fora de escopo Mobile nesta onda |
+
+Feedback nativo: `Alert.alert`, sheets próprios. Ciência = fluxo explícito (nunca toast).
 
 ---
 
@@ -2140,29 +2238,38 @@ A navegação deve privilegiar:
 - uso com uma mão;
 - ações frequentes.
 
+**Implementação atual (Sprint 3.4):** Bottom Navigation fixa + Stack (Expo Router) para fluxos internos. Componente: `apps/mobile/src/features/navigation/components/app-bottom-tab-bar.tsx`, montado em `apps/mobile/app/(app)/(tabs)/_layout.tsx`.
+
 ---
 
-## Estrutura Principal
+## Bottom Navigation — estrutura implementada
 
-A navegação inferior (Bottom Tabs) deve conter apenas os módulos essenciais.
+Quatro abas permanentes + **FAB central** (não é aba do router):
 
-Sugestão:
+| Destino | Label | Rota | Ícone (atual) |
+| --- | --- | --- | --- |
+| Início | Início | `/(app)` | `▦` |
+| Listagem PP | Paralisações | `/(app)/stop-work` | `☰` |
+| Nova PP (FAB) | Paralisar | `/(app)/stop-work/new` | `+` (botão elevado) |
+| Notificações | Notificações | `/(app)/notifications` | `🔔` |
+| Perfil | Perfil | `/(app)/profile` | `👤` |
 
-```text
-🏠 Início
+Copy alinhada a PO-UX-4: **“Paralisações”** (não “Ocorrências”) na navegação principal.
 
-📋 Ocorrências
+**Fora da Bottom Nav (acesso secundário / Stack):** Aprovações MDHO (`/(app)/approvals/mdho`), troca de organização (`/(app)/organizations`), rotas legadas `/occurrences/*` ainda existentes no código.
 
-➕ Registrar
+---
 
-🔔 Notificações
+## Bottom Navigation — comportamento
 
-👤 Perfil
-```
+- **Sempre visível** nas telas dentro de `(tabs)` — inclusive listagem, detalhe e criação de PP (FAB permanece acessível).
+- **Safe Area:** `paddingBottom` respeita `useSafeAreaInsets()`.
+- **Rascunho Nova PP:** ao sair de `stop-work/new` com formulário não enviado, `PreventiveStopDraftNavigationProvider` exibe confirmação (“Salvar e sair” / “Continuar preenchendo”); em “Salvar e sair”, persiste o estado atual via **`flushDraft(getValues())`** antes de navegar (não depende apenas de `onBlur`).
+- **Logout:** ação **“Sair”** no `profile-screen.tsx` (não na Home).
+- **Cores:** tokens `@safestop/ui` (`colors.primary`, `colors.foregroundMuted`, etc.) — importados no componente.
+- **Ícones:** placeholders tipográficos/emoji — substituição por icon set formal permanece P1.
 
-Evitar adicionar muitas abas.
-
-Caso novos módulos sejam criados, utilizar navegação secundária.
+Evitar adicionar abas além dos destinos acima; novos módulos administrativos devem usar Stack ou telas secundárias.
 
 ---
 
@@ -2171,11 +2278,11 @@ Caso novos módulos sejam criados, utilizar navegação secundária.
 O fluxo principal esperado é:
 
 ```text
-Home
+Início
 
 ↓
 
-Nova Paralisação
+Nova Paralisação (FAB)
 
 ↓
 
@@ -2200,12 +2307,12 @@ Todo o fluxo deve exigir o menor número possível de interações.
 
 ## Navegação Hierárquica
 
-Utilizar navegação em pilha (Stack).
+Utilizar navegação em pilha (Stack) acima da Bottom Nav.
 
 Exemplo:
 
 ```text
-Ocorrências
+Paralisações
 
 ↓
 
@@ -2236,47 +2343,60 @@ O painel Web é voltado para:
 
 A navegação deve favorecer produtividade.
 
----
+**Implementação atual (Sprint 3.4):** a **top bar horizontal** (`app-top-bar`) foi **substituída** por **Sidebar** (`apps/web/src/features/navigation/components/app-sidebar.tsx`), montada no layout autenticado `(app)/layout.tsx`. Itens e RBAC: `get-nav-items.ts`.
 
-## Sidebar
-
-A Sidebar deve conter:
-
-```text
-Dashboard
-
-Ocorrências
-
-Avaliações
-
-MDHO
-
-Planos de Ação
-
-Notificações
-
-Relatórios
-
-Usuários
-
-Configurações
-```
-
-Itens administrativos devem respeitar permissões.
+A Sidebar **não renderiza** em `/organizations/*` nem `/login/*`.
 
 ---
 
-## Header
+## Sidebar — itens e RBAC
 
-O Header poderá conter:
+Lista **plana** (sem agrupamento). Itens condicionados são **ocultos** — nunca exibidos desabilitados.
 
-- Breadcrumb;
-- Pesquisa;
-- Organização ativa;
-- Notificações;
-- Perfil do usuário.
+| Item | Rota | Visibilidade |
+| --- | --- | --- |
+| Dashboard | `/` | sempre |
+| Paralisações Preventivas | `/stop-work` | sempre |
+| Nova Paralisação | `/stop-work/new` | `occurrence.create` |
+| Aprovações MDHO | `/approvals/mdho` | `mdho.approve` **ou** `mdho.return` |
+| Responsáveis | `/organization-contacts` | `canManageOrganizationContacts` (`organization.manage` ou platform admin) |
+| Relatórios | `/reports` | `report.read` |
+| Notificações | `/notifications` | sempre |
+| Perfil | `/profile` | sempre |
 
-Não adicionar excesso de ações.
+Mecanismo: `useAuthorization().can(...)` + helper `canManageOrganizationContacts` — mesmo critério da navegação anterior.
+
+**Item ativo:** destaque em **pill** (`rounded-full`, `bg-[var(--surface-elevated)]`), não barra lateral colorida.
+
+**Badge de notificações:** contador na sidebar quando `unreadCount > 0` (ponto no modo ícone; pill numérico no modo expandido).
+
+**Organização ativa:** bloco com nome, código e link **“Trocar”** quando o usuário possui múltiplas organizações.
+
+**Logout:** botão **“Sair”** no rodapé da sidebar (`SignOutButton` → `signOut()`).
+
+**Branding:** ícone laranja + texto “SafeStop”.
+
+**Ícones de navegação:** Lucide React via `nav-icons.tsx` (spec C — estrutura inalterada).
+
+---
+
+## Sidebar — responsividade
+
+| Viewport | Comportamento |
+| --- | --- |
+| **&lt; 768px** | Barra superior mínima (brand + hambúrguer); menu completo em **Drawer** (`w-72`, overlay escuro). |
+| **768px – 1023px** | Sidebar fixa **colapsada** (`w-16`): ícones + `sr-only` + `title` tooltip. |
+| **≥ 1024px** | Sidebar **expandida** (`lg:w-64`): ícones + labels completos. |
+
+---
+
+## Barra superior Web (pós-3.4)
+
+Não existe header global com breadcrumb, busca ou perfil como na navegação antiga.
+
+- Em **mobile-web**, a barra superior serve **apenas** para brand + abrir o Drawer.
+- Demais contextos (título de página, filtros, ações locais) ficam **no conteúdo** de cada feature.
+- **Indicador offline:** banner sticky no layout autenticado (`OfflineIndicator`) quando `navigator.onLine === false`.
 
 ---
 
@@ -3353,9 +3473,9 @@ Todos os formulários devem possuir:
 
 # Convenções de Ícones
 
-Sempre utilizar Lucide.
+Implementação atual: **Lucide React** no Web; placeholders emoji no Mobile Bottom Nav (ver [Ícones](#ícones)).
 
-Não misturar bibliotecas.
+Não misturar bibliotecas dentro da mesma plataforma.
 
 ---
 

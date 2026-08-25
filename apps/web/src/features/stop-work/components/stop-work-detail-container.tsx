@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { CollapsibleSection } from "@/components/collapsible-section";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRequirePermission } from "@/features/authorization";
 import { EvidenceSection } from "@/features/evidence";
 import {
@@ -94,14 +96,14 @@ export function StopWorkDetailContainer() {
 
       <header className="flex flex-col gap-2">
         <span className="font-mono text-sm text-orange-400">{stopWork.publicCode}</span>
-        <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-gray-500">
-          <span>{formatOccurrenceStatus(stopWork.status)}</span>
+        <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+          <Badge variant="secondary">{formatOccurrenceStatus(stopWork.status)}</Badge>
           {stopWork.status === "INTERDICAO_CONFIRMADA" ? (
-            <span className="rounded-full border border-red-600/60 bg-red-950/40 px-2 py-0.5 text-red-300">
+            <Badge className="border-red-600/60 bg-red-950/40 text-red-300" variant="outline">
               Interdição Oficial
-            </span>
+            </Badge>
           ) : null}
-          <span>{formatOccurrenceSeverity(stopWork.severity)}</span>
+          <Badge variant="outline">{formatOccurrenceSeverity(stopWork.severity)}</Badge>
         </div>
         <h1 className="text-3xl font-bold text-gray-100">{stopWork.title}</h1>
       </header>
@@ -114,40 +116,52 @@ export function StopWorkDetailContainer() {
         <OperationalDeadEndBanner status={stopWork.status} />
       ) : null}
 
-      <section className="flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/40 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Localização</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+      <Card className="gap-4 py-4">
+        <CardHeader className="px-4">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Localização
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-4 px-4 sm:grid-cols-2">
           <DetailField label="Área" value={stopWork.areaName ?? "—"} />
           <DetailField label="Local" value={stopWork.locationDescription} />
           <DetailField label="Empresa" value={stopWork.contractorOrganizationName ?? "—"} />
           {coordinates ? <DetailField label="Coordenadas" value={coordinates} /> : null}
-        </div>
-      </section>
+        </CardContent>
+      </Card>
 
-      <section className="flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/40 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">Descrição</h2>
-        <DetailField label="Atividade" value={stopWork.taskDescription} />
-        <DetailField label="Condição insegura" value={stopWork.conditionDescription} />
-        {stopWork.immediateActionDescription ? (
-          <DetailField label="Ação imediata" value={stopWork.immediateActionDescription} />
-        ) : null}
-      </section>
+      <Card className="gap-4 py-4">
+        <CardHeader className="px-4">
+          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Descrição
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 px-4">
+          <DetailField label="Atividade" value={stopWork.taskDescription} />
+          <DetailField label="Condição insegura" value={stopWork.conditionDescription} />
+          {stopWork.immediateActionDescription ? (
+            <DetailField label="Ação imediata" value={stopWork.immediateActionDescription} />
+          ) : null}
+        </CardContent>
+      </Card>
 
-      <section className="rounded-lg border border-gray-800 bg-gray-900/40 p-4">
-        <CollapsibleSection
-          summary={
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-              Registro
-            </h2>
-          }
-        >
-          <div className="grid gap-4 sm:grid-cols-2">
-            <DetailField label="Registrado por" value={stopWork.createdByName ?? "—"} />
-            <DetailField label="Ocorrido em" value={formatDateTime(stopWork.occurredAt)} />
-            <DetailField label="Paralisado em" value={formatDateTime(stopWork.stoppedAt)} />
-          </div>
-        </CollapsibleSection>
-      </section>
+      <Card className="py-4">
+        <CardContent className="px-4">
+          <CollapsibleSection
+            summary={
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Registro
+              </h2>
+            }
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <DetailField label="Registrado por" value={stopWork.createdByName ?? "—"} />
+              <DetailField label="Ocorrido em" value={formatDateTime(stopWork.occurredAt)} />
+              <DetailField label="Paralisado em" value={formatDateTime(stopWork.stoppedAt)} />
+            </div>
+          </CollapsibleSection>
+        </CardContent>
+      </Card>
 
       <EvidenceSection occurrenceId={stopWork.id} />
 

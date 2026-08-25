@@ -1,6 +1,6 @@
 # ADR-002 — Stack Tecnológica
 
-**Status:** Aprovado
+**Status:** Aprovado (revisado Sprint 3.4 — 2026-08-25)
 
 **Data:** 2026-07-11
 
@@ -41,10 +41,12 @@ Responsável pelo gerenciamento do monorepo, compartilhamento de pacotes e organ
 - React Native
 - TypeScript
 - Expo Router
-- NativeWind
+- React Native `StyleSheet` (estilização oficial)
 - TanStack Query
 - React Hook Form
 - Zod
+
+**NativeWind:** citado em versões anteriores deste ADR, **não adotado** no estado atual do produto. Decisão Sprint 3.4 ([`UI-STACK-AUDIT.md`](./UI-STACK-AUDIT.md) §16–17): manter StyleSheet + tokens `@safestop/ui`; adotar NativeWind exigiria refactor transversal sem ganho proporcional. **Documentado historicamente — rejeitado na implementação 3.4.**
 
 ---
 
@@ -53,11 +55,15 @@ Responsável pelo gerenciamento do monorepo, compartilhamento de pacotes e organ
 - Next.js
 - React
 - TypeScript
-- Tailwind CSS
-- shadcn/ui
+- Tailwind CSS **v4**
+- shadcn/ui — **primitives seletivos** vendored em `apps/web/src/components/ui`, tematizados com tokens SafeStop (`globals.css` + `@safestop/ui`; tema dark/grafite + laranja `#F97316`)
+- Radix UI (via primitives shadcn) + `class-variance-authority`, `clsx`, `tailwind-merge`
+- Lucide React (iconografia funcional Web — Sidebar, ações, estados)
+- Recharts — **somente Dashboard** (`dashboard-charts.tsx`)
+- Sonner — feedback **transitório** (ex.: “marcadas como lidas”); **não** substitui confirmação de ciência
+- TanStack Table — relatórios gerenciais (sort/filtro/paginação)
 - TanStack Query
-- React Hook Form
-- Zod
+- React Hook Form + Zod + **`@hookform/resolvers`** (formulários wired: Nova PP Web, Perfil Web)
 
 ---
 
@@ -82,9 +88,10 @@ Pacotes compartilhados entre Mobile e Web:
 
 - types
 - validation
-- ui (quando aplicável)
+- ui — **tokens e contratos TypeScript apenas** (`colors`, `spacing`, `radius`, `typography`, `componentStates`); primitives shadcn **não** vivem em `packages/ui`
 - utils
 - config
+- query-keys
 
 ---
 
@@ -250,8 +257,26 @@ Toda alteração estrutural deverá gerar um novo ADR.
 
 ---
 
+# Revisão — Sprint 3.4 (2026-08-25)
+
+Alinhamento pós-implementação ([`UI-STACK-AUDIT.md`](./UI-STACK-AUDIT.md), [`UX-CONVERGENCE-IMPLEMENTATION-VERIFICATION.md`](./UX-CONVERGENCE-IMPLEMENTATION-VERIFICATION.md)):
+
+| Plataforma | Decisão 2026-07 | Estado implementado 3.4 |
+| --- | --- | --- |
+| **Web** | Next + Tailwind + shadcn (genérico) | Next 16 + Tailwind v4 + shadcn **seletivo** + Lucide + Recharts (Dashboard) + Sonner (transitório) + TanStack Table (Relatórios) + RHF/Zod/resolvers |
+| **Mobile** | Expo + NativeWind | Expo + **StyleSheet**; **sem** NativeWind; tokens `@safestop/ui` importados onde aplicável (Bottom Nav, Perfil, Nova PP) |
+| **`packages/ui`** | “quando aplicável” | **Somente tokens** — sem componentes React compartilhados |
+
+Esta revisão **não** altera backend, workflow, RBAC nem domínio. Catálogo shadcn completo, NativeWind, `lucide-react-native` e avatar editável permanecem **fora** do escopo entregue (P1/P2).
+
+---
+
 # Resultado
 
 O SafeStop adotará uma stack baseada em Expo, Next.js, Supabase e TypeScript, organizada em um Monorepo com pnpm Workspaces.
+
+**Web:** primitives shadcn tematizados + Lucide + bibliotecas pontuais (Recharts, Sonner, TanStack Table) nos módulos que exigem complexidade real.
+
+**Mobile:** StyleSheet nativo + tokens compartilhados — **sem** NativeWind no estado atual.
 
 Essa decisão busca maximizar produtividade, compartilhamento de código, confiabilidade e capacidade de evolução, mantendo a simplicidade como princípio fundamental do projeto.

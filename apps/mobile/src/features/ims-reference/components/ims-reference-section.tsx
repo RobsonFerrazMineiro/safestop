@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import type { OccurrenceDetails } from "@safestop/types";
 import { registerImsReferenceSchema } from "@safestop/validation";
 
+import { CollapsibleSection } from "@/components/collapsible-section";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { EvaluationConflictCard } from "@/features/ver-e-agir/components/evaluation-conflict-card";
 import { confirmAction } from "@/lib/confirm-action";
@@ -208,17 +209,26 @@ export function ImsReferenceSection({
       ) : null}
 
       {!showConflict && showCard && occurrence.imsReferenceCode ? (
-        <ImsReferenceCard
-          canUpdate={canUpdate}
-          occurrence={occurrence}
-          onEdit={() => {
-            if (!isOnline) {
-              setValidationError(IMS_REFERENCE_COPY.offlineToast);
-              return;
-            }
-            setEditVisible(true);
-          }}
-        />
+        <CollapsibleSection
+          accessibilityLabel="Referência IMS registrada"
+          summary={
+            <Text accessibilityRole="text" style={styles.collapsedSummary}>
+              {occurrence.imsReferenceCode.trim()}
+            </Text>
+          }
+        >
+          <ImsReferenceCard
+            canUpdate={canUpdate}
+            occurrence={occurrence}
+            onEdit={() => {
+              if (!isOnline) {
+                setValidationError(IMS_REFERENCE_COPY.offlineToast);
+                return;
+              }
+              setEditVisible(true);
+            }}
+          />
+        </CollapsibleSection>
       ) : null}
 
       <ImsEditDialog
@@ -250,6 +260,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     paddingTop: 12,
     textTransform: "uppercase",
+  },
+  collapsedSummary: {
+    color: "#E5E7EB",
+    fontFamily: "monospace",
+    fontSize: 14,
+    fontWeight: "600",
   },
   success: {
     color: "#86EFAC",

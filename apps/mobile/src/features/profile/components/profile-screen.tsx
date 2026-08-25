@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors } from "@safestop/ui";
 
 import { useAuth } from "@/hooks/use-auth";
 import { authRoutes } from "@/lib/auth/routes";
@@ -197,9 +198,14 @@ function ProfileForm({ profile, email, isUpdating, onSubmitProfile }: ProfileFor
 
 export function ProfileScreen() {
   const router = useRouter();
-  const { user } = useAuth();
-  const { profile, isLoading, isError, error, isNotFound, updateProfile, isUpdating } =
+  const { user, signOut } = useAuth();
+  const { profile, isLoading, isError, error, isNotFound, updateProfile, isUpdating, refetch } =
     useProfile();
+
+  async function handleSignOut() {
+    await signOut();
+    router.replace(authRoutes.login);
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -229,20 +235,41 @@ export function ProfileScreen() {
           {isLoading ? <ProfileLoading /> : null}
 
           {!isLoading && isError ? (
-            <ProfileError message={error instanceof Error ? error.message : undefined} />
+            <ProfileError
+              message={error instanceof Error ? error.message : undefined}
+              onRetry={() => {
+                void refetch();
+              }}
+            />
           ) : null}
 
           {!isLoading && !isError && (isNotFound || !profile) ? <ProfileNotFound /> : null}
 
           {!isLoading && !isError && profile ? (
-            <ProfileForm
-              email={user?.email}
-              isUpdating={isUpdating}
-              profile={profile}
-              onSubmitProfile={async (input) => {
-                await updateProfile(input);
-              }}
-            />
+            <>
+              <ProfileForm
+                email={user?.email}
+                isUpdating={isUpdating}
+                profile={profile}
+                onSubmitProfile={async (input) => {
+                  await updateProfile(input);
+                }}
+              />
+
+              <Pressable
+                accessibilityLabel="Sair"
+                accessibilityRole="button"
+                style={({ pressed }) => [
+                  styles.signOutButton,
+                  pressed && styles.signOutButtonPressed,
+                ]}
+                onPress={() => {
+                  void handleSignOut();
+                }}
+              >
+                <Text style={styles.signOutButtonText}>Sair</Text>
+              </Pressable>
+            </>
           ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -260,8 +287,27 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: 24,
+    paddingBottom: 32,
     paddingHorizontal: 24,
     paddingVertical: 16,
+  },
+  signOutButton: {
+    alignItems: "center",
+    backgroundColor: "#374151",
+    borderColor: "#4B5563",
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: "center",
+    marginTop: 8,
+    minHeight: 48,
+  },
+  signOutButtonPressed: {
+    opacity: 0.85,
+  },
+  signOutButtonText: {
+    color: colors.destructive,
+    fontSize: 16,
+    fontWeight: "600",
   },
   header: {
     gap: 8,
@@ -349,7 +395,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     alignItems: "center",
-    backgroundColor: "#F97316",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     marginTop: 8,
@@ -362,7 +408,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   submitButtonText: {
-    color: "#0F1115",
+    color: colors.background,
     fontSize: 16,
     fontWeight: "700",
   },

@@ -114,6 +114,9 @@ function DashboardKpiGridSection({
 
   return (
     <section aria-label={label} className="flex flex-col gap-3">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </h2>
       <div className={gridClassName}>
         {visibleKeys.map((key) => (
           <DashboardKpiSlot
@@ -148,12 +151,12 @@ export function DashboardKpiLevel1Grid({
 
   return (
     <DashboardKpiGridSection
-      gridClassName="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4"
+      gridClassName="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-4"
       isError={isError}
       isLoading={isLoading}
       keys={level1Keys}
       kpis={kpis}
-      label="Indicadores de atenção imediata"
+      label="Atenção imediata"
       onRetry={onRetry}
     />
   );
@@ -189,12 +192,12 @@ export function DashboardKpiLevel2Grid({
 
   return (
     <DashboardKpiGridSection
-      gridClassName="grid grid-cols-2 gap-3 lg:grid-cols-3 lg:gap-4"
+      gridClassName="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-3 lg:gap-4"
       isError={isError}
       isLoading={isLoading}
       keys={level2Order}
       kpis={kpis}
-      label="Indicadores de estoque"
+      label="Situação operacional"
       onRetry={onRetry}
     />
   );
@@ -223,20 +226,15 @@ export function DashboardKpiLevel3Grid({
   ];
 
   return (
-    <section aria-label="Indicadores de fluxo no período" className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-        Indicadores do período
-      </h2>
-      <DashboardKpiGridSection
-        gridClassName="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4"
-        isError={isError}
-        isLoading={isLoading}
-        keys={flowKeys}
-        kpis={kpis}
-        label="Indicadores de fluxo no período"
-        onRetry={onRetry}
-      />
-    </section>
+    <DashboardKpiGridSection
+      gridClassName="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-4"
+      isError={isError}
+      isLoading={isLoading}
+      keys={flowKeys}
+      kpis={kpis}
+      label="Desempenho no período"
+      onRetry={onRetry}
+    />
   );
 }
 

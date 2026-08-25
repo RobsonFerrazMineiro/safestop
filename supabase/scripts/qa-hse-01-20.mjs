@@ -442,8 +442,17 @@ async function main() {
   const invalidate = readRepo(
     "apps/web/src/features/hse-approval/hooks/use-invalidate-hse-approval-caches.ts",
   );
-  if (invalidate.includes("queuePrefix")) {
-    record("HSE-18", "PASS", "cache fila invalidado pós-decisão (queuePrefix)");
+  const invalidationMatrix = readRepo("packages/query-keys/src/invalidation-matrix.ts");
+  // Sprint 2.9 (PO-CON-9) centralizou a invalidação em getOccurrenceInvalidationTargets/
+  // resolveOccurrenceInvalidationKeys; o domínio "hse" precisa incluir o target "hseQueue"
+  // (que resolve para hseApprovalQueryKeys.queue(), prefixo invalidado via matching parcial).
+  const hseDomainIncludesQueue = /hse:\s*\[[^\]]*"hseQueue"[^\]]*\]/.test(invalidationMatrix);
+  if (
+    invalidate.includes("getOccurrenceInvalidationTargets") &&
+    invalidate.includes("resolveOccurrenceInvalidationKeys") &&
+    hseDomainIncludesQueue
+  ) {
+    record("HSE-18", "PASS", "cache fila invalidado pós-decisão (hseQueue via invalidation-matrix)");
   } else {
     record("HSE-18", "FAIL", "invalidate ausente");
   }

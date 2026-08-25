@@ -15,6 +15,7 @@
   "dependencies": {
     "@safestop/query-keys": "workspace:*",
     "@safestop/types": "workspace:*",
+    "@safestop/ui": "workspace:*",
     "@safestop/validation": "workspace:*",
     "@supabase/supabase-js": "2.110.2",
     "@tanstack/react-query": "5.84.1",

@@ -1,12 +1,25 @@
 "use client";
 
-import { type CreatePreventiveStopInput } from "@safestop/validation";
-import { OCCURRENCE_SEVERITIES } from "@safestop/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createPreventiveStopSchema, type CreatePreventiveStopInput } from "@safestop/validation";
+import { OCCURRENCE_SEVERITIES, type OccurrenceSeverity } from "@safestop/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { useRequirePermission } from "@/features/authorization";
 import { formatOccurrenceSeverity } from "@/features/occurrences/utils/format-labels";
 
@@ -26,6 +39,14 @@ const defaultValues: CreatePreventiveStopInput = {
   areaId: "",
   contractorOrganizationId: "",
 };
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) {
+    return null;
+  }
+
+  return <p className="text-sm text-destructive">{message}</p>;
+}
 
 export function StopWorkCreateContainer() {
   useRequirePermission("occurrence.create");
@@ -49,8 +70,10 @@ export function StopWorkCreateContainer() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<CreatePreventiveStopInput>({
+    resolver: zodResolver(createPreventiveStopSchema),
     defaultValues,
   });
 
@@ -92,156 +115,199 @@ export function StopWorkCreateContainer() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-6 py-10">
       <header className="flex flex-col gap-2">
-        <Link className="text-sm text-orange-400 hover:text-orange-300" href="/stop-work">
+        <Link className="text-sm text-primary hover:text-primary/90" href="/stop-work">
           ← Voltar para paralisações
         </Link>
-        <h1 className="text-3xl font-bold text-gray-100">Nova Paralisação Preventiva</h1>
-        <p className="text-sm text-gray-400">
+        <h1 className="text-3xl font-bold">Nova Paralisação Preventiva</h1>
+        <p className="text-sm text-muted-foreground">
           Preencha os dados mínimos para registrar a paralisação na organização ativa.
         </p>
       </header>
 
       <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-200" htmlFor="areaId">
-            Área
-          </label>
-          <select
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
-            disabled={isFormDisabled}
-            id="areaId"
-            {...register("areaId", { required: "Área é obrigatória." })}
-          >
-            <option value="">Selecione uma área</option>
-            {areas.map((area) => (
-              <option key={area.id} value={area.id}>
-                {area.name}
-                {area.code ? ` (${area.code})` : ""}
-              </option>
-            ))}
-          </select>
-          {errors.areaId ? <p className="text-sm text-red-300">{errors.areaId.message}</p> : null}
-        </div>
+        <Card className="gap-4 py-4">
+          <CardHeader className="px-4">
+            <CardTitle className="text-base">Onde e quem</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 px-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium" htmlFor="areaId">
+                Área
+              </label>
+              <Controller
+                control={control}
+                name="areaId"
+                render={({ field }) => (
+                  <Select
+                    disabled={isFormDisabled}
+                    onValueChange={field.onChange}
+                    value={field.value || undefined}
+                  >
+                    <SelectTrigger className="w-full" id="areaId">
+                      <SelectValue placeholder="Selecione uma área" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {areas.map((area) => (
+                        <SelectItem key={area.id} value={area.id}>
+                          {area.name}
+                          {area.code ? ` (${area.code})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError message={errors.areaId?.message} />
+            </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-200" htmlFor="contractorOrganizationId">
-            Empresa envolvida
-          </label>
-          <select
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
-            disabled={isFormDisabled}
-            id="contractorOrganizationId"
-            {...register("contractorOrganizationId", {
-              required: "Empresa envolvida é obrigatória.",
-            })}
-          >
-            <option value="">Selecione a empresa</option>
-            {contractors.map((contractor) => (
-              <option key={contractor.id} value={contractor.id}>
-                {contractor.name}
-              </option>
-            ))}
-          </select>
-          {errors.contractorOrganizationId ? (
-            <p className="text-sm text-red-300">{errors.contractorOrganizationId.message}</p>
-          ) : null}
-          {contractors.length === 0 ? (
-            <p className="text-sm text-amber-200">
-              Nenhuma contratada com contrato ativo nesta organização.
-            </p>
-          ) : null}
-        </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium" htmlFor="locationDescription">
+                Local
+              </label>
+              <Textarea
+                disabled={isFormDisabled}
+                id="locationDescription"
+                {...register("locationDescription")}
+              />
+              <FieldError message={errors.locationDescription?.message} />
+            </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-200" htmlFor="severity">
-            Criticidade
-          </label>
-          <select
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
-            disabled={isFormDisabled}
-            id="severity"
-            {...register("severity")}
-          >
-            {OCCURRENCE_SEVERITIES.map((severity) => (
-              <option key={severity} value={severity}>
-                {formatOccurrenceSeverity(severity)}
-              </option>
-            ))}
-          </select>
-        </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium" htmlFor="contractorOrganizationId">
+                Contratada
+              </label>
+              <Controller
+                control={control}
+                name="contractorOrganizationId"
+                render={({ field }) => (
+                  <Select
+                    disabled={isFormDisabled}
+                    onValueChange={field.onChange}
+                    value={field.value || undefined}
+                  >
+                    <SelectTrigger className="w-full" id="contractorOrganizationId">
+                      <SelectValue placeholder="Selecione a empresa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {contractors.map((contractor) => (
+                        <SelectItem key={contractor.id} value={contractor.id}>
+                          {contractor.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError message={errors.contractorOrganizationId?.message} />
+              {contractors.length === 0 ? (
+                <p className="text-sm text-amber-200">
+                  Nenhuma contratada com contrato ativo nesta organização.
+                </p>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-200" htmlFor="taskDescription">
-            Atividade
-          </label>
-          <textarea
-            className="min-h-24 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
-            disabled={isFormDisabled}
-            id="taskDescription"
-            {...register("taskDescription", { required: "Atividade é obrigatória." })}
-          />
-          {errors.taskDescription ? (
-            <p className="text-sm text-red-300">{errors.taskDescription.message}</p>
-          ) : null}
-        </div>
+        <Card className="gap-4 py-4">
+          <CardHeader className="px-4">
+            <CardTitle className="text-base">O que está acontecendo</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4 px-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium" htmlFor="taskDescription">
+                Atividade
+              </label>
+              <Textarea
+                disabled={isFormDisabled}
+                id="taskDescription"
+                {...register("taskDescription")}
+              />
+              <FieldError message={errors.taskDescription?.message} />
+            </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-200" htmlFor="locationDescription">
-            Local
-          </label>
-          <textarea
-            className="min-h-20 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
-            disabled={isFormDisabled}
-            id="locationDescription"
-            {...register("locationDescription", { required: "Local é obrigatório." })}
-          />
-          {errors.locationDescription ? (
-            <p className="text-sm text-red-300">{errors.locationDescription.message}</p>
-          ) : null}
-        </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium" htmlFor="conditionDescription">
+                Condição insegura
+              </label>
+              <Textarea
+                disabled={isFormDisabled}
+                id="conditionDescription"
+                {...register("conditionDescription")}
+              />
+              <FieldError message={errors.conditionDescription?.message} />
+            </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-200" htmlFor="conditionDescription">
-            Condição insegura
-          </label>
-          <textarea
-            className="min-h-24 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
-            disabled={isFormDisabled}
-            id="conditionDescription"
-            {...register("conditionDescription", {
-              required: "Condição insegura é obrigatória.",
-            })}
-          />
-          {errors.conditionDescription ? (
-            <p className="text-sm text-red-300">{errors.conditionDescription.message}</p>
-          ) : null}
-        </div>
+            <div className="flex flex-col gap-2">
+              <span className="text-sm font-medium" id="severity-label">
+                Criticidade
+              </span>
+              <Controller
+                control={control}
+                name="severity"
+                render={({ field }) => (
+                  <RadioGroup
+                    aria-labelledby="severity-label"
+                    className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+                    disabled={isFormDisabled}
+                    onValueChange={(value) => {
+                      field.onChange(value as OccurrenceSeverity);
+                    }}
+                    value={field.value}
+                  >
+                    {OCCURRENCE_SEVERITIES.map((severity) => {
+                      const selected = field.value === severity;
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-200" htmlFor="immediateActionDescription">
-            Ação imediata (opcional)
-          </label>
-          <textarea
-            className="min-h-20 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
-            disabled={isFormDisabled}
-            id="immediateActionDescription"
-            {...register("immediateActionDescription")}
-          />
-        </div>
+                      return (
+                        <label
+                          className={cn(
+                            "flex cursor-pointer items-center justify-center rounded-lg border px-3 py-2 text-sm font-medium transition",
+                            selected
+                              ? "border-primary bg-primary/15 text-foreground"
+                              : "border-border text-muted-foreground hover:border-primary/50",
+                            isFormDisabled ? "cursor-not-allowed opacity-50" : "",
+                          )}
+                          key={severity}
+                        >
+                          <RadioGroupItem className="sr-only" value={severity} />
+                          {formatOccurrenceSeverity(severity)}
+                        </label>
+                      );
+                    })}
+                  </RadioGroup>
+                )}
+              />
+              <FieldError message={errors.severity?.message} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="gap-4 py-4">
+          <CardHeader className="px-4">
+            <CardTitle className="text-base">Complemento</CardTitle>
+          </CardHeader>
+          <CardContent className="px-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium" htmlFor="immediateActionDescription">
+                Medida imediata (opcional)
+              </label>
+              <Textarea
+                disabled={isFormDisabled}
+                id="immediateActionDescription"
+                {...register("immediateActionDescription")}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {formError || mutationMessage ? (
-          <p className="rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+          <p className="rounded-lg border border-destructive/60 bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {formError ?? mutationMessage}
           </p>
         ) : null}
 
-        <button
-          className="rounded-lg bg-orange-500 px-4 py-2 text-base font-semibold text-white transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isFormDisabled}
-          type="submit"
-        >
+        <Button disabled={isFormDisabled} size="lg" type="submit">
           {isCreating ? "Registrando..." : "Registrar paralisação"}
-        </button>
+        </Button>
       </form>
     </main>
   );

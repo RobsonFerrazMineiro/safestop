@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { AuthProvider, QueryProvider } from "@/providers";
 import { AuthorizationProvider } from "@/features/authorization";
 import { OrganizationProvider } from "@/features/organization/provider/organization-provider";
+import { UiProviders } from "@/components/ui/ui-providers";
 import "./globals.css";
 
 const inter = Inter({
@@ -20,12 +21,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="pt-BR" className={inter.variable}>
+    <html lang="pt-BR" className={`dark ${inter.variable}`}>
       <body>
         <QueryProvider>
           <AuthProvider>
             <OrganizationProvider>
-              <AuthorizationProvider>{children}</AuthorizationProvider>
+              <AuthorizationProvider>
+                <UiProviders>{children}</UiProviders>
+              </AuthorizationProvider>
             </OrganizationProvider>
           </AuthProvider>
         </QueryProvider>

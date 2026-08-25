@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type RefObject } from "react";
 import { Alert, ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import type { OccurrenceDetails } from "@safestop/types";
 
+import { CollapsibleSection } from "@/components/collapsible-section";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import {
   HSE_APPROVAL_COPY,
@@ -327,11 +328,20 @@ export function MdhoSection({
       ) : null}
 
       {!showConflict && showSummary && assessment && catalog ? (
-        <MdhoSummary
-          assessment={assessment}
-          catalog={catalog.categories}
-          hideImsHint={hideImsHint}
-        />
+        <CollapsibleSection
+          accessibilityLabel="MDHO aprovado"
+          summary={
+            <Text style={styles.collapsedSummary}>
+              MDHO aprovado — {assessment.approvedByName ?? "—"}
+            </Text>
+          }
+        >
+          <MdhoSummary
+            assessment={assessment}
+            catalog={catalog.categories}
+            hideImsHint={hideImsHint}
+          />
+        </CollapsibleSection>
       ) : null}
     </View>
   );
@@ -350,5 +360,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     paddingTop: 12,
     textTransform: "uppercase",
+  },
+  collapsedSummary: {
+    color: "#86EFAC",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

@@ -32,7 +32,7 @@ import {
 
 export default function AuthenticatedHomeScreen() {
   const router = useRouter();
-  const { user, signOut, isRefreshing } = useAuth();
+  const { user, isRefreshing } = useAuth();
   const { can, isPlatformAdmin } = useAuthorization();
   const { activeOrganization, hasMultipleOrganizations } = useActiveOrganization();
   const pendingData = useHomePendingData();
@@ -67,11 +67,6 @@ export default function AuthenticatedHomeScreen() {
       setIsRefreshingHome(false);
     }
   }, [refreshPendingData]);
-
-  async function handleSignOut() {
-    await signOut();
-    router.replace(authRoutes.login);
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -198,40 +193,14 @@ export default function AuthenticatedHomeScreen() {
         >
           <Text style={styles.profileButtonText}>Meu perfil</Text>
         </Pressable>
-
-        <Pressable
-          accessibilityLabel="Sair"
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-          onPress={() => {
-            void handleSignOut();
-          }}
-        >
-          <Text style={styles.buttonText}>Sair</Text>
-        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    alignItems: "center",
-    backgroundColor: "#374151",
-    borderRadius: 8,
-    justifyContent: "center",
-    marginTop: 16,
-    minHeight: 48,
-    minWidth: 200,
-    paddingHorizontal: 24,
-  },
   buttonPressed: {
     opacity: 0.85,
-  },
-  buttonText: {
-    color: "#F9FAFB",
-    fontSize: 16,
-    fontWeight: "600",
   },
   container: {
     backgroundColor: "#0F1115",

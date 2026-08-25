@@ -12,6 +12,7 @@ import {
   DASHBOARD_OCCURRENCE_STATUS_FAMILY_LABELS,
 } from "@safestop/types";
 
+import { Button } from "@/components/ui/button";
 import { Can, useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
@@ -56,13 +57,13 @@ import { dashboardDeepLinks } from "./utils/dashboard-deep-links";
 import { canAccessDashboard } from "./utils/kpi-config";
 
 const FAMILY_COLORS: Record<DashboardOccurrenceStatusFamily, string> = {
-  OPEN_EVALUATION: "bg-blue-500/80",
-  VER_E_AGIR: "bg-amber-500/80",
-  INTERDICTED: "bg-red-500/80",
-  IN_TREATMENT: "bg-orange-500/80",
-  AWAITING_VALIDATION: "bg-orange-300/80",
-  COMPLETED: "bg-green-500/80",
-  CANCELLED: "bg-gray-500/80",
+  OPEN_EVALUATION: "#2563EB",
+  VER_E_AGIR: "#F59E0B",
+  INTERDICTED: "#DC2626",
+  IN_TREATMENT: "#F97316",
+  AWAITING_VALIDATION: "#FB923C",
+  COMPLETED: "#16A34A",
+  CANCELLED: "#6B7280",
 };
 
 export function DashboardPage() {
@@ -177,12 +178,11 @@ export function DashboardPage() {
         scopeFilters,
       ).statusFamilyBuckets.map((bucket) => ({
         ...bucket,
-        colorClass:
-          FAMILY_COLORS[
-            (DASHBOARD_OCCURRENCE_STATUS_FAMILIES.find(
-              (family) => DASHBOARD_OCCURRENCE_STATUS_FAMILY_LABELS[family] === bucket.label,
-            ) ?? "OPEN_EVALUATION") as DashboardOccurrenceStatusFamily
-          ],
+        fill: FAMILY_COLORS[
+          (DASHBOARD_OCCURRENCE_STATUS_FAMILIES.find(
+            (family) => DASHBOARD_OCCURRENCE_STATUS_FAMILY_LABELS[family] === bucket.label,
+          ) ?? "OPEN_EVALUATION") as DashboardOccurrenceStatusFamily
+        ],
       }));
     }
 
@@ -195,7 +195,7 @@ export function DashboardPage() {
     return DASHBOARD_OCCURRENCE_STATUS_FAMILIES.map((family) => ({
       label: DASHBOARD_OCCURRENCE_STATUS_FAMILY_LABELS[family],
       count: byStatusFamily[family] ?? 0,
-      colorClass: FAMILY_COLORS[family],
+      fill: FAMILY_COLORS[family],
     }));
   }, [distribution, scopeFilters, scopeFiltersActive, scopeOccurrences]);
 
@@ -243,12 +243,9 @@ export function DashboardPage() {
             <DashboardScopeFiltersPanel filters={scopeFilters} onChange={setScopeFilters} />
           </Can>
           <Can permission="occurrence.create">
-            <Link
-              className="hidden rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-400 lg:inline-flex"
-              href="/stop-work/new"
-            >
-              Nova Paralisação
-            </Link>
+            <Button asChild className="hidden lg:inline-flex">
+              <Link href="/stop-work/new">Nova Paralisação</Link>
+            </Button>
           </Can>
         </div>
       </header>

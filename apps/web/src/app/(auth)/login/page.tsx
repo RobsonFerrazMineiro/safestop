@@ -2,6 +2,9 @@
 
 import { type FormEvent, useState, useSyncExternalStore } from "react";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AuthServiceError } from "@/lib/auth/errors";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -26,21 +29,21 @@ function LoginPageShell() {
     <main className="flex flex-col gap-6">
       <header className="text-center">
         <h1 className="text-3xl font-bold sm:text-4xl">SafeStop</h1>
-        <p className="mt-2 text-base text-gray-300">
+        <p className="mt-2 text-base text-muted-foreground">
           Entre com suas credenciais para acessar o painel.
         </p>
       </header>
 
       <div aria-hidden="true" className="flex flex-col gap-4">
         <div className="flex flex-col gap-2 text-left">
-          <span className="text-sm font-medium text-gray-200">E-mail</span>
-          <div className="h-10 animate-pulse rounded-lg border border-gray-700 bg-gray-900" />
+          <span className="text-sm font-medium">E-mail</span>
+          <Skeleton className="h-10 rounded-md" />
         </div>
         <div className="flex flex-col gap-2 text-left">
-          <span className="text-sm font-medium text-gray-200">Senha</span>
-          <div className="h-10 animate-pulse rounded-lg border border-gray-700 bg-gray-900" />
+          <span className="text-sm font-medium">Senha</span>
+          <Skeleton className="h-10 rounded-md" />
         </div>
-        <div className="h-10 animate-pulse rounded-lg bg-orange-500/60" />
+        <Skeleton className="h-10 rounded-md bg-primary/60" />
       </div>
     </main>
   );
@@ -75,19 +78,18 @@ function LoginForm() {
     <main className="flex flex-col gap-6">
       <header className="text-center">
         <h1 className="text-3xl font-bold sm:text-4xl">SafeStop</h1>
-        <p className="mt-2 text-base text-gray-300">
+        <p className="mt-2 text-base text-muted-foreground">
           Entre com suas credenciais para acessar o painel.
         </p>
       </header>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-2 text-left">
-          <label className="text-sm font-medium text-gray-200" htmlFor="email">
+          <label className="text-sm font-medium" htmlFor="email">
             E-mail
           </label>
-          <input
+          <Input
             autoComplete="email"
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
             data-testid="login-email"
             disabled={isLoading || isSubmitting}
             id="email"
@@ -101,12 +103,11 @@ function LoginForm() {
         </div>
 
         <div className="flex flex-col gap-2 text-left">
-          <label className="text-sm font-medium text-gray-200" htmlFor="password">
+          <label className="text-sm font-medium" htmlFor="password">
             Senha
           </label>
-          <input
+          <Input
             autoComplete="current-password"
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
             data-testid="login-password"
             disabled={isLoading || isSubmitting}
             id="password"
@@ -121,7 +122,7 @@ function LoginForm() {
 
         {errorMessage ? (
           <p
-            className="rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-200"
+            className="rounded-lg border border-destructive/60 bg-destructive/10 px-3 py-2 text-sm text-destructive"
             data-testid="login-error"
             role="alert"
           >
@@ -129,14 +130,15 @@ function LoginForm() {
           </p>
         ) : null}
 
-        <button
-          className="rounded-lg bg-orange-500 px-4 py-2 text-base font-semibold text-white transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
+        <Button
+          className="w-full"
           data-testid="login-submit"
           disabled={isLoading || isSubmitting}
+          size="lg"
           type="submit"
         >
           {isSubmitting ? "Entrando..." : "Entrar"}
-        </button>
+        </Button>
       </form>
     </main>
   );

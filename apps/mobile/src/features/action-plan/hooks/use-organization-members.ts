@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { TENANT_QUERY_KEY_PREFIX } from "@safestop/query-keys";
 
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
@@ -9,7 +10,7 @@ export function useOrganizationMembers() {
   const organizationId = activeOrganization?.id;
 
   const query = useQuery({
-    queryKey: ["organization-members", organizationId],
+    queryKey: [TENANT_QUERY_KEY_PREFIX, organizationId, "organization-members"],
     queryFn: () => getOrganizationMembers(organizationId!),
     enabled: !!organizationId,
     staleTime: 60_000,

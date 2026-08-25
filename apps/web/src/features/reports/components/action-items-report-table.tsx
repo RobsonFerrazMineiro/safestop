@@ -1,11 +1,26 @@
 "use client";
 
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { tableFeatures, useTable, type ColumnDef } from "@tanstack/react-table";
 import type { ActionItemReportRow, ActionItemReportSortField } from "@safestop/types";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { formatActionItemStatus } from "@/features/action-plan/utils/format-labels";
 
 import { formatReportDateTime } from "../utils/format-report-date";
+
+const features = tableFeatures({});
 
 type ActionItemsReportTableProps = {
   caption: string;
@@ -28,6 +43,34 @@ function sortIndicator(
   return direction === "asc" ? " ↑" : " ↓";
 }
 
+function SortableHead({
+  label,
+  field,
+  sortField,
+  sortDirection,
+  onSort,
+}: {
+  label: string;
+  field: ActionItemReportSortField;
+  sortField: ActionItemReportSortField;
+  sortDirection: "asc" | "desc";
+  onSort: (field: ActionItemReportSortField) => void;
+}) {
+  return (
+    <Button
+      className="h-auto px-0 text-left text-xs uppercase tracking-wide text-muted-foreground hover:text-foreground"
+      type="button"
+      variant="ghost"
+      onClick={() => {
+        onSort(field);
+      }}
+    >
+      {label}
+      {sortIndicator(field, sortField, sortDirection)}
+    </Button>
+  );
+}
+
 export function ActionItemsReportTable({
   caption,
   rows,
@@ -38,65 +81,139 @@ export function ActionItemsReportTable({
 }: ActionItemsReportTableProps) {
   const router = useRouter();
 
+  const columns = useMemo<Array<ColumnDef<typeof features, ActionItemReportRow>>>(() => {
+    const base: Array<ColumnDef<typeof features, ActionItemReportRow>> = [
+      {
+        accessorKey: "title",
+        header: () => (
+          <SortableHead
+            field="title"
+            label="Título"
+            onSort={onSort}
+            sortDirection={sortDirection}
+            sortField={sortField}
+          />
+        ),
+      },
+      {
+        accessorKey: "dueAt",
+        header: () => (
+          <SortableHead
+            field="due_at"
+            label="Prazo"
+            onSort={onSort}
+            sortDirection={sortDirection}
+            sortField={sortField}
+          />
+        ),
+        cell: (info) => formatReportDateTime(info.getValue<string>()),
+      },
+      {
+        accessorKey: "status",
+        header: () => (
+          <SortableHead
+            field="status"
+            label="Status"
+            onSort={onSort}
+            sortDirection={sortDirection}
+            sortField={sortField}
+          />
+        ),
+        cell: (info) => formatActionItemStatus(info.row.original.status),
+      },
+      {
+        accessorKey: "isOverdue",
+        header: "Vencida",
+        cell: (info) =>
+          info.getValue<boolean>() ? (
+            <Badge className="border-red-800/60 bg-red-950/20 text-red-300" variant="outline">
+              Vencida
+            </Badge>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          ),
+      },
+      {
+        accessorKey: "isDueSoon",
+        header: "Próx. vencimento",
+        cell: (info) =>
+          info.getValue<boolean>() ? (
+            <Badge className="border-amber-700/50 bg-amber-950/20 text-amber-200" variant="outline">
+              Próxima
+            </Badge>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          ),
+      },
+    ];
+
+    if (!showOptionalColumns) {
+      return base;
+    }
+
+    return [
+      ...base,
+      {
+        accessorKey: "responsibleMemberName",
+        header: "Responsável",
+        cell: (info) => info.getValue<string | null>() ?? "—",
+      },
+    ];
+  }, [onSort, showOptionalColumns, sortDirection, sortField]);
+
+  const table = useTable({
+    features,
+    columns,
+    data: rows,
+  });
+
   function handleRowNavigate(occurrenceId: string) {
     router.push(`/stop-work/${occurrenceId}`);
   }
 
-  function renderSortableHeader(label: string, field: ActionItemReportSortField) {
-    const ariaSort =
-      sortField === field ? (sortDirection === "asc" ? "ascending" : "descending") : "none";
-
-    return (
-      <th aria-sort={ariaSort} className="px-4 py-3" scope="col">
-        <button
-          className="text-left uppercase tracking-wide hover:text-gray-200"
-          type="button"
-          onClick={() => {
-            onSort(field);
-          }}
-        >
-          {label}
-          {sortIndicator(field, sortField, sortDirection)}
-        </button>
-      </th>
-    );
-  }
-
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-800">
-      <table className="min-w-full divide-y divide-gray-800 text-sm">
-        <caption className="sr-only">{caption}</caption>
-        <thead className="bg-gray-950/70 text-left text-xs uppercase tracking-wide text-gray-400">
-          <tr>
-            {renderSortableHeader("Título", "title")}
-            {renderSortableHeader("Prazo", "due_at")}
-            {renderSortableHeader("Status", "status")}
-            <th className="px-4 py-3" scope="col">
-              Vencida
-            </th>
-            <th className="px-4 py-3" scope="col">
-              Próx. vencimento
-            </th>
-            {showOptionalColumns ? (
-              <th className="px-4 py-3" scope="col">
-                Responsável
-              </th>
-            ) : null}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-800">
-          {rows.map((row) => {
-            const navigable = row.occurrenceId.length > 0;
+    <div className="rounded-lg border border-border">
+      <Table>
+        <TableCaption className="sr-only">{caption}</TableCaption>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                const ariaSortMap: Record<string, ActionItemReportSortField> = {
+                  title: "title",
+                  dueAt: "due_at",
+                  status: "status",
+                };
+                const mapped = ariaSortMap[header.column.id];
+                const ariaSort =
+                  mapped && sortField === mapped
+                    ? sortDirection === "asc"
+                      ? "ascending"
+                      : "descending"
+                    : "none";
+
+                return (
+                  <TableHead aria-sort={ariaSort} className="px-4 py-3" key={header.id}>
+                    {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => {
+            const navigable = row.original.occurrenceId.length > 0;
 
             return (
-              <tr
+              <TableRow
+                className={navigable ? "cursor-pointer" : undefined}
                 key={row.id}
-                className={`bg-gray-900/30 ${navigable ? "cursor-pointer hover:bg-gray-900/60" : ""}`}
                 tabIndex={navigable ? 0 : undefined}
                 onClick={
                   navigable
                     ? () => {
-                        handleRowNavigate(row.occurrenceId);
+                        handleRowNavigate(row.original.occurrenceId);
                       }
                     : undefined
                 }
@@ -104,41 +221,22 @@ export function ActionItemsReportTable({
                   navigable
                     ? (event) => {
                         if (event.key === "Enter") {
-                          handleRowNavigate(row.occurrenceId);
+                          handleRowNavigate(row.original.occurrenceId);
                         }
                       }
                     : undefined
                 }
               >
-                <td className="px-4 py-3 text-gray-100">{row.title}</td>
-                <td className="px-4 py-3 text-gray-300">{formatReportDateTime(row.dueAt)}</td>
-                <td className="px-4 py-3 text-gray-200">{formatActionItemStatus(row.status)}</td>
-                <td className="px-4 py-3">
-                  {row.isOverdue ? (
-                    <span className="rounded-full border border-red-800/60 px-2 py-0.5 text-xs text-red-300">
-                      Vencida
-                    </span>
-                  ) : (
-                    <span className="text-gray-500">—</span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  {row.isDueSoon ? (
-                    <span className="rounded-full border border-amber-700/50 px-2 py-0.5 text-xs text-amber-200">
-                      Próxima
-                    </span>
-                  ) : (
-                    <span className="text-gray-500">—</span>
-                  )}
-                </td>
-                {showOptionalColumns ? (
-                  <td className="px-4 py-3 text-gray-300">{row.responsibleMemberName ?? "—"}</td>
-                ) : null}
-              </tr>
+                {row.getAllCells().map((cell) => (
+                  <TableCell className="px-4 py-3" key={cell.id}>
+                    <table.FlexRender cell={cell} />
+                  </TableCell>
+                ))}
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

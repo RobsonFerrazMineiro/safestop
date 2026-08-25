@@ -1,7 +1,10 @@
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { getParticipantTypeLabel } from "../services/get-occurrence-participants";
 import { useOccurrenceParticipants } from "../hooks/use-occurrence-participants";
+import { getParticipantTypeLabel } from "../services/get-occurrence-participants";
+
+const COLLAPSE_THRESHOLD = 3;
 
 type OccurrenceParticipantsSectionProps = {
   occurrenceId: string;
@@ -11,6 +14,7 @@ export function OccurrenceParticipantsSection({
   occurrenceId,
 }: OccurrenceParticipantsSectionProps) {
   const { participants, isLoading, isError } = useOccurrenceParticipants(occurrenceId);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (isLoading) {
     return (
@@ -27,6 +31,11 @@ export function OccurrenceParticipantsSection({
     return null;
   }
 
+  const shouldCollapse = participants.length > COLLAPSE_THRESHOLD;
+  const visibleParticipants =
+    shouldCollapse && !isExpanded ? participants.slice(0, COLLAPSE_THRESHOLD) : participants;
+  const hiddenCount = participants.length - COLLAPSE_THRESHOLD;
+
   return (
     <View style={styles.container}>
       <Text accessibilityRole="header" style={styles.sectionTitle}>
@@ -34,7 +43,7 @@ export function OccurrenceParticipantsSection({
       </Text>
 
       <View style={styles.list}>
-        {participants.map((participant) => (
+        {visibleParticipants.map((participant) => (
           <View key={participant.id} style={styles.row}>
             <Text style={styles.bullet}>●</Text>
             <Text style={styles.label}>
@@ -45,6 +54,23 @@ export function OccurrenceParticipantsSection({
           </View>
         ))}
       </View>
+
+      {shouldCollapse ? (
+        <Pressable
+          accessibilityLabel={
+            isExpanded ? "Mostrar menos participantes" : `Mostrar mais ${hiddenCount} participantes`
+          }
+          accessibilityRole="button"
+          accessibilityState={{ expanded: isExpanded }}
+          onPress={() => {
+            setIsExpanded((current) => !current);
+          }}
+        >
+          <Text style={styles.toggle}>
+            {isExpanded ? "Mostrar menos" : `Mostrar mais (${hiddenCount})`}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -88,5 +114,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     paddingTop: 12,
     textTransform: "uppercase",
+  },
+  toggle: {
+    color: "#FB923C",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

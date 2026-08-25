@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   OCCURRENCE_DECISION_REASON_MAX_LENGTH,
   OCCURRENCE_DECISION_REASON_MIN_LENGTH,
@@ -11,6 +11,18 @@ import {
   isOccurrenceRpcConflictError,
   isOccurrenceRpcValidationError,
 } from "@/features/occurrences/utils/occurrence-decision-rpc";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useRecordInterdicaoDecision } from "../hooks/use-record-interdicao-decision";
 import { InterdicaoOfflineNotice } from "./interdicao-states";
@@ -34,7 +46,6 @@ export function InterdicaoDecisionCard({
   const [decisionReason, setDecisionReason] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const confirmDialogRef = useRef<HTMLDialogElement>(null);
 
   const trimmedLength = decisionReason.trim().length;
   const isTooShort = trimmedLength > 0 && trimmedLength < OCCURRENCE_DECISION_REASON_MIN_LENGTH;
@@ -44,23 +55,6 @@ export function InterdicaoDecisionCard({
     trimmedLength <= OCCURRENCE_DECISION_REASON_MAX_LENGTH &&
     !isPending &&
     !isOffline;
-
-  useEffect(() => {
-    const dialog = confirmDialogRef.current;
-
-    if (!dialog) {
-      return;
-    }
-
-    if (isConfirmOpen && !dialog.open) {
-      dialog.showModal();
-      return;
-    }
-
-    if (!isConfirmOpen && dialog.open) {
-      dialog.close();
-    }
-  }, [isConfirmOpen]);
 
   async function handleConfirmedSubmit() {
     setValidationError(null);
@@ -129,8 +123,8 @@ export function InterdicaoDecisionCard({
           <span className="text-sm font-medium text-gray-200">
             Justificativa técnica <span className="text-red-400">*</span>
           </span>
-          <textarea
-            className="min-h-32 w-full rounded-md border border-red-900/60 bg-gray-950 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 disabled:opacity-60"
+          <Textarea
+            className="min-h-32"
             disabled={isPending}
             id="interdicao-decision-reason"
             maxLength={OCCURRENCE_DECISION_REASON_MAX_LENGTH}
@@ -165,10 +159,11 @@ export function InterdicaoDecisionCard({
           </p>
         ) : null}
 
-        <button
-          className="w-full rounded-md bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+        <Button
+          className="w-full"
           disabled={!canSubmit}
           type="button"
+          variant="destructive"
           onClick={() => {
             if (!canSubmit) {
               if (trimmedLength < OCCURRENCE_DECISION_REASON_MIN_LENGTH) {
@@ -183,51 +178,43 @@ export function InterdicaoDecisionCard({
           }}
         >
           {isPending ? "Confirmando…" : "Confirmar interdição"}
-        </button>
+        </Button>
       </div>
 
-      <dialog
-        ref={confirmDialogRef}
-        className="w-full max-w-md rounded-lg border border-red-800 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsConfirmOpen(false);
+      <AlertDialog
+        onOpenChange={(open) => {
+          setIsConfirmOpen(open);
         }}
+        open={isConfirmOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleConfirmedSubmit();
-          }}
-        >
-          <h2 className="text-lg font-semibold text-red-100">Confirmar Interdição Oficial?</h2>
-          <p className="text-sm text-gray-400">
-            A atividade permanecerá formalmente interditada. Esta decisão não pode ser desfeita
-            nesta etapa.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-100">
+              Confirmar Interdição Oficial?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              A atividade permanecerá formalmente interditada. Esta decisão não pode ser desfeita
+              nesta etapa.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
               disabled={isPending}
               type="button"
-              onClick={() => {
-                setIsConfirmOpen(false);
+              variant="destructive"
+              onClick={(event) => {
+                event.preventDefault();
+                void handleConfirmedSubmit();
               }}
             >
-              Cancelar
-            </button>
-            <button
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
-              disabled={isPending}
-              type="submit"
-            >
               {isPending ? "Confirmando…" : "Confirmar interdição"}
-            </button>
-          </div>
-        </form>
-      </dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

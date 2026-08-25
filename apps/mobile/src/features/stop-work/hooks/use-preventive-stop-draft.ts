@@ -118,12 +118,32 @@ export function usePreventiveStopDraft() {
     hydratedScopeRef.current = scopeKey;
   }, [organizationId, scopeKey, userId]);
 
+  const flushDraft = useCallback(
+    async (nextDraft: PreventiveStopDraftInput) => {
+      if (!userId || !organizationId || !scopeKey || !isHydrated) {
+        return;
+      }
+
+      draftRef.current = nextDraft;
+      setDraft(nextDraft);
+      setIsSaving(true);
+
+      try {
+        await setStoredPreventiveStopDraft(userId, organizationId, nextDraft);
+      } finally {
+        setIsSaving(false);
+      }
+    },
+    [isHydrated, organizationId, scopeKey, userId],
+  );
+
   const isDraftReady = scopeKey !== null && isHydrated;
 
   return {
     draft: isDraftReady ? draft : {},
     updateDraft,
     replaceDraft,
+    flushDraft,
     clearDraft,
     isHydrated: isDraftReady,
     isSaving,

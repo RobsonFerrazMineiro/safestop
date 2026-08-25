@@ -1,27 +1,116 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * SafeStop identity (Seção O / @safestop/ui) + shadcn semantic tokens.
+ * html.dark — tema único grafite + primary #F97316 (sem tema claro).
+ */
 :root {
-  /* Color tokens — Seção O, UX-CONVERGENCE-UI-SPEC (espelha @safestop/ui/tokens/colors) */
-  --background: #0f1115;
+  /* SafeStop raw tokens (espelho @safestop/ui) */
   --surface: #171a21;
   --surface-muted: #20242d;
   --surface-elevated: #2a303b;
-  --border: #2e3440;
-  --foreground: #f3f4f6;
-  --foreground-muted: #9ca3af;
-  --primary: #f97316;
   --primary-hover: #ea580c;
   --primary-active: #c2410c;
-  --destructive: #dc2626;
   --success: #16a34a;
   --warning: #facc15;
   --info: #2563eb;
-  /* Disabled: 40% opacidade sobre token base — usar com color-mix() ou rgba no consumidor */
   --disabled-opacity: 0.4;
+
+  /* shadcn semantic — mapeados à identidade SafeStop */
+  --background: #0f1115;
+  --foreground: #f3f4f6;
+  --card: #171a21;
+  --card-foreground: #f3f4f6;
+  --popover: #2a303b;
+  --popover-foreground: #f3f4f6;
+  --primary: #f97316;
+  --primary-foreground: #0f1115;
+  --secondary: #20242d;
+  --secondary-foreground: #f3f4f6;
+  --muted: #20242d;
+  --muted-foreground: #9ca3af;
+  --accent: #2a303b;
+  --accent-foreground: #f3f4f6;
+  --destructive: #dc2626;
+  --destructive-foreground: #f3f4f6;
+  --border: #2e3440;
+  --input: #2e3440;
+  --ring: #f97316;
+  /* Base radius: input/button SafeStop (8px) — não 0.625rem Base44 */
+  --radius: 8px;
+
+  /* Recharts / chart chrome */
+  --chart-1: #f97316;
+  --chart-2: #2563eb;
+  --chart-3: #16a34a;
+  --chart-4: #facc15;
+  --chart-5: #9ca3af;
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), system-ui, sans-serif;
+.dark {
+  /* Tema único dark — mesmos valores que :root (sem alternância claro/escuro) */
+  --background: #0f1115;
+  --foreground: #f3f4f6;
+  --card: #171a21;
+  --card-foreground: #f3f4f6;
+  --popover: #2a303b;
+  --popover-foreground: #f3f4f6;
+  --primary: #f97316;
+  --primary-foreground: #0f1115;
+  --secondary: #20242d;
+  --secondary-foreground: #f3f4f6;
+  --muted: #20242d;
+  --muted-foreground: #9ca3af;
+  --accent: #2a303b;
+  --accent-foreground: #f3f4f6;
+  --destructive: #dc2626;
+  --destructive-foreground: #f3f4f6;
+  --border: #2e3440;
+  --input: #2e3440;
+  --ring: #f97316;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) * 0.75);
+  --radius-md: var(--radius);
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-inter), system-ui, sans-serif;
+  }
 }

@@ -1,12 +1,28 @@
 "use client";
 
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { tableFeatures, useTable, type ColumnDef } from "@tanstack/react-table";
 import type { AwarenessReportRow, AwarenessReportSortField } from "@safestop/types";
 import { requiresNotificationAwareness } from "@safestop/types";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { formatNotificationEventType } from "../utils/format-notification-event-type";
 import { formatReportDateTime } from "../utils/format-report-date";
 import { REPORT_COPY } from "../utils/report-copy";
+
+const features = tableFeatures({});
 
 type AwarenessReportTableProps = {
   caption: string;
@@ -29,6 +45,34 @@ function sortIndicator(
   return direction === "asc" ? " ↑" : " ↓";
 }
 
+function SortableHead({
+  label,
+  field,
+  sortField,
+  sortDirection,
+  onSort,
+}: {
+  label: string;
+  field: AwarenessReportSortField;
+  sortField: AwarenessReportSortField;
+  sortDirection: "asc" | "desc";
+  onSort: (field: AwarenessReportSortField) => void;
+}) {
+  return (
+    <Button
+      className="h-auto px-0 text-left text-xs uppercase tracking-wide text-muted-foreground hover:text-foreground"
+      type="button"
+      variant="ghost"
+      onClick={() => {
+        onSort(field);
+      }}
+    >
+      {label}
+      {sortIndicator(field, sortField, sortDirection)}
+    </Button>
+  );
+}
+
 export function AwarenessReportTable({
   caption,
   rows,
@@ -39,117 +83,168 @@ export function AwarenessReportTable({
 }: AwarenessReportTableProps) {
   const router = useRouter();
 
+  const columns = useMemo<Array<ColumnDef<typeof features, AwarenessReportRow>>>(() => {
+    const base: Array<ColumnDef<typeof features, AwarenessReportRow>> = [
+      {
+        accessorKey: "createdAt",
+        header: () => (
+          <SortableHead
+            field="created_at"
+            label="Data"
+            onSort={onSort}
+            sortDirection={sortDirection}
+            sortField={sortField}
+          />
+        ),
+        cell: (info) => formatReportDateTime(info.getValue<string>()),
+      },
+      {
+        accessorKey: "eventType",
+        header: () => (
+          <SortableHead
+            field="event_type"
+            label="Tipo evento"
+            onSort={onSort}
+            sortDirection={sortDirection}
+            sortField={sortField}
+          />
+        ),
+        cell: (info) => formatNotificationEventType(info.row.original.eventType),
+      },
+      {
+        accessorKey: "recipientMemberName",
+        header: "Destinatário",
+        cell: (info) => info.getValue<string | null>() ?? "—",
+      },
+      {
+        id: "awareness",
+        header: "Ciência",
+        cell: (info) => {
+          const row = info.row.original;
+          const pending = requiresNotificationAwareness(row);
+
+          if (pending) {
+            return (
+              <Badge
+                className="border-amber-700/50 bg-amber-950/20 text-amber-200"
+                variant="outline"
+              >
+                Pendente
+              </Badge>
+            );
+          }
+
+          return (
+            <span>
+              Confirmada
+              {row.awarenessConfirmedAt
+                ? ` · ${formatReportDateTime(row.awarenessConfirmedAt)}`
+                : ""}
+            </span>
+          );
+        },
+      },
+    ];
+
+    if (!showOptionalColumns) {
+      return base;
+    }
+
+    return [
+      ...base,
+      {
+        accessorKey: "requiresAwareness",
+        header: "Exige ciência?",
+        cell: (info) => (info.getValue<boolean>() ? "Sim" : "Não"),
+      },
+      {
+        accessorKey: "readAt",
+        header: "Leitura",
+        cell: (info) => (
+          <span title={REPORT_COPY.awarenessReadHint}>
+            {info.row.original.readAt ? formatReportDateTime(info.row.original.readAt) : "—"}
+          </span>
+        ),
+      },
+    ];
+  }, [onSort, showOptionalColumns, sortDirection, sortField]);
+
+  const table = useTable({
+    features,
+    columns,
+    data: rows,
+  });
+
   function handleRowNavigate(occurrenceId: string) {
     router.push(`/stop-work/${occurrenceId}`);
   }
 
-  function renderSortableHeader(label: string, field: AwarenessReportSortField) {
-    const ariaSort =
-      sortField === field ? (sortDirection === "asc" ? "ascending" : "descending") : "none";
-
-    return (
-      <th aria-sort={ariaSort} className="px-4 py-3" scope="col">
-        <button
-          className="text-left uppercase tracking-wide hover:text-gray-200"
-          type="button"
-          onClick={() => {
-            onSort(field);
-          }}
-        >
-          {label}
-          {sortIndicator(field, sortField, sortDirection)}
-        </button>
-      </th>
-    );
-  }
-
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-800">
-      <table className="min-w-full divide-y divide-gray-800 text-sm">
-        <caption className="sr-only">{caption}</caption>
-        <thead className="bg-gray-950/70 text-left text-xs uppercase tracking-wide text-gray-400">
-          <tr>
-            {renderSortableHeader("Data", "created_at")}
-            {renderSortableHeader("Tipo evento", "event_type")}
-            <th className="px-4 py-3" scope="col">
-              Destinatário
-            </th>
-            <th className="px-4 py-3" scope="col">
-              Ciência
-            </th>
-            {showOptionalColumns ? (
-              <>
-                <th className="px-4 py-3" scope="col">
-                  Exige ciência?
-                </th>
-                <th className="px-4 py-3" scope="col">
-                  Leitura
-                </th>
-              </>
-            ) : null}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-800">
-          {rows.map((row) => {
-            const pending = requiresNotificationAwareness(row);
-            const navigable = row.occurrenceId !== null && row.occurrenceId.length > 0;
+    <div className="rounded-lg border border-border">
+      <Table>
+        <TableCaption className="sr-only">{caption}</TableCaption>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                const ariaSortMap: Record<string, AwarenessReportSortField> = {
+                  createdAt: "created_at",
+                  eventType: "event_type",
+                };
+                const mapped = ariaSortMap[header.column.id];
+                const ariaSort =
+                  mapped && sortField === mapped
+                    ? sortDirection === "asc"
+                      ? "ascending"
+                      : "descending"
+                    : "none";
+
+                return (
+                  <TableHead aria-sort={ariaSort} className="px-4 py-3" key={header.id}>
+                    {header.isPlaceholder ? null : <table.FlexRender header={header} />}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => {
+            const occurrenceId = row.original.occurrenceId;
+            const navigable = occurrenceId !== null && occurrenceId.length > 0;
 
             return (
-              <tr
+              <TableRow
+                className={navigable ? "cursor-pointer" : undefined}
                 key={row.id}
-                className={`bg-gray-900/30 ${navigable ? "cursor-pointer hover:bg-gray-900/60" : ""}`}
                 tabIndex={navigable ? 0 : undefined}
                 onClick={
-                  navigable && row.occurrenceId
+                  navigable && occurrenceId
                     ? () => {
-                        handleRowNavigate(row.occurrenceId as string);
+                        handleRowNavigate(occurrenceId);
                       }
                     : undefined
                 }
                 onKeyDown={
-                  navigable && row.occurrenceId
+                  navigable && occurrenceId
                     ? (event) => {
                         if (event.key === "Enter") {
-                          handleRowNavigate(row.occurrenceId as string);
+                          handleRowNavigate(occurrenceId);
                         }
                       }
                     : undefined
                 }
               >
-                <td className="px-4 py-3 text-gray-300">{formatReportDateTime(row.createdAt)}</td>
-                <td className="px-4 py-3 text-gray-200">
-                  {formatNotificationEventType(row.eventType)}
-                </td>
-                <td className="px-4 py-3 text-gray-300">{row.recipientMemberName ?? "—"}</td>
-                <td className="px-4 py-3">
-                  {pending ? (
-                    <span className="rounded-full border border-amber-700/50 px-2 py-0.5 text-xs text-amber-200">
-                      Pendente
-                    </span>
-                  ) : (
-                    <span className="text-gray-300">
-                      Confirmada
-                      {row.awarenessConfirmedAt
-                        ? ` · ${formatReportDateTime(row.awarenessConfirmedAt)}`
-                        : ""}
-                    </span>
-                  )}
-                </td>
-                {showOptionalColumns ? (
-                  <>
-                    <td className="px-4 py-3 text-gray-300">
-                      {row.requiresAwareness ? "Sim" : "Não"}
-                    </td>
-                    <td className="px-4 py-3 text-gray-300" title={REPORT_COPY.awarenessReadHint}>
-                      {row.readAt ? formatReportDateTime(row.readAt) : "—"}
-                    </td>
-                  </>
-                ) : null}
-              </tr>
+                {row.getAllCells().map((cell) => (
+                  <TableCell className="px-4 py-3" key={cell.id}>
+                    <table.FlexRender cell={cell} />
+                  </TableCell>
+                ))}
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }

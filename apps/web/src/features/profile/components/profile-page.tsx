@@ -1,11 +1,14 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { profileUpdateSchema, type ProfileUpdateInput } from "@safestop/validation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 
 import { useProfile } from "../hooks/use-profile";
@@ -69,6 +72,7 @@ function ProfileForm({
     reset,
     formState: { errors },
   } = useForm<ProfileUpdateInput>({
+    resolver: zodResolver(profileUpdateSchema),
     defaultValues: {
       fullName: profile.full_name,
       phone: profile.phone ?? "",
@@ -91,15 +95,8 @@ function ProfileForm({
     setFormError(null);
     onResetUpdateState();
 
-    const parsed = profileUpdateSchema.safeParse(values);
-
-    if (!parsed.success) {
-      setFormError("Verifique os campos e tente novamente.");
-      return;
-    }
-
     try {
-      await onSubmitProfile(parsed.data);
+      await onSubmitProfile(values);
     } catch (error) {
       const message =
         error instanceof Error
@@ -119,12 +116,7 @@ function ProfileForm({
         <label className="text-sm font-medium text-gray-200" htmlFor="fullName">
           Nome completo
         </label>
-        <input
-          className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
-          disabled={isFormDisabled}
-          id="fullName"
-          {...register("fullName", { required: "Nome completo é obrigatório." })}
-        />
+        <Input disabled={isFormDisabled} id="fullName" {...register("fullName")} />
         {errors.fullName ? <p className="text-sm text-red-300">{errors.fullName.message}</p> : null}
       </div>
 
@@ -132,13 +124,7 @@ function ProfileForm({
         <label className="text-sm font-medium text-gray-200" htmlFor="phone">
           Telefone
         </label>
-        <input
-          className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
-          disabled={isFormDisabled}
-          id="phone"
-          type="tel"
-          {...register("phone")}
-        />
+        <Input disabled={isFormDisabled} id="phone" type="tel" {...register("phone")} />
         {errors.phone ? <p className="text-sm text-red-300">{errors.phone.message}</p> : null}
       </div>
 
@@ -163,13 +149,9 @@ function ProfileForm({
         </p>
       ) : null}
 
-      <button
-        className="rounded-lg bg-orange-500 px-4 py-2 text-base font-semibold text-white transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
-        disabled={isFormDisabled}
-        type="submit"
-      >
+      <Button disabled={isFormDisabled} size="lg" type="submit">
         {isUpdating ? "Salvando..." : "Salvar alterações"}
-      </button>
+      </Button>
     </form>
   );
 }

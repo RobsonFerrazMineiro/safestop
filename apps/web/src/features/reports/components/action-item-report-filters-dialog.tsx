@@ -1,10 +1,28 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useState } from "react";
 import type { ActionItemStatus } from "@safestop/types";
 import { DASHBOARD_DUE_SOON_DAYS_DEFAULT } from "@safestop/types";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { formatActionItemStatus } from "@/features/action-plan/utils/format-labels";
+import { cn } from "@/lib/utils";
 
 import { useReportScopeFilterOptions } from "../hooks/use-report-scope-filter-options";
 import { REPORT_COPY } from "../utils/report-copy";
@@ -26,194 +44,133 @@ export function ActionItemReportFiltersDialog({
   activeFilterCount,
   onApply,
 }: ActionItemReportFiltersDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [open, setOpen] = useState(false);
   const { members, isLoading, isError } = useReportScopeFilterOptions();
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-
-    if (!dialog) {
-      return;
-    }
-
-    const handleClose = () => {
-      document.body.style.overflow = "";
-    };
-
-    dialog.addEventListener("close", handleClose);
-
-    return () => {
-      dialog.removeEventListener("close", handleClose);
-    };
-  }, []);
-
-  function openDialog() {
-    const dialog = dialogRef.current;
-
-    if (!dialog) {
-      return;
-    }
-
-    document.body.style.overflow = "hidden";
-    dialog.showModal();
-  }
-
-  function closeDialog() {
-    dialogRef.current?.close();
-  }
 
   function update(partial: Partial<ActionItemReportViewState>) {
     onApply({ ...filters, ...partial });
   }
 
   return (
-    <>
-      <button
-        className={`rounded-full border px-3 py-1.5 text-sm transition ${
-          activeFilterCount > 0
-            ? "border-orange-500 bg-orange-500/10 text-orange-200"
-            : "border-gray-700 text-gray-300 hover:border-gray-500"
-        }`}
-        type="button"
-        onClick={openDialog}
-      >
-        {REPORT_COPY.filters}
-        {activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
-      </button>
-
-      <dialog
-        ref={dialogRef}
-        aria-labelledby="action-item-report-filters-title"
-        className="w-full max-w-lg rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/70"
-      >
-        <form
-          className="flex max-h-[85vh] flex-col gap-4 overflow-y-auto p-5"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            closeDialog();
-          }}
+    <Dialog onOpenChange={setOpen} open={open}>
+      <DialogTrigger asChild>
+        <Button
+          className={cn(
+            "rounded-full",
+            activeFilterCount > 0 ? "border-primary bg-primary/10 text-primary" : "",
+          )}
+          type="button"
+          variant="outline"
         >
-          <header className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-semibold" id="action-item-report-filters-title">
-                {REPORT_COPY.filters}
-              </h2>
-              <p className="text-xs text-gray-400">Status, prazo e responsável.</p>
-            </div>
-            <button
-              aria-label="Fechar filtros"
-              className="rounded-md border border-gray-700 px-2 py-1 text-sm text-gray-300 hover:bg-gray-800"
-              type="button"
-              onClick={closeDialog}
-            >
-              ✕
-            </button>
-          </header>
+          {REPORT_COPY.filters}
+          {activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{REPORT_COPY.filters}</DialogTitle>
+          <DialogDescription>Status, prazo e responsável.</DialogDescription>
+        </DialogHeader>
 
-          {isLoading ? <p className="text-sm text-gray-500">Carregando opções…</p> : null}
-          {isError ? (
-            <p className="text-sm text-red-300">Não foi possível carregar as opções de filtro.</p>
-          ) : null}
+        {isLoading ? <p className="text-sm text-muted-foreground">Carregando opções…</p> : null}
+        {isError ? (
+          <p className="text-sm text-destructive">Não foi possível carregar as opções de filtro.</p>
+        ) : null}
 
-          <label className="flex flex-col gap-1 text-sm">
-            <span className="text-gray-400">Responsável</span>
-            <select
-              className="rounded-md border border-gray-700 bg-gray-950 px-3 py-2 text-gray-100"
-              value={filters.responsibleMemberId ?? ""}
-              onChange={(event) => {
-                update({ responsibleMemberId: event.target.value || null });
-              }}
-            >
-              <option value="">Todos</option>
+        <div className="flex flex-col gap-1 text-sm">
+          <span className="text-muted-foreground">Responsável</span>
+          <Select
+            onValueChange={(value) => {
+              update({ responsibleMemberId: value === "all" ? null : value });
+            }}
+            value={filters.responsibleMemberId ?? "all"}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Todos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
               {members.map((member) => (
-                <option key={member.id} value={member.id}>
+                <SelectItem key={member.id} value={member.id}>
                   {member.fullName ?? member.id}
-                </option>
+                </SelectItem>
               ))}
-            </select>
-          </label>
+            </SelectContent>
+          </Select>
+        </div>
 
-          <fieldset className="flex flex-col gap-2">
-            <legend className="text-sm text-gray-400">Status</legend>
-            <div className="flex flex-wrap gap-2">
-              {ACTION_ITEM_STATUS_OPTIONS.map((status) => {
-                const selected = filters.status.includes(status);
-
-                return (
-                  <button
-                    key={status}
-                    className={`rounded-full border px-2.5 py-1 text-xs ${
-                      selected
-                        ? "border-orange-500 bg-orange-500/10 text-orange-200"
-                        : "border-gray-700 text-gray-300"
-                    }`}
-                    type="button"
-                    onClick={() => {
-                      update({
-                        status: toggleArrayValue(filters.status, status as ActionItemStatus),
-                      });
-                    }}
-                  >
-                    {formatActionItemStatus(status)}
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-sm text-muted-foreground">Status</legend>
           <div className="flex flex-wrap gap-2">
-            <button
-              className={`rounded-full border px-3 py-1.5 text-sm ${
-                filters.overdueOnly
-                  ? "border-orange-500 bg-orange-500/10 text-orange-200"
-                  : "border-gray-700 text-gray-300"
-              }`}
-              type="button"
-              onClick={() => {
-                update({ overdueOnly: !filters.overdueOnly });
-              }}
-            >
-              Vencidas
-            </button>
-            <button
-              className={`rounded-full border px-3 py-1.5 text-sm ${
-                filters.dueSoonOnly
-                  ? "border-orange-500 bg-orange-500/10 text-orange-200"
-                  : "border-gray-700 text-gray-300"
-              }`}
-              type="button"
-              onClick={() => {
-                update({ dueSoonOnly: !filters.dueSoonOnly });
-              }}
-            >
-              Próximas do vencimento
-            </button>
-          </div>
+            {ACTION_ITEM_STATUS_OPTIONS.map((status) => {
+              const selected = filters.status.includes(status);
 
-          {filters.dueSoonOnly ? (
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-gray-400">Dias para vencimento próximo</span>
-              <input
-                className="rounded-md border border-gray-700 bg-gray-950 px-3 py-2 text-gray-100"
-                max={30}
-                min={1}
-                type="number"
-                value={filters.dueSoonDays}
-                onChange={(event) => {
-                  const parsed = Number.parseInt(event.target.value, 10);
-                  update({
-                    dueSoonDays:
-                      Number.isFinite(parsed) && parsed >= 1 && parsed <= 30
-                        ? parsed
-                        : DASHBOARD_DUE_SOON_DAYS_DEFAULT,
-                  });
-                }}
-              />
-            </label>
-          ) : null}
-        </form>
-      </dialog>
-    </>
+              return (
+                <Button
+                  className="rounded-full"
+                  key={status}
+                  size="sm"
+                  type="button"
+                  variant={selected ? "default" : "outline"}
+                  onClick={() => {
+                    update({
+                      status: toggleArrayValue(filters.status, status as ActionItemStatus),
+                    });
+                  }}
+                >
+                  {formatActionItemStatus(status)}
+                </Button>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            className="rounded-full"
+            size="sm"
+            type="button"
+            variant={filters.overdueOnly ? "default" : "outline"}
+            onClick={() => {
+              update({ overdueOnly: !filters.overdueOnly });
+            }}
+          >
+            Vencidas
+          </Button>
+          <Button
+            className="rounded-full"
+            size="sm"
+            type="button"
+            variant={filters.dueSoonOnly ? "default" : "outline"}
+            onClick={() => {
+              update({ dueSoonOnly: !filters.dueSoonOnly });
+            }}
+          >
+            Próximas do vencimento
+          </Button>
+        </div>
+
+        {filters.dueSoonOnly ? (
+          <div className="flex flex-col gap-1 text-sm">
+            <span className="text-muted-foreground">Dias para vencimento próximo</span>
+            <Input
+              max={30}
+              min={1}
+              type="number"
+              value={filters.dueSoonDays}
+              onChange={(event) => {
+                const parsed = Number.parseInt(event.target.value, 10);
+                update({
+                  dueSoonDays:
+                    Number.isFinite(parsed) && parsed >= 1 && parsed <= 30
+                      ? parsed
+                      : DASHBOARD_DUE_SOON_DAYS_DEFAULT,
+                });
+              }}
+            />
+          </div>
+        ) : null}
+      </DialogContent>
+    </Dialog>
   );
 }

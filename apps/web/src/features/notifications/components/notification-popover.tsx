@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 
+import { Button } from "@/components/ui/button";
+
 import { NotificationItem } from "./notification-item";
 import {
   NotificationEmptyState,
@@ -83,14 +85,16 @@ export function NotificationPopover({
     >
       <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
         <h2 className="text-sm font-semibold text-gray-100">Notificações</h2>
-        <button
-          className="text-xs text-orange-400 hover:text-orange-300 disabled:opacity-50"
+        <Button
+          className="text-xs"
           disabled={isMarkingAll || isOffline || items.length === 0}
+          size="sm"
           type="button"
+          variant="ghost"
           onClick={onMarkAllRead}
         >
           Marcar todas
-        </button>
+        </Button>
       </div>
 
       <div className="flex max-h-[420px] flex-col gap-2 overflow-y-auto p-3">

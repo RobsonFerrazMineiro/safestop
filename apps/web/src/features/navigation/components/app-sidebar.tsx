@@ -10,9 +10,11 @@ import { useAuth } from "@/hooks/use-auth";
 import { useNotificationBadgeCounts } from "@/features/notifications";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { formatBadgeCount } from "@/features/notifications/utils/format-labels";
+
 import { BrandMarkIcon, CloseIcon, LogOutIcon, MenuIcon } from "./nav-icons";
 import { getPrimaryNavItems, type NavItem } from "../utils/get-nav-items";
-import { formatBadgeCount } from "@/features/notifications/utils/format-labels";
 
 const HIDDEN_PATH_PREFIXES = ["/organizations", "/login"];
 
@@ -48,38 +50,48 @@ function NavList({ items, pathname, variant, unreadCount, onNavigate }: NavListP
         const active = item.isActive(pathname);
         const showBadge = item.key === "notifications" && unreadCount > 0;
 
+        const link = (
+          <Link
+            className={`flex items-center gap-3 rounded-full px-3 py-2.5 text-sm transition ${
+              active
+                ? "bg-[var(--surface-elevated)] text-[var(--foreground)]"
+                : "text-[var(--foreground-muted)] hover:bg-[var(--surface-elevated)]/60 hover:text-[var(--foreground)]"
+            } ${variant === "icon" ? "justify-center" : ""}`}
+            href={item.href}
+            onClick={onNavigate}
+          >
+            <span className="relative shrink-0">
+              <Icon className="h-5 w-5" />
+              {showBadge && variant === "icon" ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[var(--primary)]"
+                />
+              ) : null}
+            </span>
+            {variant === "full" ? (
+              <span className="flex-1 truncate">{item.label}</span>
+            ) : (
+              <span className="sr-only">{item.label}</span>
+            )}
+            {showBadge && variant === "full" ? (
+              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--primary)] px-1 text-[10px] font-bold text-white">
+                {formatBadgeCount(unreadCount)}
+              </span>
+            ) : null}
+          </Link>
+        );
+
         return (
           <li key={item.key}>
-            <Link
-              className={`flex items-center gap-3 rounded-full px-3 py-2.5 text-sm transition ${
-                active
-                  ? "bg-[var(--surface-elevated)] text-[var(--foreground)]"
-                  : "text-[var(--foreground-muted)] hover:bg-[var(--surface-elevated)]/60 hover:text-[var(--foreground)]"
-              } ${variant === "icon" ? "justify-center" : ""}`}
-              href={item.href}
-              title={variant === "icon" ? item.label : undefined}
-              onClick={onNavigate}
-            >
-              <span className="relative shrink-0">
-                <Icon className="h-5 w-5" />
-                {showBadge && variant === "icon" ? (
-                  <span
-                    aria-hidden="true"
-                    className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[var(--primary)]"
-                  />
-                ) : null}
-              </span>
-              {variant === "full" ? (
-                <span className="flex-1 truncate">{item.label}</span>
-              ) : (
-                <span className="sr-only">{item.label}</span>
-              )}
-              {showBadge && variant === "full" ? (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--primary)] px-1 text-[10px] font-bold text-white">
-                  {formatBadgeCount(unreadCount)}
-                </span>
-              ) : null}
-            </Link>
+            {variant === "icon" ? (
+              <Tooltip>
+                <TooltipTrigger asChild>{link}</TooltipTrigger>
+                <TooltipContent side="right">{item.label}</TooltipContent>
+              </Tooltip>
+            ) : (
+              link
+            )}
           </li>
         );
       })}

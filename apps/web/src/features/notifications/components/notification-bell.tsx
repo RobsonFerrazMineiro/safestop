@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
+import { Bell } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
 import {
@@ -16,31 +20,11 @@ import { useNotificationPopoverList } from "../hooks/use-notification-popover-li
 import { formatBadgeCount } from "../utils/format-labels";
 import { NotificationPopover } from "./notification-popover";
 
-function BellIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-5 w-5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      viewBox="0 0 24 24"
-    >
-      <path
-        d="M15 17H9m8-4a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9Z"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 export function NotificationBell() {
   const { activeOrganization } = useActiveOrganization();
   const organizationId = activeOrganization?.id ?? "";
   const { canRead, canConfirmAwareness, isOffline } = useNotificationContext();
   const [isOpen, setIsOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
 
   const { unreadCount, pendingAwarenessCount } = useNotificationBadgeCounts();
   const { items, isLoading, isError, refetch, enabled } = useNotificationPopoverList(
@@ -64,7 +48,7 @@ export function NotificationBell() {
 
   function handleMarkAllRead() {
     void markAllMutation.mutateAsync().then(() => {
-      setToast("Marcadas como lidas.");
+      toast.success("Marcadas como lidas.");
       void refetch();
     });
   }
@@ -73,41 +57,42 @@ export function NotificationBell() {
     void confirmMutation
       .mutateAsync(notificationId)
       .then(() => {
-        setToast("Ciência confirmada.");
         void refetch();
       })
       .catch((error: unknown) => {
         if (isNotificationForbiddenError(error)) {
-          setToast("Você não tem permissão para confirmar ciência.");
+          return;
         }
       });
   }
 
   return (
     <div className="relative">
-      <button
+      <Button
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         aria-label={ariaLabel}
-        className="relative rounded-md border border-gray-700 p-2 text-gray-200 hover:bg-gray-800"
+        className="relative"
+        size="icon"
         type="button"
+        variant="outline"
         onClick={() => {
           setIsOpen((open) => !open);
         }}
       >
-        <BellIcon />
+        <Bell className="h-5 w-5" />
         {unreadCount > 0 ? (
-          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[10px] font-bold text-white">
+          <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
             {formatBadgeCount(unreadCount)}
           </span>
         ) : null}
         {pendingAwarenessCount > 0 ? (
           <span
             aria-hidden="true"
-            className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-gray-950 bg-amber-400"
+            className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background bg-amber-400"
           />
         ) : null}
-      </button>
+      </Button>
 
       <NotificationPopover
         canConfirmAwareness={canConfirmAwareness}
@@ -128,12 +113,6 @@ export function NotificationBell() {
           void refetch();
         }}
       />
-
-      {toast ? (
-        <p className="sr-only" role="status">
-          {toast}
-        </p>
-      ) : null}
     </div>
   );
 }

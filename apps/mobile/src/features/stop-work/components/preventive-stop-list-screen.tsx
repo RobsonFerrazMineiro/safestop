@@ -121,6 +121,9 @@ export function PreventiveStopListScreen({
               ? "Não foi possível carregar as ações."
               : "Não foi possível carregar as ocorrências."
           }
+          onRetry={() => {
+            void refetch();
+          }}
         />
       </SafeAreaView>
     );

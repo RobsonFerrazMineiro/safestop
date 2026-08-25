@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import type { OccurrenceTimelineItem } from "@safestop/types";
+import type { OccurrenceTimelineItem, OccurrenceDetails } from "@safestop/types";
 import { shouldShowActionPlanSection } from "@safestop/types";
 
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
@@ -59,6 +59,83 @@ function DetailField({ label, value }: { label: string; value: string }) {
     <View style={styles.field}>
       <Text style={styles.fieldLabel}>{label}</Text>
       <Text style={styles.fieldValue}>{value}</Text>
+    </View>
+  );
+}
+
+type RegistrationDetailsSectionProps = {
+  createdByName: string | null | undefined;
+  occurredAt: string;
+  stoppedAt: string | null | undefined;
+};
+
+function RegistrationDetailsSection({
+  createdByName,
+  occurredAt,
+  stoppedAt,
+}: RegistrationDetailsSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <View style={styles.registrationSection}>
+      <Pressable
+        accessibilityLabel="Ver detalhes de registro"
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isExpanded }}
+        onPress={() => {
+          setIsExpanded((current) => !current);
+        }}
+      >
+        <Text style={styles.registrationToggle}>
+          {isExpanded ? "Ocultar detalhes de registro" : "Ver detalhes de registro"}
+        </Text>
+      </Pressable>
+
+      {isExpanded ? (
+        <View style={styles.registrationContent}>
+          {createdByName ? <DetailField label="Registrado por" value={createdByName} /> : null}
+          <DetailField label="Ocorrido em" value={formatOccurrenceDate(occurredAt)} />
+          {stoppedAt ? (
+            <DetailField label="Paralisado em" value={formatOccurrenceDate(stoppedAt)} />
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+type LeadershipDecisionSectionProps = {
+  isOnline: boolean;
+  isRefreshing: boolean;
+  occurrence: OccurrenceDetails;
+  onRefresh: () => Promise<unknown>;
+};
+
+function LeadershipDecisionSection({
+  isOnline,
+  isRefreshing,
+  occurrence,
+  onRefresh,
+}: LeadershipDecisionSectionProps) {
+  return (
+    <View style={styles.leadershipSection}>
+      <Text accessibilityRole="header" style={styles.sectionTitle}>
+        Decisão da Liderança
+      </Text>
+      <View style={styles.leadershipCards}>
+        <EvaluationSection
+          isOnline={isOnline}
+          isRefreshing={isRefreshing}
+          occurrence={occurrence}
+          onRefresh={onRefresh}
+        />
+        <InterdicaoSection
+          isOnline={isOnline}
+          isRefreshing={isRefreshing}
+          occurrence={occurrence}
+          onRefresh={onRefresh}
+        />
+      </View>
     </View>
   );
 }
@@ -211,30 +288,17 @@ export function PreventiveStopDetailScreen({
           <DetailField label="Medida imediata" value={preventiveStop.immediateActionDescription} />
         ) : null}
 
-        <Text style={styles.sectionTitle}>Registro</Text>
-        {preventiveStop.createdByName ? (
-          <DetailField label="Registrado por" value={preventiveStop.createdByName} />
-        ) : null}
-        <DetailField label="Ocorrido em" value={formatOccurrenceDate(preventiveStop.occurredAt)} />
-        {preventiveStop.stoppedAt ? (
-          <DetailField
-            label="Paralisado em"
-            value={formatOccurrenceDate(preventiveStop.stoppedAt)}
-          />
-        ) : null}
+        <RegistrationDetailsSection
+          createdByName={preventiveStop.createdByName}
+          occurredAt={preventiveStop.occurredAt}
+          stoppedAt={preventiveStop.stoppedAt}
+        />
 
         <OccurrenceParticipantsSection occurrenceId={occurrenceId} />
 
         <EvidenceSection occurrenceId={occurrenceId} />
 
-        <EvaluationSection
-          isOnline={isOnline}
-          isRefreshing={isFetching}
-          occurrence={preventiveStop}
-          onRefresh={refetch}
-        />
-
-        <InterdicaoSection
+        <LeadershipDecisionSection
           isOnline={isOnline}
           isRefreshing={isFetching}
           occurrence={preventiveStop}
@@ -314,7 +378,12 @@ export function PreventiveStopDetailScreen({
   if (isError) {
     return (
       <SafeAreaView style={styles.container}>
-        <OccurrenceError message="Não foi possível carregar a ocorrência." />
+        <OccurrenceError
+          message="Não foi possível carregar a ocorrência."
+          onRetry={() => {
+            void refetch();
+          }}
+        />
       </SafeAreaView>
     );
   }
@@ -461,6 +530,23 @@ const styles = StyleSheet.create({
   },
   homeButtonWithStickyFooter: {
     bottom: 168,
+  },
+  leadershipCards: {
+    gap: 12,
+  },
+  leadershipSection: {
+    gap: 12,
+  },
+  registrationContent: {
+    gap: 12,
+  },
+  registrationSection: {
+    gap: 8,
+  },
+  registrationToggle: {
+    color: "#FB923C",
+    fontSize: 14,
+    fontWeight: "600",
   },
   stickyFooterHost: {
     left: 0,

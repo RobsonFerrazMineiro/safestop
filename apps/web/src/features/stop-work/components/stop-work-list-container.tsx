@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { Can, useRequirePermission } from "@/features/authorization";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 import { useStopWorkListView } from "../hooks/use-stop-work-list-view";
 import {
@@ -80,15 +82,15 @@ export function StopWorkListContainer() {
         <p className="max-w-md text-base text-red-200" role="alert">
           {error instanceof Error ? error.message : "Não foi possível carregar as ocorrências."}
         </p>
-        <button
-          className="rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-500"
+        <Button
+          type="button"
+          variant="outline"
           onClick={() => {
             void refetch();
           }}
-          type="button"
         >
           Tentar novamente
-        </button>
+        </Button>
       </main>
     );
   }
@@ -113,20 +115,17 @@ export function StopWorkListContainer() {
           </p>
         </div>
         <Can permission="occurrence.create">
-          <Link
-            className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-400"
-            href="/stop-work/new"
-          >
-            Nova Paralisação
-          </Link>
+          <Button asChild>
+            <Link href="/stop-work/new">Nova Paralisação</Link>
+          </Button>
         </Can>
       </header>
 
       {!isAttentionView ? (
         <label className="flex max-w-md flex-col gap-2">
           <span className="text-sm font-medium text-gray-200">Código IMS</span>
-          <input
-            className="w-full rounded-md border border-gray-700 bg-gray-950 px-3 py-2 font-mono text-sm text-gray-100"
+          <Input
+            className="font-mono"
             placeholder="BAA-26-0001"
             value={imsReferenceCodeInput}
             onChange={(event) => {

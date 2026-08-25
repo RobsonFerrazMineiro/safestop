@@ -281,6 +281,18 @@ Validação: smokes `smoke-list-*-report.mjs`, `smoke-report-export-audit.mjs`, 
 
 **Gate I (DOCS):** contratos documentados em `database.md`, `api.md`, `architecture.md` — liberado para commit da sprint.
 
+### Nota — Sub-sprint 3.4 (UX/UI Convergence + Hardening) — **concluída**
+
+A **sub-sprint 3.4** entrega convergência de navegação e tokens iniciais do design system: **Sidebar Web** (substitui top bar horizontal), **Bottom Navigation Mobile** (4 abas + FAB Nova PP), tokens em `@safestop/ui` (cores, spacing, radius, tipografia, estados) e hardening P0 (logout Web/Mobile, banner ciência no detalhe Web, indicador offline, `isPending` em confirmar ciência, cache tenant ao trocar org).
+
+Decisões: [`docs/decisions/UX-CONVERGENCE-DECISIONS.md`](decisions/UX-CONVERGENCE-DECISIONS.md) · UI: [`docs/decisions/UX-CONVERGENCE-UI-SPEC.md`](decisions/UX-CONVERGENCE-UI-SPEC.md) · Verificação: [`docs/decisions/UX-CONVERGENCE-IMPLEMENTATION-VERIFICATION.md`](decisions/UX-CONVERGENCE-IMPLEMENTATION-VERIFICATION.md).
+
+**Fora de escopo 3.4 (P1/P2 — backlog):** componentes visuais compartilhados (`Button`, `NavigationItem`, `Badge`, `Card`, `EmptyState`, `Skeleton`), reorganização visual do Dashboard, chips Nova PP Web, ícones formais Mobile, remoção rotas legadas `/occurrences/*`.
+
+Validação: SECURITY (RBAC + cache F2) aprovado; QA bloqueantes QA-B1…B4 corrigidos; revalidação DOCS 2026-08-24 (`pnpm typecheck`, `pnpm --filter web test`, `qa-hse-01-20.mjs` 20/20).
+
+**Gate I (DOCS):** `docs/design-system.md` atualizado (navegação real + tokens); fechamento em `UX-CONVERGENCE-IMPLEMENTATION-VERIFICATION.md`.
+
 ---
 
 # Sprint 4

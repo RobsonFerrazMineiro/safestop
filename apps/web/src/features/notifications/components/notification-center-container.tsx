@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { useRequirePermission } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 import {
   isNotificationForbiddenError,
@@ -134,21 +136,16 @@ export function NotificationCenterContainer() {
 
   function handleMarkAllRead() {
     void markAllMutation.mutateAsync().then(() => {
-      setStatusMessage("Marcadas como lidas.");
+      toast.success("Marcadas como lidas.");
     });
   }
 
   function handleConfirmAwareness(notificationId: string) {
-    void confirmMutation
-      .mutateAsync(notificationId)
-      .then(() => {
-        setStatusMessage("Ciência confirmada.");
-      })
-      .catch((mutationError: unknown) => {
-        if (isNotificationForbiddenError(mutationError)) {
-          setStatusMessage("Você não tem permissão para confirmar ciência.");
-        }
-      });
+    void confirmMutation.mutateAsync(notificationId).catch((mutationError: unknown) => {
+      if (isNotificationForbiddenError(mutationError)) {
+        setStatusMessage("Você não tem permissão para confirmar ciência.");
+      }
+    });
   }
 
   return (
@@ -161,15 +158,15 @@ export function NotificationCenterContainer() {
       </header>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-200 hover:bg-gray-800 disabled:opacity-50"
+        <Button
           disabled={markAllMutation.isPending || isOffline || items.length === 0}
           type="button"
+          variant="outline"
           onClick={handleMarkAllRead}
         >
           {markAllMutation.isPending ? "Marcando…" : "Marcar todas como lidas"}
-        </button>
-        <Link className="text-sm text-orange-400 hover:text-orange-300" href="/stop-work">
+        </Button>
+        <Link className="text-sm text-primary hover:text-primary/90" href="/stop-work">
           Paralisações
         </Link>
       </div>
@@ -214,16 +211,17 @@ export function NotificationCenterContainer() {
       ) : null}
 
       {!isLoading && !isError && hasNextPage ? (
-        <button
-          className="self-center rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-200 hover:bg-gray-800 disabled:opacity-50"
+        <Button
+          className="self-center"
           disabled={isFetchingNextPage}
           type="button"
+          variant="outline"
           onClick={() => {
             void fetchNextPage();
           }}
         >
           {isFetchingNextPage ? "Carregando…" : "Carregar mais"}
-        </button>
+        </Button>
       ) : null}
     </section>
   );

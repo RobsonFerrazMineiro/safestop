@@ -1,6 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 import {
   isNotificationForbiddenError,
@@ -15,9 +26,8 @@ type NotificationAwarenessBannerProps = {
 };
 
 /**
- * Banner de ciência pendente no topo do Detalhe da PP (Web) — equivalente ao
- * `NotificationAwarenessBanner` do Mobile. Reaproveita a mesma lógica de
- * `isConfirming` da correção F1 para bloquear duplo envio.
+ * Banner de ciência pendente no topo do Detalhe da PP (Web).
+ * Ciência é CTA explícito — nunca toast.
  */
 export function NotificationAwarenessBanner({
   organizationId,
@@ -28,24 +38,18 @@ export function NotificationAwarenessBanner({
   const confirmMutation = useConfirmNotificationAwareness(organizationId);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (isConfirmOpen && !dialog.open) dialog.showModal();
-    if (!isConfirmOpen && dialog.open) dialog.close();
-  }, [isConfirmOpen]);
 
   if (!notification) {
     return null;
   }
 
+  const pendingNotification = notification;
+
   function handleConfirm() {
     setError(null);
 
     confirmMutation
-      .mutateAsync(notification!.id)
+      .mutateAsync(pendingNotification.id)
       .then(() => {
         setIsConfirmOpen(false);
         void refetch();
@@ -67,12 +71,12 @@ export function NotificationAwarenessBanner({
         Você tem uma notificação com ciência pendente sobre esta ocorrência.
       </p>
 
-      <button
-        className="w-full rounded-md bg-orange-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50 sm:w-auto sm:self-start"
+      <Button
+        className="w-full sm:w-auto sm:self-start"
         disabled={isOffline || confirmMutation.isPending}
         type="button"
         onClick={() => {
-          if (notification.priority === "CRITICAL") {
+          if (pendingNotification.priority === "CRITICAL") {
             setIsConfirmOpen(true);
             return;
           }
@@ -80,51 +84,39 @@ export function NotificationAwarenessBanner({
         }}
       >
         {confirmMutation.isPending ? "Confirmando…" : "Confirmar ciência"}
-      </button>
+      </Button>
 
       {error ? (
-        <p className="text-xs text-red-300" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {error}
         </p>
       ) : null}
 
-      <dialog
-        ref={dialogRef}
-        className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsConfirmOpen(false);
+      <AlertDialog
+        onOpenChange={(open) => {
+          setIsConfirmOpen(open);
         }}
+        open={isConfirmOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            handleConfirm();
-          }}
-        >
-          <h2 className="text-lg font-semibold">Confirma que está ciente desta ocorrência?</h2>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirma que está ciente desta ocorrência?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isOffline || confirmMutation.isPending}
               type="button"
-              onClick={() => {
-                setIsConfirmOpen(false);
+              onClick={(event) => {
+                event.preventDefault();
+                handleConfirm();
               }}
             >
-              Cancelar
-            </button>
-            <button
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50"
-              disabled={isOffline || confirmMutation.isPending}
-              type="submit"
-            >
               {confirmMutation.isPending ? "Confirmando…" : "Confirmar ciência"}
-            </button>
-          </div>
-        </form>
-      </dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

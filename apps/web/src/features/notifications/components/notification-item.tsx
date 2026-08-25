@@ -1,12 +1,24 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   isNotificationUnread,
   requiresNotificationAwareness,
   type NotificationListItem,
 } from "@safestop/types";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 import {
   formatNotificationAbsoluteTime,
@@ -34,7 +46,7 @@ function priorityClass(priority: NotificationListItem["priority"]): string {
     case "MEDIUM":
       return "text-blue-400";
     default:
-      return "text-gray-400";
+      return "text-muted-foreground";
   }
 }
 
@@ -51,18 +63,10 @@ export function NotificationItem({
   const router = useRouter();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const dialogRef = useRef<HTMLDialogElement>(null);
 
   const unread = isNotificationUnread(item);
   const pendingAwareness = requiresNotificationAwareness(item);
   const awarenessConfirmed = item.requiresAwareness && item.awarenessConfirmedAt !== null;
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (isConfirmOpen && !dialog.open) dialog.showModal();
-    if (!isConfirmOpen && dialog.open) dialog.close();
-  }, [isConfirmOpen]);
 
   function handleOpenOccurrence() {
     if (unread) {
@@ -87,7 +91,7 @@ export function NotificationItem({
   return (
     <article
       className={`flex flex-col gap-2 rounded-lg border px-3 py-3 transition ${
-        unread ? "border-gray-600 bg-gray-900/70" : "border-gray-800 bg-gray-950/40"
+        unread ? "border-border bg-card" : "border-border/60 bg-card/40"
       } ${compact ? "text-sm" : ""}`}
     >
       <button
@@ -104,38 +108,36 @@ export function NotificationItem({
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="sr-only">Prioridade {formatNotificationPriority(item.priority)}</span>
-            <h3 className={`truncate ${unread ? "font-semibold text-gray-100" : "text-gray-200"}`}>
+            <h3
+              className={`truncate ${unread ? "font-semibold text-foreground" : "text-foreground/90"}`}
+            >
               {item.title}
             </h3>
-            <p className="line-clamp-2 text-gray-400">{item.message}</p>
+            <p className="line-clamp-2 text-muted-foreground">{item.message}</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <time dateTime={item.createdAt} title={formatNotificationAbsoluteTime(item.createdAt)}>
             {formatRelativeNotificationTime(item.createdAt)}
           </time>
-          {unread ? (
-            <span className="rounded-full border border-gray-600 px-2 py-0.5 text-gray-300">
-              Não lida
-            </span>
-          ) : null}
+          {unread ? <Badge variant="outline">Não lida</Badge> : null}
           {pendingAwareness ? (
-            <span className="rounded-full border border-amber-600/60 bg-amber-950/30 px-2 py-0.5 text-amber-200">
+            <Badge className="border-amber-600/60 bg-amber-950/30 text-amber-200" variant="outline">
               Ciência pendente
-            </span>
+            </Badge>
           ) : null}
           {awarenessConfirmed ? (
-            <span className="rounded-full border border-green-700/50 px-2 py-0.5 text-green-300">
+            <Badge className="border-green-700/50 bg-green-950/20 text-green-300" variant="outline">
               Ciência confirmada
-            </span>
+            </Badge>
           ) : null}
         </div>
       </button>
 
       {pendingAwareness && canConfirmAwareness ? (
-        <button
-          className="w-full rounded-md bg-orange-500 px-3 py-2 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50 sm:w-auto sm:self-start"
+        <Button
+          className="w-full sm:w-auto sm:self-start"
           disabled={isOffline || isConfirming}
           type="button"
           onClick={() => {
@@ -148,52 +150,40 @@ export function NotificationItem({
           }}
         >
           {isConfirming ? "Confirmando…" : "Confirmar ciência"}
-        </button>
+        </Button>
       ) : null}
 
       {actionError ? (
-        <p className="text-xs text-red-400" role="alert">
+        <p className="text-xs text-destructive" role="alert">
           {actionError}
         </p>
       ) : null}
 
-      <dialog
-        ref={dialogRef}
-        className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsConfirmOpen(false);
+      <AlertDialog
+        onOpenChange={(open) => {
+          setIsConfirmOpen(open);
         }}
+        open={isConfirmOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            handleConfirmAwareness();
-          }}
-        >
-          <h2 className="text-lg font-semibold">Confirma que está ciente desta ocorrência?</h2>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirma que está ciente desta ocorrência?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isOffline || isConfirming}
               type="button"
-              onClick={() => {
-                setIsConfirmOpen(false);
+              onClick={(event) => {
+                event.preventDefault();
+                handleConfirmAwareness();
               }}
             >
-              Cancelar
-            </button>
-            <button
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50"
-              disabled={isOffline || isConfirming}
-              type="submit"
-            >
               {isConfirming ? "Confirmando…" : "Confirmar ciência"}
-            </button>
-          </div>
-        </form>
-      </dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </article>
   );
 }

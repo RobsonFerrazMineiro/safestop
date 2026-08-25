@@ -1,12 +1,24 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   OCCURRENCE_DECISION_REASON_MAX_LENGTH,
   OCCURRENCE_DECISION_REASON_MIN_LENGTH,
 } from "@safestop/types";
 import { recordVerEAgirDecisionSchema } from "@safestop/validation";
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   isOccurrenceRpcConflictError,
   isOccurrenceRpcValidationError,
@@ -35,8 +47,6 @@ export function VerEAgirDecisionForm({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isOverwriteConfirmOpen, setIsOverwriteConfirmOpen] = useState(false);
-  const confirmDialogRef = useRef<HTMLDialogElement>(null);
-  const overwriteDialogRef = useRef<HTMLDialogElement>(null);
 
   const trimmedLength = decisionReason.trim().length;
   const isTooShort = trimmedLength > 0 && trimmedLength < OCCURRENCE_DECISION_REASON_MIN_LENGTH;
@@ -46,40 +56,6 @@ export function VerEAgirDecisionForm({
     trimmedLength <= OCCURRENCE_DECISION_REASON_MAX_LENGTH &&
     !isPending &&
     !isOffline;
-
-  useEffect(() => {
-    const dialog = confirmDialogRef.current;
-
-    if (!dialog) {
-      return;
-    }
-
-    if (isConfirmOpen && !dialog.open) {
-      dialog.showModal();
-      return;
-    }
-
-    if (!isConfirmOpen && dialog.open) {
-      dialog.close();
-    }
-  }, [isConfirmOpen]);
-
-  useEffect(() => {
-    const dialog = overwriteDialogRef.current;
-
-    if (!dialog) {
-      return;
-    }
-
-    if (isOverwriteConfirmOpen && !dialog.open) {
-      dialog.showModal();
-      return;
-    }
-
-    if (!isOverwriteConfirmOpen && dialog.open) {
-      dialog.close();
-    }
-  }, [isOverwriteConfirmOpen]);
 
   async function handleConfirmedSubmit() {
     setValidationError(null);
@@ -143,8 +119,8 @@ export function VerEAgirDecisionForm({
         <span className="text-sm font-medium text-gray-200">
           Justificativa <span className="text-orange-400">*</span>
         </span>
-        <textarea
-          className="min-h-32 w-full rounded-md border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500 disabled:opacity-60"
+        <Textarea
+          className="min-h-32"
           disabled={isPending}
           id="ver-e-agir-decision-reason"
           maxLength={OCCURRENCE_DECISION_REASON_MAX_LENGTH}
@@ -180,18 +156,19 @@ export function VerEAgirDecisionForm({
       ) : null}
 
       {commentDraft ? (
-        <button
-          className="self-start text-sm text-orange-400 hover:text-orange-300 disabled:opacity-50"
+        <Button
+          className="self-start"
           disabled={isPending || isOffline}
           type="button"
+          variant="ghost"
           onClick={handleUseCommentDraft}
         >
           Usar comentário como rascunho
-        </button>
+        </Button>
       ) : null}
 
-      <button
-        className="w-full rounded-md bg-orange-600 px-4 py-3 text-sm font-medium text-white hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+      <Button
+        className="w-full"
         disabled={!canSubmit}
         type="button"
         onClick={() => {
@@ -206,87 +183,66 @@ export function VerEAgirDecisionForm({
         }}
       >
         {isPending ? "Registrando…" : "Registrar Ver e Agir"}
-      </button>
+      </Button>
 
-      <dialog
-        ref={confirmDialogRef}
-        className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsConfirmOpen(false);
+      <AlertDialog
+        onOpenChange={(open) => {
+          setIsConfirmOpen(open);
         }}
+        open={isConfirmOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleConfirmedSubmit();
-          }}
-        >
-          <h2 className="text-lg font-semibold">Registrar decisão Ver e Agir?</h2>
-          <p className="text-sm text-gray-400">Esta ação não pode ser desfeita nesta etapa.</p>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Registrar decisão Ver e Agir?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação não pode ser desfeita nesta etapa.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
               disabled={isPending}
               type="button"
-              onClick={() => {
-                setIsConfirmOpen(false);
+              onClick={(event) => {
+                event.preventDefault();
+                void handleConfirmedSubmit();
               }}
             >
-              Cancelar
-            </button>
-            <button
-              className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-500 disabled:opacity-50"
-              disabled={isPending}
-              type="submit"
-            >
               {isPending ? "Registrando…" : "Registrar Ver e Agir"}
-            </button>
-          </div>
-        </form>
-      </dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <dialog
-        ref={overwriteDialogRef}
-        className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsOverwriteConfirmOpen(false);
+      <AlertDialog
+        onOpenChange={(open) => {
+          setIsOverwriteConfirmOpen(open);
         }}
+        open={isOverwriteConfirmOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (commentDraft) {
-              setDecisionReason(commentDraft);
-            }
-            setIsOverwriteConfirmOpen(false);
-          }}
-        >
-          <h2 className="text-lg font-semibold">Substituir o texto da justificativa?</h2>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Substituir o texto da justificativa?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
               type="button"
-              onClick={() => {
+              onClick={(event) => {
+                event.preventDefault();
+                if (commentDraft) {
+                  setDecisionReason(commentDraft);
+                }
                 setIsOverwriteConfirmOpen(false);
               }}
             >
-              Cancelar
-            </button>
-            <button
-              className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-500"
-              type="submit"
-            >
               Substituir
-            </button>
-          </div>
-        </form>
-      </dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

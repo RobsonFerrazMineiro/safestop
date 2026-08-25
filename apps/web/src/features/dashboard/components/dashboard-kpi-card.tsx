@@ -7,6 +7,8 @@ import {
   type PermissionCode,
 } from "@safestop/types";
 
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { useAuthorization } from "@/features/authorization";
 
 import { formatDashboardMetricValue } from "./utils/format-metric-value";
@@ -76,9 +78,11 @@ function DashboardKpiCardInner({
     </>
   );
 
-  const className = `flex min-h-[7rem] flex-col justify-between gap-2 rounded-lg border p-4 ${tone} ${
-    href && !isError ? "transition hover:border-gray-600" : ""
-  }`;
+  const className = cn(
+    "flex min-h-[7rem] flex-col justify-between gap-2 rounded-lg border p-4 shadow-sm",
+    tone,
+    href && !isError ? "transition hover:border-border" : "",
+  );
 
   if (href && !isError && !isLoading) {
     return (
@@ -110,10 +114,5 @@ export function DashboardKpiCard(props: DashboardKpiCardProps) {
 }
 
 export function DashboardKpiCardSkeleton() {
-  return (
-    <div
-      aria-hidden="true"
-      className="min-h-[7rem] animate-pulse rounded-lg border border-gray-800 bg-gray-900/40"
-    />
-  );
+  return <Skeleton aria-hidden="true" className="min-h-[7rem] rounded-lg" />;
 }
