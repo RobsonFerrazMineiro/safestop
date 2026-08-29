@@ -11,6 +11,8 @@ import {
   ORGANIZATION_CONTACT_TYPE_MANAGING_COMPANY_SUPERVISOR,
 } from "@safestop/types";
 
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
 import { OrganizationContactFormDialog } from "./organization-contact-form-dialog";
@@ -31,6 +33,11 @@ const ALL_TYPES = [
   ...ORGANIZATION_CONTACT_TYPES,
   ORGANIZATION_CONTACT_TYPE_MANAGING_COMPANY_SUPERVISOR,
 ] as const;
+
+const CONTACTS_SHELL_CLASS = "flex w-full flex-1 flex-col gap-6 px-6 py-10";
+
+const NATIVE_SELECT_CLASS =
+  "h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30";
 
 export function OrganizationContactsContainer() {
   const router = useRouter();
@@ -79,19 +86,22 @@ export function OrganizationContactsContainer() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-6 py-10">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-gray-100">Responsáveis da comunicação</h1>
-        <p className="text-sm text-gray-400">
-          Todos os contatos ativos deste tipo no escopo recebem a notificação.
-        </p>
-      </header>
+    <section className={CONTACTS_SHELL_CLASS}>
+      <PageHeader
+        actions={
+          <Button type="button" onClick={handleCreate}>
+            Novo responsável
+          </Button>
+        }
+        subtitle="Todos os contatos ativos deste tipo no escopo recebem a notificação."
+        title="Responsáveis da comunicação"
+      />
 
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-sm text-gray-300">
+        <label className="flex flex-col gap-1 text-sm text-foreground">
           Tipo
           <select
-            className="rounded-md border border-gray-700 bg-gray-950 px-3 py-2"
+            className={NATIVE_SELECT_CLASS}
             value={filters.contactType ?? ""}
             onChange={(event) => {
               const value = event.target.value as OrganizationContactTypeExtended | "";
@@ -110,10 +120,10 @@ export function OrganizationContactsContainer() {
           </select>
         </label>
 
-        <label className="flex flex-col gap-1 text-sm text-gray-300">
+        <label className="flex flex-col gap-1 text-sm text-foreground">
           Status
           <select
-            className="rounded-md border border-gray-700 bg-gray-950 px-3 py-2"
+            className={NATIVE_SELECT_CLASS}
             value={filters.isActive === undefined ? "" : filters.isActive ? "active" : "inactive"}
             onChange={(event) => {
               const value = event.target.value;
@@ -128,14 +138,6 @@ export function OrganizationContactsContainer() {
             <option value="inactive">Inativos</option>
           </select>
         </label>
-
-        <button
-          className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400"
-          type="button"
-          onClick={handleCreate}
-        >
-          Novo responsável
-        </button>
       </div>
 
       {isLoading ? <OrganizationContactsLoadingSkeleton /> : null}

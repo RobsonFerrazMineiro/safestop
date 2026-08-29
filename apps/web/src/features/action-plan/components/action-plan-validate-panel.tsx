@@ -1,10 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   ACTION_ITEM_VALIDATION_NOTE_MAX_LENGTH,
   ACTION_ITEM_VALIDATION_NOTE_MIN_LENGTH,
 } from "@safestop/types";
+
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { useActionItemAttachments } from "../hooks/use-action-item-attachments";
 import { useValidateActionItem } from "../hooks/use-validate-action-item";
@@ -48,25 +67,9 @@ export function ActionPlanValidatePanel({
   const [isRejectOpen, setIsRejectOpen] = useState(false);
   const [rejectNote, setRejectNote] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
-  const approveDialogRef = useRef<HTMLDialogElement>(null);
-  const rejectDialogRef = useRef<HTMLDialogElement>(null);
 
   const validateMutation = useValidateActionItem(organizationId, occurrenceId, planId, item.id);
   const { completedAttachments } = useActionItemAttachments(organizationId, item.id, true);
-
-  useEffect(() => {
-    const dialog = approveDialogRef.current;
-    if (!dialog) return;
-    if (isApproveOpen && !dialog.open) dialog.showModal();
-    if (!isApproveOpen && dialog.open) dialog.close();
-  }, [isApproveOpen]);
-
-  useEffect(() => {
-    const dialog = rejectDialogRef.current;
-    if (!dialog) return;
-    if (isRejectOpen && !dialog.open) dialog.showModal();
-    if (!isRejectOpen && dialog.open) dialog.close();
-  }, [isRejectOpen]);
 
   async function handleApprove() {
     setActionError(null);
@@ -128,17 +131,19 @@ export function ActionPlanValidatePanel({
   }
 
   return (
-    <div className="mt-3 flex flex-col gap-3 rounded-md border border-gray-700/80 bg-gray-950/50 p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Validar ação</p>
+    <div className="mt-3 flex flex-col gap-3 rounded-md border border-border/80 bg-card/50 p-3">
+      <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        Validar ação
+      </p>
 
-      <div className="flex flex-col gap-1 text-sm text-gray-300">
+      <div className="flex flex-col gap-1 text-sm text-foreground">
         <span>
           {formatActionItemPriority(item.priority)} · {item.responsibleMemberName ?? "—"}
         </span>
         {item.completionDescription ? (
-          <p className="text-gray-400">{item.completionDescription}</p>
+          <p className="text-muted-foreground">{item.completionDescription}</p>
         ) : null}
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-muted-foreground">
           Concluída por {item.completedByName ?? "—"} em {formatDateTime(item.completedAt)}
         </span>
       </div>
@@ -146,10 +151,11 @@ export function ActionPlanValidatePanel({
       {completedAttachments.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {completedAttachments.map((attachment) => (
-            <button
+            <Button
               key={attachment.id}
-              className="rounded-md border border-gray-600 px-3 py-1.5 text-xs text-orange-300 hover:bg-gray-800"
+              size="sm"
               type="button"
+              variant="outline"
               onClick={() => {
                 void getActionItemAttachmentSignedUrl(attachment.id).then((url) => {
                   window.open(url, "_blank", "noopener,noreferrer");
@@ -157,13 +163,13 @@ export function ActionPlanValidatePanel({
               }}
             >
               Ver evidência
-            </button>
+            </Button>
           ))}
         </div>
       ) : null}
 
       {showSelfValidationNotice ? (
-        <p className="text-sm text-amber-200/90" role="status">
+        <p className="text-sm text-status-warning-fg" role="status">
           Quem concluiu a ação não pode validá-la.
         </p>
       ) : null}
@@ -171,26 +177,27 @@ export function ActionPlanValidatePanel({
       {isOffline ? <ActionPlanOfflineNotice /> : null}
 
       {actionError ? (
-        <p className="text-sm text-red-400" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {actionError}
         </p>
       ) : null}
 
       {canValidate ? (
         <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            className="w-full rounded-md border border-red-700 px-4 py-3 text-sm font-medium text-red-200 hover:bg-red-950/40 disabled:opacity-50"
+          <Button
+            className="w-full"
             disabled={validateMutation.isPending || isOffline}
             type="button"
+            variant="destructive"
             onClick={() => {
               setActionError(null);
               setIsRejectOpen(true);
             }}
           >
             Rejeitar
-          </button>
-          <button
-            className="w-full rounded-md bg-orange-500 px-4 py-3 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50"
+          </Button>
+          <Button
+            className="w-full"
             disabled={validateMutation.isPending || isOffline}
             type="button"
             onClick={() => {
@@ -199,103 +206,96 @@ export function ActionPlanValidatePanel({
             }}
           >
             Aprovar
-          </button>
+          </Button>
         </div>
       ) : null}
 
-      <dialog
-        ref={approveDialogRef}
-        className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsApproveOpen(false);
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsApproveOpen(false);
+          }
         }}
+        open={isApproveOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleApprove();
-          }}
-        >
-          <h2 className="text-lg font-semibold">Confirmar aprovação desta ação?</h2>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
-              type="button"
-              onClick={() => {
-                setIsApproveOpen(false);
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50"
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar aprovação desta ação?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
               disabled={validateMutation.isPending}
-              type="submit"
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                void handleApprove();
+              }}
             >
               Aprovar
-            </button>
-          </div>
-        </form>
-      </dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <dialog
-        ref={rejectDialogRef}
-        className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsRejectOpen(false);
+      <Dialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsRejectOpen(false);
+          }
         }}
+        open={isRejectOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleReject();
-          }}
-        >
-          <h2 className="text-lg font-semibold">Informe o motivo da rejeição.</h2>
-          <label className="flex flex-col gap-2">
-            <span className="text-sm text-gray-300">Motivo *</span>
-            <textarea
-              className="min-h-24 w-full rounded-md border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-gray-100"
-              maxLength={ACTION_ITEM_VALIDATION_NOTE_MAX_LENGTH}
-              value={rejectNote}
-              onChange={(event) => {
-                setRejectNote(event.target.value);
-              }}
-            />
-            <span className="text-xs text-gray-500">
-              {rejectNote.trim().length}/{ACTION_ITEM_VALIDATION_NOTE_MAX_LENGTH} (mín.{" "}
-              {ACTION_ITEM_VALIDATION_NOTE_MIN_LENGTH})
-            </span>
-          </label>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
-              type="button"
-              onClick={() => {
-                setIsRejectOpen(false);
-              }}
-            >
-              Cancelar
-            </button>
-            <button
-              className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-500 disabled:opacity-50"
-              disabled={
-                validateMutation.isPending ||
-                rejectNote.trim().length < ACTION_ITEM_VALIDATION_NOTE_MIN_LENGTH
-              }
-              type="submit"
-            >
-              Rejeitar
-            </button>
-          </div>
-        </form>
-      </dialog>
+        <DialogContent className="sm:max-w-md" showCloseButton={false}>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleReject();
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>Informe o motivo da rejeição.</DialogTitle>
+            </DialogHeader>
+            <label className="flex flex-col gap-2">
+              <span className="text-sm text-muted-foreground">Motivo *</span>
+              <Textarea
+                className="min-h-24"
+                maxLength={ACTION_ITEM_VALIDATION_NOTE_MAX_LENGTH}
+                value={rejectNote}
+                onChange={(event) => {
+                  setRejectNote(event.target.value);
+                }}
+              />
+              <span className="text-xs text-muted-foreground">
+                {rejectNote.trim().length}/{ACTION_ITEM_VALIDATION_NOTE_MAX_LENGTH} (mín.{" "}
+                {ACTION_ITEM_VALIDATION_NOTE_MIN_LENGTH})
+              </span>
+            </label>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsRejectOpen(false);
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                disabled={
+                  validateMutation.isPending ||
+                  rejectNote.trim().length < ACTION_ITEM_VALIDATION_NOTE_MIN_LENGTH
+                }
+                type="submit"
+                variant="destructive"
+              >
+                Rejeitar
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

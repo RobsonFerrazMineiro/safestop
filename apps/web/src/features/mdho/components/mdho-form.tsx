@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   MDHO_COMPLEMENT_MAX_LENGTH,
   MDHO_DEVIATION_TYPE_CATEGORY_CODE,
@@ -8,6 +8,18 @@ import {
   type MdhoCatalogCategory,
 } from "@safestop/types";
 import { createSubmitMdhoSchema } from "@safestop/validation";
+
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import {
   buildFormStateFromSelections,
@@ -58,27 +70,12 @@ export function MdhoForm({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [draftNotice, setDraftNotice] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const confirmDialogRef = useRef<HTMLDialogElement>(null);
 
   const saveDraft = useSaveMdhoDraft(occurrenceId, organizationId);
   const submitAssessment = useSubmitMdhoAssessment(occurrenceId, organizationId);
 
   const currentCategory = categories[currentStep];
   const isLastStep = currentStep === categories.length - 1;
-
-  useEffect(() => {
-    const dialog = confirmDialogRef.current;
-    if (!dialog) return;
-
-    if (isConfirmOpen && !dialog.open) {
-      dialog.showModal();
-      return;
-    }
-
-    if (!isConfirmOpen && dialog.open) {
-      dialog.close();
-    }
-  }, [isConfirmOpen]);
 
   const selectionsInput = useMemo(
     () => selectionInputsFromFormState(categories, formState),
@@ -221,14 +218,14 @@ export function MdhoForm({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-medium text-blue-200">
+        <p className="text-sm font-medium text-foreground">
           Passo {currentStep + 1} de {categories.length} · {formatStepLabel(currentCategory)}
         </p>
         <div className="flex gap-1" aria-hidden="true">
           {categories.map((category, index) => (
             <span
               key={category.id}
-              className={`h-2 w-2 rounded-full ${index === currentStep ? "bg-blue-500" : "bg-gray-700"}`}
+              className={`h-2 w-2 rounded-full ${index === currentStep ? "bg-primary" : "bg-muted"}`}
             />
           ))}
         </div>
@@ -310,54 +307,54 @@ export function MdhoForm({
       ) : null}
 
       <div className="flex flex-wrap gap-2">
-        <button
-          className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 disabled:opacity-50"
+        <Button
           disabled={currentStep === 0}
           type="button"
+          variant="outline"
           onClick={() => {
             setCurrentStep((step) => Math.max(0, step - 1));
           }}
         >
           Voltar
-        </button>
+        </Button>
         {!isLastStep ? (
-          <button
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500"
+          <Button
             type="button"
             onClick={() => {
               setCurrentStep((step) => Math.min(categories.length - 1, step + 1));
             }}
           >
             Próximo
-          </button>
+          </Button>
         ) : null}
       </div>
 
       {isOffline ? <MdhoOfflineNotice /> : null}
       {draftNotice ? <MdhoDraftSavedNotice /> : null}
       {submitError ? (
-        <p className="text-sm text-red-400" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {submitError}
         </p>
       ) : null}
 
       {canEdit ? (
-        <div className="sticky bottom-0 flex flex-col gap-2 border-t border-gray-800 bg-gray-900/95 py-4">
+        <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background/95 py-4">
           <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              className="w-full rounded-md border border-gray-600 px-4 py-3 text-sm font-medium text-gray-100 hover:bg-gray-800 disabled:opacity-50"
+            <Button
+              className="w-full"
               disabled={isPending || isOffline}
               type="button"
+              variant="outline"
               onClick={() => {
                 void handleSaveDraft();
               }}
             >
               {saveDraft.isPending ? "Salvando…" : "Salvar rascunho"}
-            </button>
+            </Button>
 
             {canSubmit ? (
-              <button
-                className="w-full rounded-md bg-blue-600 px-4 py-3 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+              <Button
+                className="w-full"
                 disabled={isPending || isOffline}
                 type="button"
                 onClick={() => {
@@ -365,53 +362,44 @@ export function MdhoForm({
                 }}
               >
                 {submitAssessment.isPending ? "Enviando…" : "Enviar MDHO"}
-              </button>
+              </Button>
             ) : null}
           </div>
         </div>
       ) : null}
 
-      <dialog
-        ref={confirmDialogRef}
-        className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsConfirmOpen(false);
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsConfirmOpen(false);
+          }
         }}
+        open={isConfirmOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleSubmitConfirmed();
-          }}
-        >
-          <h2 className="text-lg font-semibold">Enviar Avaliação Técnica (MDHO)?</h2>
-          <p className="text-sm text-gray-400">
-            Após o envio, a edição só será possível se a liderança devolver.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Enviar Avaliação Técnica (MDHO)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Após o envio, a edição só será possível se a liderança devolver.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending} type="button">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
               disabled={isPending}
               type="button"
-              onClick={() => {
-                setIsConfirmOpen(false);
+              onClick={(event) => {
+                event.preventDefault();
+                void handleSubmitConfirmed();
               }}
             >
-              Cancelar
-            </button>
-            <button
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
-              disabled={isPending}
-              type="submit"
-            >
               {isPending ? "Enviando…" : "Enviar MDHO"}
-            </button>
-          </div>
-        </form>
-      </dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

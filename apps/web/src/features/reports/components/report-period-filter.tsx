@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import type { DashboardPeriodPresetId } from "@/features/dashboard/components/utils/period-presets";
 import { DASHBOARD_PERIOD_PRESETS } from "@/features/dashboard/components/utils/period-presets";
 
@@ -18,26 +19,24 @@ export function ReportPeriodFilter({ activePreset, onChange }: ReportPeriodFilte
           const selected = activePreset === preset.id;
 
           return (
-            <button
+            <Button
               key={preset.id}
               aria-selected={selected}
-              className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                selected
-                  ? "border-orange-500 bg-orange-500/10 text-orange-200"
-                  : "border-gray-700 text-gray-300 hover:border-gray-500"
-              }`}
+              className="rounded-full"
               role="tab"
+              size="sm"
               type="button"
+              variant={selected ? "default" : "outline"}
               onClick={() => {
                 onChange(preset.id);
               }}
             >
               {preset.label}
-            </button>
+            </Button>
           );
         })}
       </div>
-      <p className="text-xs text-gray-500">{REPORT_COPY.periodHint}</p>
+      <p className="text-xs text-muted-foreground">{REPORT_COPY.periodHint}</p>
     </div>
   );
 }

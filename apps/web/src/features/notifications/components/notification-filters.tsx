@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import type { NotificationFilter } from "../types";
 import { NOTIFICATION_FILTER_OPTIONS } from "../types";
 
@@ -15,22 +17,20 @@ export function NotificationFilters({ activeFilter, onChange }: NotificationFilt
         const selected = activeFilter === option.id;
 
         return (
-          <button
+          <Button
             key={option.id}
             aria-selected={selected}
-            className={`rounded-full border px-3 py-1.5 text-sm transition ${
-              selected
-                ? "border-orange-500 bg-orange-500/10 text-orange-200"
-                : "border-gray-700 text-gray-300 hover:border-gray-500"
-            }`}
+            className="rounded-full"
             role="tab"
+            size="sm"
             type="button"
+            variant={selected ? "default" : "outline"}
             onClick={() => {
               onChange(option.id);
             }}
           >
             {option.label}
-          </button>
+          </Button>
         );
       })}
     </div>

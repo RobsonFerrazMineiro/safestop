@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 
+import { PageHeader } from "@/components/page-header";
+import { Card } from "@/components/ui/card";
 import { useAuthorization } from "@/features/authorization";
 
 import { REPORT_COPY } from "../utils/report-copy";
 import { ReportForbiddenState } from "./report-states";
+
+const REPORTS_SHELL_CLASS = "flex w-full flex-1 flex-col gap-6 px-6 py-10";
 
 const REPORT_ENTRIES = [
   {
@@ -30,13 +34,16 @@ export function ReportsHubPage() {
 
   if (isLoading || !isReady) {
     return (
-      <main className="mx-auto max-w-6xl px-6 py-8">
-        <div className="h-10 w-48 animate-pulse rounded-lg bg-gray-900/40" />
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <main className={REPORTS_SHELL_CLASS}>
+        <PageHeader
+          subtitle="Relatórios gerenciais para análise operacional e exportação."
+          title={REPORT_COPY.hubTitle}
+        />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
             <div
               key={index}
-              className="min-h-[10rem] animate-pulse rounded-lg border border-gray-800 bg-gray-900/40"
+              className="min-h-[10rem] animate-pulse rounded-lg border border-border bg-card"
             />
           ))}
         </div>
@@ -49,26 +56,24 @@ export function ReportsHubPage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-8" data-testid="reports-hub">
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold text-gray-100">{REPORT_COPY.hubTitle}</h1>
-        <p className="mt-1 text-sm text-gray-400">
-          Relatórios gerenciais para análise operacional e exportação.
-        </p>
-      </header>
+    <main className={REPORTS_SHELL_CLASS} data-testid="reports-hub">
+      <PageHeader
+        subtitle="Relatórios gerenciais para análise operacional e exportação."
+        title={REPORT_COPY.hubTitle}
+      />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {REPORT_ENTRIES.map((entry) => (
-          <Link
-            key={entry.href}
-            className="flex min-h-[10rem] flex-col justify-between rounded-lg border border-gray-800 bg-gray-900/40 p-5 transition hover:border-gray-600"
-            href={entry.href}
-          >
-            <div>
-              <h2 className="text-lg font-semibold text-orange-400">{entry.title}</h2>
-              <p className="mt-2 text-sm text-gray-400">{entry.description}</p>
-            </div>
-            <span className="text-sm text-gray-300">Abrir relatório →</span>
+          <Link key={entry.href} className="block" href={entry.href}>
+            <Card className="flex min-h-[10rem] flex-col justify-between gap-0 py-0 transition hover:border-primary/50">
+              <div className="flex min-h-[10rem] flex-col justify-between p-5">
+                <div>
+                  <h2 className="text-lg font-semibold text-primary">{entry.title}</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">{entry.description}</p>
+                </div>
+                <span className="text-sm text-muted-foreground">Abrir relatório →</span>
+              </div>
+            </Card>
           </Link>
         ))}
       </div>

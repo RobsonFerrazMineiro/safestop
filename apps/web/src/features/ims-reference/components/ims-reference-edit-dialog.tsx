@@ -1,11 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   IMS_UPDATE_REASON_MAX_LENGTH,
   IMS_UPDATE_REASON_MIN_LENGTH,
   isValidImsReferenceCode,
 } from "@safestop/types";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { isImsReferenceRpcConflictError, isImsReferenceRpcValidationError } from "../utils/ims-rpc";
 import { useUpdateImsReference } from "../hooks/use-update-ims-reference";
@@ -34,7 +46,6 @@ export function ImsReferenceEditDialog({
   const [updateReason, setUpdateReason] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const dialogRef = useRef<HTMLDialogElement>(null);
 
   const updateMutation = useUpdateImsReference(occurrenceId, organizationId);
 
@@ -53,13 +64,6 @@ export function ImsReferenceEditDialog({
     resetForm();
     onClose();
   }
-
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (isOpen && !dialog.open) dialog.showModal();
-    if (!isOpen && dialog.open) dialog.close();
-  }, [isOpen]);
 
   async function handleSave() {
     setValidationError(null);
@@ -104,94 +108,91 @@ export function ImsReferenceEditDialog({
   }
 
   return (
-    <dialog
-      ref={dialogRef}
-      className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-      onCancel={(event) => {
-        event.preventDefault();
-        handleClose();
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) {
+          handleClose();
+        }
       }}
+      open={isOpen}
     >
-      <form
-        className="flex flex-col gap-4 p-6"
-        method="dialog"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void handleSave();
-        }}
-      >
-        <h2 className="text-lg font-semibold">Corrigir referência IMS</h2>
+      <DialogContent className="sm:max-w-md" showCloseButton={false}>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSave();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Corrigir referência IMS</DialogTitle>
+            <DialogDescription>
+              Código atual: <span className="font-mono text-foreground">{currentCode}</span>
+            </DialogDescription>
+          </DialogHeader>
 
-        <p className="text-sm text-gray-400">
-          Código atual: <span className="font-mono text-gray-200">{currentCode}</span>
-        </p>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm text-muted-foreground">Novo código *</span>
+            <Input
+              aria-invalid={validationError !== null}
+              className="font-mono"
+              placeholder="BAA-26-0001"
+              value={newCode}
+              onChange={(event) => {
+                setNewCode(event.target.value);
+                setValidationError(null);
+              }}
+            />
+          </label>
 
-        <label className="flex flex-col gap-2">
-          <span className="text-sm text-gray-300">Novo código *</span>
-          <input
-            aria-invalid={validationError !== null}
-            className="w-full rounded-md border border-gray-700 bg-gray-950 px-3 py-2 font-mono text-sm text-gray-100"
-            placeholder="BAA-26-0001"
-            value={newCode}
-            onChange={(event) => {
-              setNewCode(event.target.value);
-              setValidationError(null);
-            }}
-          />
-        </label>
+          <label className="flex flex-col gap-2">
+            <span className="text-sm text-muted-foreground">Motivo da correção *</span>
+            <Textarea
+              className="min-h-24"
+              maxLength={IMS_UPDATE_REASON_MAX_LENGTH}
+              value={updateReason}
+              onChange={(event) => {
+                setUpdateReason(event.target.value);
+                setValidationError(null);
+              }}
+            />
+            <span className="text-xs text-muted-foreground">
+              {reasonLength}/{IMS_UPDATE_REASON_MAX_LENGTH} (mín. {IMS_UPDATE_REASON_MIN_LENGTH})
+            </span>
+          </label>
 
-        <label className="flex flex-col gap-2">
-          <span className="text-sm text-gray-300">Motivo da correção *</span>
-          <textarea
-            className="min-h-24 w-full rounded-md border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-gray-100"
-            maxLength={IMS_UPDATE_REASON_MAX_LENGTH}
-            value={updateReason}
-            onChange={(event) => {
-              setUpdateReason(event.target.value);
-              setValidationError(null);
-            }}
-          />
-          <span className="text-xs text-gray-500">
-            {reasonLength}/{IMS_UPDATE_REASON_MAX_LENGTH} (mín. {IMS_UPDATE_REASON_MIN_LENGTH})
-          </span>
-        </label>
+          {isOffline ? <ImsOfflineNotice /> : null}
 
-        {isOffline ? <ImsOfflineNotice /> : null}
+          {validationError ? (
+            <p className="text-sm text-destructive" role="alert">
+              {validationError}
+            </p>
+          ) : null}
 
-        {validationError ? (
-          <p className="text-sm text-red-400" role="alert">
-            {validationError}
-          </p>
-        ) : null}
+          {actionError ? (
+            <p className="text-sm text-destructive" role="alert">
+              {actionError}
+            </p>
+          ) : null}
 
-        {actionError ? (
-          <p className="text-sm text-red-400" role="alert">
-            {actionError}
-          </p>
-        ) : null}
-
-        <div className="flex justify-end gap-3">
-          <button
-            className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
-            type="button"
-            onClick={handleClose}
-          >
-            Cancelar
-          </button>
-          <button
-            className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50"
-            disabled={
-              updateMutation.isPending ||
-              isOffline ||
-              reasonLength < IMS_UPDATE_REASON_MIN_LENGTH ||
-              trimmedCode.length === 0
-            }
-            type="submit"
-          >
-            {updateMutation.isPending ? "Salvando…" : "Salvar correção"}
-          </button>
-        </div>
-      </form>
-    </dialog>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleClose}>
+              Cancelar
+            </Button>
+            <Button
+              disabled={
+                updateMutation.isPending ||
+                isOffline ||
+                reasonLength < IMS_UPDATE_REASON_MIN_LENGTH ||
+                trimmedCode.length === 0
+              }
+              type="submit"
+            >
+              {updateMutation.isPending ? "Salvando…" : "Salvar correção"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

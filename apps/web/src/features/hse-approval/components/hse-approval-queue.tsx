@@ -2,6 +2,8 @@
 
 import type { MdhoPendingApprovalItem } from "@safestop/types";
 
+import { Button } from "@/components/ui/button";
+
 import { HseApprovalQueueEmpty, HseApprovalQueueItem } from "./hse-approval-queue-item";
 
 type HseApprovalQueueProps = {
@@ -28,16 +30,17 @@ export function HseApprovalQueue({
       ))}
 
       {hasNextPage ? (
-        <button
-          className="rounded-lg border border-gray-700 px-4 py-2 text-sm font-medium text-gray-200 transition hover:border-gray-500 disabled:opacity-50"
+        <Button
+          className="self-center"
           disabled={isFetchingNextPage}
           type="button"
+          variant="outline"
           onClick={() => {
             onLoadMore();
           }}
         >
           {isFetchingNextPage ? "Carregando…" : "Carregar mais"}
-        </button>
+        </Button>
       ) : null}
     </div>
   );

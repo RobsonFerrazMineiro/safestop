@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import { REPORT_COPY } from "../utils/report-copy";
 
 export function ReportPageSkeleton() {
@@ -9,17 +11,14 @@ export function ReportPageSkeleton() {
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
-            className="min-h-[7rem] animate-pulse rounded-lg border border-gray-800 bg-gray-900/40"
+            className="min-h-[7rem] animate-pulse rounded-lg border border-border bg-card"
           />
         ))}
       </div>
-      <div className="h-12 animate-pulse rounded-lg border border-gray-800 bg-gray-900/40" />
+      <div className="h-12 animate-pulse rounded-lg border border-border bg-card" />
       <div className="flex flex-col gap-2">
         {Array.from({ length: 5 }).map((_, index) => (
-          <div
-            key={index}
-            className="h-12 animate-pulse rounded-lg border border-gray-800 bg-gray-900/40"
-          />
+          <div key={index} className="h-12 animate-pulse rounded-lg border border-border bg-card" />
         ))}
       </div>
     </div>
@@ -34,18 +33,14 @@ type ReportErrorStateProps = {
 export function ReportErrorState({ message, onRetry }: ReportErrorStateProps) {
   return (
     <div
-      className="flex flex-col items-start gap-2 rounded-lg border border-red-900/40 bg-red-950/20 p-4"
+      className="flex flex-col items-start gap-2 rounded-lg border border-status-destructive-border bg-status-destructive-bg/40 p-4"
       role="alert"
     >
-      <p className="text-sm text-red-300">{message ?? REPORT_COPY.loadError}</p>
+      <p className="text-sm text-destructive">{message ?? REPORT_COPY.loadError}</p>
       {onRetry ? (
-        <button
-          className="text-sm text-orange-400 hover:text-orange-300"
-          type="button"
-          onClick={onRetry}
-        >
+        <Button className="h-auto px-0" size="sm" type="button" variant="link" onClick={onRetry}>
           {REPORT_COPY.retry}
-        </button>
+        </Button>
       ) : null}
     </div>
   );
@@ -59,21 +54,17 @@ type ReportEmptyStateProps = {
 export function ReportEmptyState({ variant, onClearFilters }: ReportEmptyStateProps) {
   return (
     <div
-      className="rounded-lg border border-dashed border-gray-700 px-6 py-10 text-center"
+      className="rounded-lg border border-dashed border-border px-6 py-10 text-center"
       data-testid={variant === "no-results" ? "report-no-results" : "report-empty"}
       role="status"
     >
-      <p className="text-base text-gray-300">
+      <p className="text-base text-foreground">
         {variant === "empty" ? REPORT_COPY.empty : REPORT_COPY.noResults}
       </p>
       {variant === "no-results" && onClearFilters ? (
-        <button
-          className="mt-4 text-sm text-orange-400 hover:text-orange-300"
-          type="button"
-          onClick={onClearFilters}
-        >
+        <Button className="mt-4" type="button" variant="outline" onClick={onClearFilters}>
           {REPORT_COPY.clearFilters}
-        </button>
+        </Button>
       ) : null}
     </div>
   );
@@ -85,8 +76,8 @@ export function ReportForbiddenState() {
       className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6 text-center"
       data-testid="report-forbidden"
     >
-      <h1 className="text-2xl font-semibold text-gray-100">Acesso negado</h1>
-      <p className="max-w-md text-base text-gray-400">{REPORT_COPY.forbidden}</p>
+      <h1 className="text-2xl font-semibold text-foreground">Acesso negado</h1>
+      <p className="max-w-md text-base text-muted-foreground">{REPORT_COPY.forbidden}</p>
     </main>
   );
 }
@@ -104,29 +95,27 @@ export function ReportExportErrorBanner({
 }: ReportExportErrorBannerProps) {
   return (
     <div
-      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-900/40 bg-amber-950/20 p-3"
+      className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-status-warning-border bg-status-warning-bg/40 p-3"
       data-testid="report-export-error"
       role="alert"
     >
-      <p className="text-sm text-amber-200">{message}</p>
+      <p className="text-sm text-status-warning-fg">{message}</p>
       <div className="flex items-center gap-3">
         {onRetry ? (
-          <button
-            className="text-sm text-orange-400 hover:text-orange-300"
-            type="button"
-            onClick={onRetry}
-          >
+          <Button className="h-auto px-0" size="sm" type="button" variant="link" onClick={onRetry}>
             {REPORT_COPY.retry}
-          </button>
+          </Button>
         ) : null}
         {onDismiss ? (
-          <button
-            className="text-sm text-gray-400 hover:text-gray-200"
+          <Button
+            className="h-auto px-0"
+            size="sm"
             type="button"
+            variant="ghost"
             onClick={onDismiss}
           >
             Fechar
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>

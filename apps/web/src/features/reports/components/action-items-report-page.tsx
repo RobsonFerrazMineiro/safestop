@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { computeActionItemReportSummary, type ActionItemReportSortField } from "@safestop/types";
 
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import type { DashboardPeriodPresetId } from "@/features/dashboard/components/utils/period-presets";
@@ -39,6 +40,8 @@ import {
   ReportPageSkeleton,
 } from "./report-states";
 import { ReportSummaryKpiCard } from "./report-summary-kpi-card";
+
+const REPORTS_SHELL_CLASS = "flex w-full flex-1 flex-col gap-6 px-6 py-10";
 
 function countActionItemActiveFilters(state: ActionItemReportViewState): number {
   let count = 0;
@@ -113,7 +116,12 @@ export function ActionItemsReportPage() {
 
   if (isAuthLoading || !isReady) {
     return (
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className={REPORTS_SHELL_CLASS}>
+        <PageHeader
+          backHref="/reports"
+          backLabel={REPORT_COPY.hubTitle}
+          title={REPORT_COPY.actionItems}
+        />
         <ReportPageSkeleton />
       </main>
     );
@@ -124,18 +132,15 @@ export function ActionItemsReportPage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-8" data-testid="report-action-items-page">
-      <header className="mb-6">
-        <Link className="text-sm text-gray-400 hover:text-gray-200" href="/reports">
-          ← {REPORT_COPY.hubTitle}
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold text-gray-100">{REPORT_COPY.actionItems}</h1>
-        <p className="mt-1 text-sm text-gray-400">
-          {activeOrganization?.name ?? "Organização"} · {items.length} registros nesta página
-        </p>
-      </header>
+    <main className={REPORTS_SHELL_CLASS} data-testid="report-action-items-page">
+      <PageHeader
+        backHref="/reports"
+        backLabel={REPORT_COPY.hubTitle}
+        subtitle={`${activeOrganization?.name ?? "Organização"} · ${items.length} registros nesta página`}
+        title={REPORT_COPY.actionItems}
+      />
 
-      <section className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <ReportSummaryKpiCard
           isLoading={query.isLoading}
           label={`${REPORT_COPY.onThisPage}: total`}
@@ -155,7 +160,7 @@ export function ActionItemsReportPage() {
         />
       </section>
 
-      <section className="mb-4 flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/20 p-4">
+      <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <ReportPeriodFilter activePreset={viewState.periodPreset} onChange={handlePeriodChange} />
           <div className="flex flex-wrap items-center gap-2">
@@ -181,10 +186,10 @@ export function ActionItemsReportPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-2 text-sm text-gray-300">
+          <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               checked={viewState.showOptionalColumns}
-              className="accent-orange-500"
+              className="accent-primary"
               type="checkbox"
               onChange={(event) => {
                 replaceViewState({
@@ -196,35 +201,37 @@ export function ActionItemsReportPage() {
             {REPORT_COPY.showOptionalColumns}
           </label>
           {activeFilters ? (
-            <button
-              className="text-sm text-orange-400 hover:text-orange-300"
+            <Button
+              className="h-auto px-0"
+              size="sm"
               type="button"
+              variant="link"
               onClick={handleClearFilters}
             >
               {REPORT_COPY.clearFilters}
-            </button>
+            </Button>
           ) : null}
         </div>
 
         {activeFilters ? (
-          <div className="flex flex-wrap gap-2 text-xs text-gray-400">
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
             {DASHBOARD_PERIOD_PRESETS.map((preset) =>
               viewState.periodPreset === preset.id ? (
-                <span key={preset.id} className="rounded-full border border-gray-700 px-2 py-1">
+                <span key={preset.id} className="rounded-full border border-border px-2 py-1">
                   Período: {preset.label}
                 </span>
               ) : null,
             )}
             {viewState.status.map((status) => (
-              <span key={status} className="rounded-full border border-gray-700 px-2 py-1">
+              <span key={status} className="rounded-full border border-border px-2 py-1">
                 Status: {formatActionItemStatus(status)}
               </span>
             ))}
             {viewState.overdueOnly ? (
-              <span className="rounded-full border border-gray-700 px-2 py-1">Vencidas</span>
+              <span className="rounded-full border border-border px-2 py-1">Vencidas</span>
             ) : null}
             {viewState.dueSoonOnly ? (
-              <span className="rounded-full border border-gray-700 px-2 py-1">
+              <span className="rounded-full border border-border px-2 py-1">
                 Próximas do vencimento
               </span>
             ) : null}

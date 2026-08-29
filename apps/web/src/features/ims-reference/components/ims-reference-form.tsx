@@ -1,7 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { isValidImsReferenceCode } from "@safestop/types";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import { isImsReferenceRpcConflictError, isImsReferenceRpcValidationError } from "../utils/ims-rpc";
 import { useRegisterImsReference } from "../hooks/use-register-ims-reference";
@@ -26,18 +39,10 @@ export function ImsReferenceForm({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const confirmDialogRef = useRef<HTMLDialogElement>(null);
 
   const registerMutation = useRegisterImsReference(occurrenceId, organizationId);
   const trimmedCode = imsReferenceCode.trim();
   const isFormatValid = trimmedCode.length > 0 && isValidImsReferenceCode(trimmedCode);
-
-  useEffect(() => {
-    const dialog = confirmDialogRef.current;
-    if (!dialog) return;
-    if (isConfirmOpen && !dialog.open) dialog.showModal();
-    if (!isConfirmOpen && dialog.open) dialog.close();
-  }, [isConfirmOpen]);
 
   function openConfirm() {
     setValidationError(null);
@@ -87,16 +92,16 @@ export function ImsReferenceForm({
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-gray-400" id={helperId}>
+      <p className="text-sm text-muted-foreground" id={helperId}>
         Informe o código gerado no sistema IMS da Hydro. O SafeStop não consulta o IMS.
       </p>
 
       <label className="flex max-w-md flex-col gap-2">
-        <span className="text-sm font-medium text-gray-200">Código IMS</span>
-        <input
+        <span className="text-sm font-medium text-foreground">Código IMS</span>
+        <Input
           aria-describedby={`${helperId}${validationError ? ` ${errorId}` : ""}`}
           aria-invalid={validationError !== null}
-          className="w-full rounded-md border border-gray-700 bg-gray-950 px-3 py-2 font-mono text-sm text-gray-100"
+          className="font-mono"
           placeholder="BAA-26-0001"
           value={imsReferenceCode}
           onChange={(event) => {
@@ -105,9 +110,9 @@ export function ImsReferenceForm({
             setActionError(null);
           }}
         />
-        <span className="text-xs text-gray-500">Formato: BAA-XX-0000</span>
+        <span className="text-xs text-muted-foreground">Formato: BAA-XX-0000</span>
         {validationError ? (
-          <span className="text-sm text-red-400" id={errorId} role="alert">
+          <span className="text-sm text-destructive" id={errorId} role="alert">
             {validationError}
           </span>
         ) : null}
@@ -116,62 +121,56 @@ export function ImsReferenceForm({
       {isOffline ? <ImsOfflineNotice /> : null}
 
       {actionError ? (
-        <p className="text-sm text-red-400" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {actionError}
         </p>
       ) : null}
 
-      <button
-        className="w-full max-w-md rounded-md bg-orange-500 px-4 py-3 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50 sm:w-auto"
+      <Button
+        className="w-full max-w-md sm:w-auto"
         disabled={registerMutation.isPending || isOffline || !isFormatValid}
         type="button"
         onClick={openConfirm}
       >
         {registerMutation.isPending ? "Registrando…" : "Registrar referência IMS"}
-      </button>
+      </Button>
 
-      <dialog
-        ref={confirmDialogRef}
-        className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-900 p-0 text-gray-100 backdrop:bg-black/60"
-        onCancel={(event) => {
-          event.preventDefault();
-          setIsConfirmOpen(false);
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsConfirmOpen(false);
+          }
         }}
+        open={isConfirmOpen}
       >
-        <form
-          className="flex flex-col gap-4 p-6"
-          method="dialog"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleRegister();
-          }}
-        >
-          <h2 className="text-lg font-semibold">Registrar referência IMS?</h2>
-          <p className="font-mono text-sm text-gray-200">Código: {trimmedCode}</p>
-          <p className="text-sm text-gray-400">
-            A ocorrência passará para Em Tratativa. O SafeStop não valida este código no sistema
-            IMS.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:bg-gray-800"
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Registrar referência IMS?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                <p className="font-mono text-foreground">Código: {trimmedCode}</p>
+                <p className="mt-2">
+                  A Paralisação Preventiva passará para Em Tratativa. O SafeStop não valida este
+                  código no sistema IMS.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={registerMutation.isPending}
               type="button"
-              onClick={() => {
-                setIsConfirmOpen(false);
+              onClick={(event) => {
+                event.preventDefault();
+                void handleRegister();
               }}
             >
-              Cancelar
-            </button>
-            <button
-              className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50"
-              disabled={registerMutation.isPending}
-              type="submit"
-            >
               Registrar referência IMS
-            </button>
-          </div>
-        </form>
-      </dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
