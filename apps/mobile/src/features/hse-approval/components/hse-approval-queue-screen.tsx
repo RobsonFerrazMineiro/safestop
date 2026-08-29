@@ -1,15 +1,9 @@
 import { useRouter } from "expo-router";
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button } from "@/components/ui";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
 import { authRoutes } from "@/lib/auth/routes";
@@ -73,16 +67,15 @@ export function HseApprovalQueueScreen() {
       {isError ? (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>{HSE_APPROVAL_COPY.queueLoadError}</Text>
-          <Pressable
+          <Button
             accessibilityLabel="Tentar novamente"
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
+            variant="secondary"
             onPress={() => {
               void refetch();
             }}
           >
-            <Text style={styles.retryText}>Tentar novamente</Text>
-          </Pressable>
+            Tentar novamente
+          </Button>
         </View>
       ) : (
         <FlatList
@@ -92,28 +85,24 @@ export function HseApprovalQueueScreen() {
           ListEmptyComponent={<HseApprovalEmpty />}
           ListFooterComponent={
             hasNextPage ? (
-              <Pressable
+              <Button
                 accessibilityLabel="Carregar mais"
-                accessibilityRole="button"
-                disabled={isFetchingNextPage}
-                style={({ pressed }) => [styles.loadMoreButton, pressed && styles.pressed]}
+                loading={isFetchingNextPage}
+                style={styles.loadMoreButton}
+                variant="ghost"
                 onPress={() => {
                   void fetchNextPage();
                 }}
               >
-                {isFetchingNextPage ? (
-                  <ActivityIndicator color="#FBBF24" size="small" />
-                ) : (
-                  <Text style={styles.loadMoreText}>Carregar mais</Text>
-                )}
-              </Pressable>
+                {isFetchingNextPage ? "Carregando…" : "Carregar mais"}
+              </Button>
             ) : null
           }
           refreshControl={
             <RefreshControl
-              colors={["#D97706"]}
+              colors={[colors.primary]}
               refreshing={isFetching && !isFetchingNextPage}
-              tintColor="#D97706"
+              tintColor={colors.primary}
               onRefresh={() => {
                 void refetch();
               }}
@@ -128,79 +117,55 @@ export function HseApprovalQueueScreen() {
 
 const styles = StyleSheet.create({
   backLink: {
-    color: "#FBBF24",
-    fontSize: 14,
+    color: colors.primary,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
   container: {
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
   },
   errorBox: {
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingTop: 24,
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[6],
   },
   errorText: {
-    color: "#F87171",
-    fontSize: 14,
+    color: colors.destructive,
+    fontSize: typography.label.fontSize,
   },
   forbidden: {
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing[6],
   },
   forbiddenText: {
-    color: "#F9FAFB",
-    fontSize: 16,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     textAlign: "center",
   },
   header: {
-    gap: 4,
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    gap: spacing[1],
+    paddingBottom: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[2],
   },
   listContent: {
-    gap: 12,
-    paddingBottom: 24,
-    paddingHorizontal: 16,
+    gap: spacing[3],
+    paddingBottom: spacing[6],
+    paddingHorizontal: spacing[4],
   },
   loadMoreButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-    paddingVertical: 8,
-  },
-  loadMoreText: {
-    color: "#FBBF24",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  retryButton: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    backgroundColor: "#374151",
-    borderRadius: 8,
-    minHeight: 40,
-    paddingHorizontal: 16,
-    justifyContent: "center",
-  },
-  retryText: {
-    color: "#F9FAFB",
-    fontSize: 14,
-    fontWeight: "600",
+    alignSelf: "center",
+    marginTop: spacing[2],
   },
   subtitle: {
-    color: "#FCD34D",
-    fontSize: 14,
+    color: statusChip.warning.foreground,
+    fontSize: typography.label.fontSize,
   },
   title: {
-    color: "#FBBF24",
-    fontSize: 24,
-    fontWeight: "700",
+    color: statusChip.warning.foreground,
+    fontSize: typography.cardTitle.fontSize,
+    fontWeight: typography.cardTitle.fontWeight,
   },
 });

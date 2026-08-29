@@ -1,8 +1,10 @@
 import type { MdhoPendingApprovalItem } from "@safestop/types";
 import type { Href } from "expo-router";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { colors, statusChip, typography } from "@safestop/ui";
 
+import { Card, StatusBadge } from "@/components/ui";
 import { getOccurrenceSeverityLabel } from "@/features/occurrences/utils/occurrence-labels";
 
 import { HSE_APPROVAL_COPY } from "../utils/hse-approval-copy";
@@ -19,10 +21,10 @@ export function HsePendingApprovalCard({ item }: HsePendingApprovalCardProps) {
   const detailHref = `/(app)/stop-work/${item.occurrenceId}?section=mdho-review` as Href;
 
   return (
-    <Pressable
+    <Card
       accessibilityLabel={`Ocorrência ${item.publicCode}, enviada por ${submittedBy}`}
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      style={styles.card}
+      variant="muted"
       onPress={() => {
         router.push(detailHref);
       }}
@@ -30,8 +32,13 @@ export function HsePendingApprovalCard({ item }: HsePendingApprovalCardProps) {
       <View style={styles.header}>
         <Text style={styles.code}>{item.publicCode}</Text>
         <View style={styles.badges}>
-          <Text style={styles.pendingBadge}>{HSE_APPROVAL_COPY.pendingBadge}</Text>
-          <Text style={styles.severity}>{getOccurrenceSeverityLabel(item.criticality)}</Text>
+          <View style={styles.pendingBadge}>
+            <Text style={styles.pendingBadgeText}>{HSE_APPROVAL_COPY.pendingBadge}</Text>
+          </View>
+          <StatusBadge
+            label={getOccurrenceSeverityLabel(item.criticality)}
+            severity={item.criticality}
+          />
         </View>
       </View>
 
@@ -43,7 +50,7 @@ export function HsePendingApprovalCard({ item }: HsePendingApprovalCardProps) {
       <Text style={styles.meta}>
         Enviado por {submittedBy} · {relativeTime}
       </Text>
-    </Pressable>
+    </Card>
   );
 }
 
@@ -53,20 +60,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   card: {
-    backgroundColor: "#1F2937",
-    borderColor: "#D97706",
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 8,
-    padding: 16,
-  },
-  cardPressed: {
-    opacity: 0.85,
+    borderColor: statusChip.warning.border,
   },
   code: {
-    color: "#FBBF24",
+    color: statusChip.warning.foreground,
     fontFamily: "monospace",
-    fontSize: 13,
+    fontSize: typography.helper.fontSize,
     fontWeight: "700",
   },
   header: {
@@ -75,28 +74,26 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   meta: {
-    color: "#9CA3AF",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
   },
   pendingBadge: {
-    backgroundColor: "#78350F",
+    backgroundColor: statusChip.warning.background,
+    borderColor: statusChip.warning.border,
     borderRadius: 999,
-    color: "#FDE68A",
-    fontSize: 11,
-    fontWeight: "700",
-    overflow: "hidden",
+    borderWidth: 1,
     paddingHorizontal: 8,
     paddingVertical: 2,
+  },
+  pendingBadgeText: {
+    color: statusChip.warning.foreground,
+    fontSize: typography.caption.fontSize,
+    fontWeight: "700",
     textTransform: "uppercase",
   },
-  severity: {
-    color: "#FBBF24",
-    fontSize: 12,
-    fontWeight: "600",
-  },
   summary: {
-    color: "#F9FAFB",
-    fontSize: 15,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     lineHeight: 21,
   },
 });

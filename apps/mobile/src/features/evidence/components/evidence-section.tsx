@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { colors, radius, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button } from "@/components/ui";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
 
 import { EvidenceAddSheet } from "./evidence-add-sheet";
@@ -10,7 +12,6 @@ import { useDeleteEvidence } from "../hooks/use-delete-evidence";
 import { useEvidenceSignedUrl } from "../hooks/use-evidence-signed-url";
 import { useOccurrenceEvidence } from "../hooks/use-occurrence-evidence";
 import { useUploadEvidence } from "../hooks/use-upload-evidence";
-import { evidenceColors } from "../theme/colors";
 import type { EvidenceListItem } from "../types";
 
 type EvidenceSectionProps = {
@@ -120,16 +121,15 @@ export function EvidenceSection({ occurrenceId, showOfflineBanner = true }: Evid
         <View style={styles.messageBox}>
           <Text style={styles.errorTitle}>Não foi possível carregar as evidências.</Text>
           <Text style={styles.errorBody}>Verifique sua conexão e tente novamente.</Text>
-          <Pressable
+          <Button
             accessibilityLabel="Tentar novamente"
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
+            variant="secondary"
             onPress={() => {
               void refetch();
             }}
           >
-            <Text style={styles.retryButtonText}>Tentar novamente</Text>
-          </Pressable>
+            Tentar novamente
+          </Button>
         </View>
       ) : (
         <>
@@ -204,6 +204,7 @@ export function EvidenceSection({ occurrenceId, showOfflineBanner = true }: Evid
 
       <EvidencePreviewModal
         evidence={previewItem}
+        isDeleting={isDeleting}
         occurrenceId={occurrenceId}
         visible={previewItem !== null}
         onClose={() => {
@@ -223,89 +224,72 @@ export function EvidenceSection({ occurrenceId, showOfflineBanner = true }: Evid
 
 const styles = StyleSheet.create({
   actionError: {
-    color: evidenceColors.destructive,
-    fontSize: 13,
-    marginTop: 8,
+    color: colors.destructive,
+    fontSize: typography.caption.fontSize,
+    marginTop: spacing[2],
   },
   block: {
-    gap: 12,
+    gap: spacing[3],
   },
   counter: {
-    color: evidenceColors.foregroundMuted,
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.body.fontSize,
     fontWeight: "600",
   },
   emptyBody: {
-    color: evidenceColors.foregroundMuted,
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.body.fontSize,
   },
   emptyBox: {
-    gap: 4,
+    gap: spacing[1],
   },
   emptyTitle: {
-    color: evidenceColors.foreground,
-    fontSize: 14,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "600",
   },
   errorBody: {
-    color: evidenceColors.foregroundMuted,
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.body.fontSize,
   },
   errorTitle: {
-    color: evidenceColors.foreground,
-    fontSize: 14,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "600",
   },
   gallery: {
-    gap: 8,
-    paddingVertical: 4,
+    gap: spacing[2],
+    paddingVertical: spacing[1],
   },
   header: {
     alignItems: "center",
-    borderTopColor: evidenceColors.borderSubtle,
+    borderTopColor: colors.border,
     borderTopWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingTop: 12,
+    paddingTop: spacing[3],
   },
   messageBox: {
-    gap: 8,
+    gap: spacing[2],
   },
   offlineBanner: {
-    backgroundColor: evidenceColors.destructiveSurface,
-    borderRadius: 12,
-    gap: 4,
-    padding: 12,
+    backgroundColor: statusChip.destructive.background,
+    borderRadius: radius.card,
+    gap: spacing[1],
+    padding: spacing[3],
   },
   offlineBody: {
-    color: evidenceColors.foregroundMuted,
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
   },
   offlineTitle: {
-    color: evidenceColors.foreground,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  retryButton: {
-    alignSelf: "flex-start",
-    backgroundColor: evidenceColors.surface,
-    borderColor: evidenceColors.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  retryButtonText: {
-    color: evidenceColors.primary,
-    fontSize: 14,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "600",
   },
   sectionTitle: {
-    color: evidenceColors.foregroundLabel,
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
     textTransform: "uppercase",
   },

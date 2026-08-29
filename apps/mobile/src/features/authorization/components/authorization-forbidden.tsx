@@ -1,6 +1,8 @@
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { colors, spacing, typography } from "@safestop/ui";
 
+import { Button } from "@/components/ui";
 import { authRoutes } from "@/lib/auth/routes";
 
 export function AuthorizationForbidden() {
@@ -12,9 +14,15 @@ export function AuthorizationForbidden() {
       <Text style={styles.description}>
         Você não possui permissão para acessar esta área na organização ativa.
       </Text>
-      <Pressable onPress={() => router.replace(authRoutes.app)}>
-        <Text style={styles.link}>Voltar ao início</Text>
-      </Pressable>
+      <Button
+        accessibilityLabel="Voltar ao início"
+        variant="ghost"
+        onPress={() => {
+          router.replace(authRoutes.app);
+        }}
+      >
+        Voltar ao início
+      </Button>
     </View>
   );
 }
@@ -22,26 +30,20 @@ export function AuthorizationForbidden() {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
-    gap: 12,
+    gap: spacing[3],
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing[6],
   },
   description: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.body.fontSize,
     textAlign: "center",
   },
-  link: {
-    color: "#F97316",
-    fontSize: 14,
-    fontWeight: "600",
-    textDecorationLine: "underline",
-  },
   title: {
-    color: "#F9FAFB",
-    fontSize: 20,
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
     fontWeight: "600",
     textAlign: "center",
   },

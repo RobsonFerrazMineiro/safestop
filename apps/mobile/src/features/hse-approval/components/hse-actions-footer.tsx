@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { colors, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button } from "@/components/ui";
 import { confirmAction } from "@/lib/confirm-action";
 
 import type { HseActionsFooterState } from "../types";
@@ -56,54 +58,37 @@ export function HseActionsFooter({
 
   return (
     <>
-      <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+      <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, spacing[3]) }]}>
         {!isOnline ? <Text style={styles.offline}>{HSE_APPROVAL_COPY.offlineToast}</Text> : null}
 
         <View style={styles.row}>
           {canReturn ? (
-            <Pressable
+            <Button
               accessibilityLabel={HSE_APPROVAL_COPY.returnCta}
-              accessibilityRole="button"
               disabled={isBusy}
-              style={({ pressed }) => [
-                styles.returnButton,
-                canApprove ? styles.halfButton : styles.fullButton,
-                isBusy && styles.buttonDisabled,
-                pressed && !isBusy && styles.pressed,
-              ]}
+              loading={isReturning}
+              style={canApprove ? styles.halfButton : styles.fullButton}
+              variant="destructive"
               onPress={handleReturnPress}
             >
-              {isReturning ? (
-                <ActivityIndicator color="#FCA5A5" size="small" />
-              ) : (
-                <Text style={styles.returnText}>{HSE_APPROVAL_COPY.returnCta}</Text>
-              )}
-            </Pressable>
+              {HSE_APPROVAL_COPY.returnCta}
+            </Button>
           ) : null}
 
           {canApprove ? (
-            <Pressable
+            <Button
               accessibilityLabel={
                 isApproving ? HSE_APPROVAL_COPY.approving : HSE_APPROVAL_COPY.approveCta
               }
-              accessibilityRole="button"
               disabled={isBusy}
-              style={({ pressed }) => [
-                styles.approveButton,
-                canReturn ? styles.halfButton : styles.fullButton,
-                isBusy && styles.buttonDisabled,
-                pressed && !isBusy && styles.pressed,
-              ]}
+              loading={isApproving}
+              style={canReturn ? styles.halfButton : styles.fullButton}
               onPress={() => {
                 void confirmApprove();
               }}
             >
-              {isApproving ? (
-                <ActivityIndicator color="#FFFBEB" size="small" />
-              ) : (
-                <Text style={styles.approveText}>{HSE_APPROVAL_COPY.approveCta}</Text>
-              )}
-            </Pressable>
+              {HSE_APPROVAL_COPY.approveCta}
+            </Button>
           ) : null}
         </View>
       </View>
@@ -121,29 +106,13 @@ export function HseActionsFooter({
 }
 
 const styles = StyleSheet.create({
-  approveButton: {
-    alignItems: "center",
-    backgroundColor: "#D97706",
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: 12,
-  },
-  approveText: {
-    color: "#FFFBEB",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
   container: {
-    backgroundColor: "#0F1115",
-    borderTopColor: "#92400E",
+    backgroundColor: colors.background,
+    borderTopColor: statusChip.warning.border,
     borderTopWidth: 1,
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[3],
   },
   fullButton: {
     flex: 1,
@@ -152,28 +121,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   offline: {
-    color: "#FCD34D",
-    fontSize: 13,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  returnButton: {
-    alignItems: "center",
-    borderColor: "#DC2626",
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: 12,
-  },
-  returnText: {
-    color: "#FCA5A5",
-    fontSize: 15,
-    fontWeight: "700",
+    color: statusChip.warning.foreground,
+    fontSize: typography.helper.fontSize,
   },
   row: {
     flexDirection: "row",
-    gap: 10,
+    gap: spacing[2],
   },
 });

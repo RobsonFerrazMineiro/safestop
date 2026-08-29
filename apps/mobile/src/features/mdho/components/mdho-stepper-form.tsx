@@ -7,7 +7,9 @@ import {
   MDHO_OTHER_OPTION_CODE,
 } from "@safestop/types";
 import { createSubmitMdhoSchema } from "@safestop/validation";
+import { colors, radius, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button } from "@/components/ui";
 import { confirmAction } from "@/lib/confirm-action";
 
 import type { MdhoAssessmentEnriched } from "../services/map-mdho";
@@ -154,7 +156,7 @@ export function MdhoStepperForm({
                     accessibilityLabel="Descreva a opção Outro"
                     multiline
                     placeholder="Descreva..."
-                    placeholderTextColor="#6B7280"
+                    placeholderTextColor={colors.foregroundMuted}
                     style={styles.detailInput}
                     value={getSelectionDetail(form, currentCategory.id, option.id)}
                     onChangeText={(value) => {
@@ -175,7 +177,7 @@ export function MdhoStepperForm({
             accessibilityLabel="Complemento da avaliação"
             multiline
             placeholder="Complemento da avaliação..."
-            placeholderTextColor="#6B7280"
+            placeholderTextColor={colors.foregroundMuted}
             style={styles.complementInput}
             value={form.complement}
             onChangeText={(value) => {
@@ -189,37 +191,29 @@ export function MdhoStepperForm({
       )}
 
       <View style={styles.navRow}>
-        <Pressable
+        <Button
           accessibilityLabel="Voltar"
-          accessibilityRole="button"
           disabled={stepIndex === 0}
-          style={({ pressed }) => [
-            styles.navButton,
-            stepIndex === 0 && styles.navButtonDisabled,
-            pressed && stepIndex > 0 && styles.pressed,
-          ]}
+          style={styles.navButton}
+          variant="secondary"
           onPress={() => {
             setStepIndex((current) => Math.max(0, current - 1));
           }}
         >
-          <Text style={styles.navText}>Voltar</Text>
-        </Pressable>
+          Voltar
+        </Button>
 
-        <Pressable
+        <Button
           accessibilityLabel="Próximo"
-          accessibilityRole="button"
           disabled={stepIndex >= catalog.length}
-          style={({ pressed }) => [
-            styles.navButton,
-            stepIndex >= catalog.length && styles.navButtonDisabled,
-            pressed && stepIndex < catalog.length && styles.pressed,
-          ]}
+          style={styles.navButton}
+          variant="secondary"
           onPress={() => {
             setStepIndex((current) => Math.min(catalog.length, current + 1));
           }}
         >
-          <Text style={styles.navText}>Próximo</Text>
-        </Pressable>
+          Próximo
+        </Button>
       </View>
 
       <MdhoDraftBar
@@ -241,113 +235,99 @@ export function MdhoStepperForm({
 
 const styles = StyleSheet.create({
   complementBlock: {
-    gap: 8,
+    gap: spacing[2],
   },
   complementHelper: {
-    color: "#9CA3AF",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
   },
   complementInput: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 12,
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
+    borderRadius: radius.card,
     borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 15,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     maxHeight: 160,
     minHeight: 100,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
   },
   container: {
-    gap: 12,
+    gap: spacing[3],
   },
   counter: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     textAlign: "right",
   },
   detailInput: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 8,
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
+    borderRadius: radius.input,
     borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 14,
+    color: colors.foreground,
+    fontSize: typography.label.fontSize,
     marginLeft: 28,
     minHeight: 72,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[2],
   },
   dot: {
-    backgroundColor: "#374151",
+    backgroundColor: colors.border,
     borderRadius: 999,
     height: 8,
     width: 8,
   },
   dotActive: {
-    backgroundColor: "#2563EB",
+    backgroundColor: colors.info,
   },
   dots: {
     flexDirection: "row",
     gap: 6,
   },
   error: {
-    color: "#F87171",
-    fontSize: 13,
+    color: colors.destructive,
+    fontSize: typography.helper.fontSize,
   },
   navButton: {
-    alignItems: "center",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
     flex: 1,
-    justifyContent: "center",
-    minHeight: 44,
-  },
-  navButtonDisabled: {
-    opacity: 0.4,
   },
   navRow: {
     flexDirection: "row",
-    gap: 10,
-  },
-  navText: {
-    color: "#D1D5DB",
-    fontSize: 14,
-    fontWeight: "600",
+    gap: spacing[2],
   },
   optionBlock: {
-    gap: 8,
+    gap: spacing[2],
   },
   optionIndicator: {
-    color: "#2563EB",
-    fontSize: 14,
+    color: colors.info,
+    fontSize: typography.label.fontSize,
     width: 18,
   },
   optionLabel: {
-    color: "#F9FAFB",
+    color: colors.foreground,
     flex: 1,
-    fontSize: 15,
+    fontSize: typography.body.fontSize,
   },
   optionRow: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 10,
+    gap: spacing[2],
     minHeight: 44,
   },
   options: {
-    gap: 8,
+    gap: spacing[2],
   },
   pressed: {
     opacity: 0.85,
   },
   stepHeader: {
-    gap: 8,
+    gap: spacing[2],
   },
   stepTitle: {
-    color: "#DBEAFE",
-    fontSize: 14,
+    color: statusChip.info.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "700",
   },
 });

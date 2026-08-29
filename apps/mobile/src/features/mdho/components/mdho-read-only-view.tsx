@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import type { MdhoCatalogCategory } from "@safestop/types";
 import { MDHO_DEVIATION_TYPE_CATEGORY_CODE, MDHO_OTHER_OPTION_CODE } from "@safestop/types";
+import { colors, typography } from "@safestop/ui";
 
 import type { MdhoAssessmentEnriched } from "../services/map-mdho";
 import { getMdhoCategoryLabel } from "../utils/mdho-labels";
@@ -65,14 +66,14 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   label: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     textTransform: "uppercase",
   },
   value: {
-    color: "#F9FAFB",
-    fontSize: 15,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     lineHeight: 22,
   },
 });

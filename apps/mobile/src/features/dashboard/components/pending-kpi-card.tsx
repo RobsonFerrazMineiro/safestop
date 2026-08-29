@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { radius, statusChip, typography } from "@safestop/ui";
 
 type PendingKpiCardTone = "danger" | "warning" | "info" | "neutral";
 
@@ -16,24 +17,24 @@ const TONE_STYLES: Record<
   { backgroundColor: string; borderColor: string; valueColor: string }
 > = {
   danger: {
-    backgroundColor: "#450A0A",
-    borderColor: "#DC2626",
-    valueColor: "#FCA5A5",
+    backgroundColor: statusChip.destructive.background,
+    borderColor: statusChip.destructive.border,
+    valueColor: statusChip.destructive.foreground,
   },
   warning: {
-    backgroundColor: "#451A03",
-    borderColor: "#D97706",
-    valueColor: "#FDE68A",
+    backgroundColor: statusChip.warning.background,
+    borderColor: statusChip.warning.border,
+    valueColor: statusChip.warning.foreground,
   },
   info: {
-    backgroundColor: "#1E3A5F",
-    borderColor: "#2563EB",
-    valueColor: "#BFDBFE",
+    backgroundColor: statusChip.info.background,
+    borderColor: statusChip.info.border,
+    valueColor: statusChip.info.foreground,
   },
   neutral: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    valueColor: "#F9FAFB",
+    backgroundColor: statusChip.muted.background,
+    borderColor: statusChip.muted.border,
+    valueColor: statusChip.muted.foreground,
   },
 };
 
@@ -79,7 +80,7 @@ export function PendingKpiCard({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 12,
+    borderRadius: radius.card,
     borderWidth: 1,
     gap: 6,
     minHeight: 72,
@@ -87,8 +88,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   label: {
-    color: "#D1D5DB",
-    fontSize: 14,
+    color: statusChip.muted.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
     lineHeight: 20,
   },

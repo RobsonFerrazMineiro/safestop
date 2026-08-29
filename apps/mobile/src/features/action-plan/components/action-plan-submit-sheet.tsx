@@ -1,16 +1,10 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-} from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text } from "react-native";
 import type { ActionItemPriority } from "@safestop/types";
 import { submitActionItemSchema } from "@safestop/validation";
+import { colors, overlay, radius, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button, TextField } from "@/components/ui";
 import { EvidenceAddSheet } from "@/features/evidence/components/evidence-add-sheet";
 
 import { useActionItemAttachments, useUploadActionItemEvidence } from "../hooks";
@@ -108,13 +102,11 @@ export function ActionPlanSubmitSheet({
             <ScrollView contentContainerStyle={styles.content}>
               <Text style={styles.title}>{ACTION_PLAN_COPY.submitTitle}</Text>
 
-              <Text style={styles.label}>{ACTION_PLAN_COPY.completionLabel}</Text>
-              <TextInput
-                editable={isOnline && !isSubmitting}
+              <TextField
+                disabled={!isOnline || isSubmitting}
+                label={ACTION_PLAN_COPY.completionLabel}
                 multiline
                 placeholder="Descreva o que foi feito"
-                placeholderTextColor="#6B7280"
-                style={styles.textarea}
                 value={description}
                 onChangeText={setDescription}
               />
@@ -136,44 +128,35 @@ export function ActionPlanSubmitSheet({
                 </Text>
               ) : null}
 
-              <Pressable
+              <Button
                 accessibilityLabel={ACTION_PLAN_COPY.addEvidence}
-                accessibilityRole="button"
                 disabled={!isOnline || isUploading || isSubmitting}
-                style={[styles.addEvidenceButton, (!isOnline || isUploading) && styles.disabled]}
+                loading={isUploading}
+                variant="secondary"
                 onPress={() => {
                   setShowAddSheet(true);
                 }}
               >
-                {isUploading ? (
-                  <ActivityIndicator color="#DBEAFE" />
-                ) : (
-                  <Text style={styles.addEvidenceText}>{ACTION_PLAN_COPY.addEvidence}</Text>
-                )}
-              </Pressable>
+                {ACTION_PLAN_COPY.addEvidence}
+              </Button>
 
               {uploadError ? <Text style={styles.error}>{uploadError}</Text> : null}
               {validationError ? <Text style={styles.error}>{validationError}</Text> : null}
 
-              <Pressable
+              <Button
                 accessibilityLabel={ACTION_PLAN_COPY.submitSend}
-                accessibilityRole="button"
                 disabled={!isOnline || isSubmitting || isUploading}
-                style={[styles.sendButton, (!isOnline || isSubmitting) && styles.disabled]}
+                loading={isSubmitting}
                 onPress={() => {
                   void handleSend();
                 }}
               >
-                {isSubmitting ? (
-                  <ActivityIndicator color="#EFF6FF" />
-                ) : (
-                  <Text style={styles.sendButtonText}>{ACTION_PLAN_COPY.submitSend}</Text>
-                )}
-              </Pressable>
+                {ACTION_PLAN_COPY.submitSend}
+              </Button>
 
-              <Pressable accessibilityRole="button" style={styles.cancelButton} onPress={onClose}>
-                <Text style={styles.cancelText}>{ACTION_PLAN_COPY.cancel}</Text>
-              </Pressable>
+              <Button accessibilityRole="button" variant="ghost" onPress={onClose}>
+                {ACTION_PLAN_COPY.cancel}
+              </Button>
             </ScrollView>
           </Pressable>
         </Pressable>
@@ -199,101 +182,49 @@ export function ActionPlanSubmitSheet({
 }
 
 const styles = StyleSheet.create({
-  addEvidenceButton: {
-    alignItems: "center",
-    backgroundColor: "#1E3A5F",
-    borderColor: "#2563EB",
-    borderRadius: 10,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 44,
-  },
-  addEvidenceText: {
-    color: "#DBEAFE",
-    fontSize: 15,
-    fontWeight: "700",
-  },
   attachments: {
-    color: "#86EFAC",
-    fontSize: 13,
+    color: statusChip.success.foreground,
+    fontSize: typography.caption.fontSize,
   },
   backdrop: {
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: overlay.scrim,
     flex: 1,
     justifyContent: "flex-end",
   },
-  cancelButton: {
-    alignItems: "center",
-    marginTop: 8,
-    minHeight: 44,
-    justifyContent: "center",
-  },
-  cancelText: {
-    color: "#9CA3AF",
-    fontSize: 15,
-    fontWeight: "600",
-  },
   content: {
-    gap: 10,
-    paddingBottom: 24,
+    gap: spacing[2],
+    paddingBottom: spacing[6],
   },
   counter: {
-    color: "#9CA3AF",
-    fontSize: 12,
-  },
-  disabled: {
-    opacity: 0.45,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
   },
   error: {
-    color: "#FCA5A5",
-    fontSize: 13,
+    color: colors.destructive,
+    fontSize: typography.caption.fontSize,
   },
   hint: {
-    color: "#9CA3AF",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
   },
   label: {
-    color: "#93C5FD",
-    fontSize: 12,
+    color: statusChip.info.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
     textTransform: "uppercase",
   },
-  sendButton: {
-    alignItems: "center",
-    backgroundColor: "#2563EB",
-    borderRadius: 10,
-    justifyContent: "center",
-    marginTop: 8,
-    minHeight: 48,
-  },
-  sendButtonText: {
-    color: "#EFF6FF",
-    fontSize: 16,
-    fontWeight: "700",
-  },
   sheet: {
-    backgroundColor: "#0B1220",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: colors.background,
+    borderTopLeftRadius: radius.dialog,
+    borderTopRightRadius: radius.dialog,
     maxHeight: "85%",
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  textarea: {
-    backgroundColor: "#111827",
-    borderColor: "#374151",
-    borderRadius: 10,
-    borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 15,
-    minHeight: 96,
-    padding: 12,
-    textAlignVertical: "top",
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[4],
   },
   title: {
-    color: "#F9FAFB",
-    fontSize: 18,
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
     fontWeight: "700",
-    marginBottom: 4,
+    marginBottom: spacing[1],
   },
 });

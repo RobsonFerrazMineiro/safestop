@@ -1,5 +1,8 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { colors, spacing, statusChip, typography } from "@safestop/ui";
+
+import { Button, TextField } from "@/components/ui";
 
 import { IMS_REFERENCE_COPY } from "../utils/ims-reference-copy";
 
@@ -15,21 +18,19 @@ export function ImsRegisterForm({ value, error, isOnline, onChange }: ImsRegiste
     <View style={styles.container}>
       <Text style={styles.helper}>{IMS_REFERENCE_COPY.helper}</Text>
 
-      <Text style={styles.label}>{IMS_REFERENCE_COPY.codeLabel}</Text>
-      <TextInput
-        accessibilityLabel={IMS_REFERENCE_COPY.codeLabel}
+      <TextField
         autoCapitalize="characters"
         autoCorrect={false}
-        editable
+        error={error ?? undefined}
+        helperText={!error ? IMS_REFERENCE_COPY.formatHint : undefined}
+        inputStyle={styles.monospaceInput}
+        label={IMS_REFERENCE_COPY.codeLabel}
         placeholder={IMS_REFERENCE_COPY.placeholder}
-        placeholderTextColor="#6B7280"
-        style={[styles.input, error ? styles.inputError : null]}
         value={value}
         onChangeText={onChange}
       />
-      <Text style={styles.formatHint}>{IMS_REFERENCE_COPY.formatHint}</Text>
+
       {!isOnline ? <Text style={styles.offline}>{IMS_REFERENCE_COPY.offlineToast}</Text> : null}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
     </View>
   );
 }
@@ -44,96 +45,45 @@ export function ImsRegisterFooter({ isOnline, isRegistering, onRegister }: ImsRe
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+    <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing[3]) }]}>
       {!isOnline ? <Text style={styles.offline}>{IMS_REFERENCE_COPY.offlineToast}</Text> : null}
-      <Pressable
+      <Button
         accessibilityLabel={
           isRegistering ? IMS_REFERENCE_COPY.registering : IMS_REFERENCE_COPY.registerCta
         }
-        accessibilityRole="button"
         disabled={isRegistering}
-        style={({ pressed }) => [
-          styles.registerButton,
-          isRegistering && styles.buttonDisabled,
-          pressed && !isRegistering && styles.pressed,
-        ]}
+        loading={isRegistering}
         onPress={onRegister}
       >
-        {isRegistering ? (
-          <ActivityIndicator color="#EFF6FF" size="small" />
-        ) : (
-          <Text style={styles.registerText}>{IMS_REFERENCE_COPY.registerCta}</Text>
-        )}
-      </Pressable>
+        {IMS_REFERENCE_COPY.registerCta}
+      </Button>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  buttonDisabled: {
-    opacity: 0.5,
-  },
   container: {
-    gap: 8,
-  },
-  error: {
-    color: "#F87171",
-    fontSize: 13,
+    gap: spacing[2],
   },
   footer: {
-    backgroundColor: "#0F1115",
-    borderTopColor: "#1F2937",
+    backgroundColor: colors.background,
+    borderTopColor: colors.border,
     borderTopWidth: 1,
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-  },
-  formatHint: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[3],
   },
   helper: {
-    color: "#93C5FD",
-    fontSize: 14,
+    color: statusChip.info.foreground,
+    fontSize: typography.body.fontSize,
     lineHeight: 20,
   },
-  input: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
-    color: "#F9FAFB",
+  monospaceInput: {
     fontFamily: "monospace",
-    fontSize: 16,
-    minHeight: 48,
-    paddingHorizontal: 12,
-  },
-  inputError: {
-    borderColor: "#F87171",
-  },
-  label: {
-    color: "#D1D5DB",
-    fontSize: 13,
-    fontWeight: "600",
+    fontSize: typography.cardTitle.fontSize,
   },
   offline: {
-    color: "#93C5FD",
-    fontSize: 13,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  registerButton: {
-    alignItems: "center",
-    backgroundColor: "#2563EB",
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: 16,
-  },
-  registerText: {
-    color: "#EFF6FF",
-    fontSize: 15,
-    fontWeight: "700",
+    color: statusChip.info.foreground,
+    fontSize: typography.caption.fontSize,
   },
 });

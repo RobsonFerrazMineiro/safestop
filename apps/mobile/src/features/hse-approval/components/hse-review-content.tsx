@@ -1,5 +1,6 @@
 import type { MdhoCatalogCategory } from "@safestop/types";
 import { StyleSheet, Text, View } from "react-native";
+import { colors, radius, spacing, statusChip, typography } from "@safestop/ui";
 
 import { formatOccurrenceDate } from "@/features/occurrences/utils/occurrence-labels";
 import { MdhoReadOnlyView } from "@/features/mdho/components/mdho-read-only-view";
@@ -50,53 +51,53 @@ export function HseReviewContent({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#422006",
-    borderColor: "#D97706",
-    borderRadius: 12,
+    backgroundColor: statusChip.warning.background,
+    borderColor: statusChip.warning.border,
+    borderRadius: radius.card,
     borderWidth: 1,
-    gap: 12,
-    padding: 16,
+    gap: spacing[3],
+    padding: spacing[4],
   },
   mdhoHeading: {
-    borderTopColor: "#92400E",
+    borderTopColor: statusChip.warning.border,
     borderTopWidth: 1,
-    color: "#FDE68A",
-    fontSize: 12,
+    color: statusChip.warning.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
-    paddingTop: 12,
+    paddingTop: spacing[3],
     textTransform: "uppercase",
   },
   metaField: {
     flex: 1,
-    gap: 4,
+    gap: spacing[1],
   },
   metaLabel: {
-    color: "#FCD34D",
-    fontSize: 12,
+    color: statusChip.warning.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     textTransform: "uppercase",
   },
   metaRow: {
     flexDirection: "row",
-    gap: 16,
+    gap: spacing[4],
   },
   metaValue: {
-    color: "#FFFBEB",
-    fontSize: 15,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
   },
   sectionTitle: {
-    color: "#FBBF24",
-    fontSize: 13,
+    color: statusChip.warning.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
     textTransform: "uppercase",
   },
   selfApprovalInfo: {
-    color: "#FCD34D",
-    fontSize: 13,
+    color: statusChip.warning.foreground,
+    fontSize: typography.helper.fontSize,
   },
   status: {
-    color: "#FDE68A",
-    fontSize: 14,
+    color: statusChip.warning.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
 });

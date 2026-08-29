@@ -7,8 +7,9 @@ import {
   View,
   type ImageSourcePropType,
 } from "react-native";
+import { colors, overlay, radius, typography } from "@safestop/ui";
 
-import { evidenceColors, EVIDENCE_TILE_SIZE } from "../theme/colors";
+import { EVIDENCE_TILE_SIZE } from "../constants";
 import { getQueueStatusLabel } from "../utils/evidence-labels";
 import type { EvidenceUploadQueueItem } from "../types";
 
@@ -68,7 +69,7 @@ export function EvidenceQueueTile({ item, index, onPress, onRetry }: EvidenceQue
 
       {isProcessing ? (
         <View style={styles.overlay}>
-          <ActivityIndicator color={evidenceColors.primary} size="small" />
+          <ActivityIndicator color={colors.primary} size="small" />
           <Text style={styles.overlayText}>{statusLabel}</Text>
         </View>
       ) : null}
@@ -118,7 +119,7 @@ export function EvidenceSyncedTile({
     >
       {isLoading ? (
         <View style={styles.placeholder}>
-          <ActivityIndicator color={evidenceColors.primary} size="small" />
+          <ActivityIndicator color={colors.primary} size="small" />
         </View>
       ) : hasError ? (
         <View style={styles.placeholder}>
@@ -137,14 +138,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   addLabel: {
-    color: evidenceColors.foregroundMuted,
-    fontSize: 11,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     marginTop: 4,
   },
   addTile: {
     alignItems: "center",
-    borderColor: evidenceColors.border,
+    borderColor: colors.border,
     borderStyle: "dashed",
     borderWidth: 1,
     justifyContent: "center",
@@ -153,13 +154,13 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   failedIcon: {
-    color: evidenceColors.destructive,
+    color: colors.destructive,
     fontSize: 18,
     fontWeight: "700",
   },
   failedText: {
-    color: evidenceColors.destructive,
-    fontSize: 11,
+    color: colors.destructive,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     marginTop: 4,
     textAlign: "center",
@@ -171,35 +172,35 @@ const styles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFill,
     alignItems: "center",
-    backgroundColor: evidenceColors.overlay,
+    backgroundColor: overlay.scrim,
     justifyContent: "center",
     padding: 4,
   },
   overlayText: {
-    color: evidenceColors.foreground,
-    fontSize: 11,
+    color: colors.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     marginTop: 4,
     textAlign: "center",
   },
   placeholder: {
     alignItems: "center",
-    backgroundColor: evidenceColors.surfaceMuted,
+    backgroundColor: colors.surfaceMuted,
     flex: 1,
     justifyContent: "center",
   },
   placeholderText: {
-    color: evidenceColors.foregroundMuted,
-    fontSize: 11,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     marginTop: 4,
   },
   pressed: {
     opacity: 0.85,
   },
   tile: {
-    backgroundColor: evidenceColors.surface,
-    borderColor: evidenceColors.border,
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.card,
     borderWidth: 1,
     height: EVIDENCE_TILE_SIZE,
     overflow: "hidden",

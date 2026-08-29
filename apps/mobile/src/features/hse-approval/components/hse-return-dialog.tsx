@@ -1,17 +1,18 @@
 import { useState } from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { MDHO_RETURN_REASON_MAX_LENGTH, MDHO_RETURN_REASON_MIN_LENGTH } from "@safestop/types";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { colors, overlay, radius, spacing, typography } from "@safestop/ui";
+
+import { Button, TextField } from "@/components/ui";
 
 import { HSE_APPROVAL_COPY } from "../utils/hse-approval-copy";
 
@@ -64,19 +65,18 @@ export function HseReturnDialog({
       >
         <Pressable accessibilityLabel="Fechar" style={styles.backdrop} onPress={handleClose} />
 
-        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing[4]) }]}>
           <Text style={styles.title}>{HSE_APPROVAL_COPY.returnDialogTitle}</Text>
 
-          <Text style={styles.label}>{HSE_APPROVAL_COPY.returnReasonLabel}</Text>
-          <Text style={styles.helper}>{HSE_APPROVAL_COPY.returnReasonHelper}</Text>
-
-          <TextInput
+          <TextField
             accessibilityLabel={HSE_APPROVAL_COPY.returnReasonLabel}
-            editable={!isReturning}
+            disabled={isReturning}
+            error={error ?? undefined}
+            helperText={HSE_APPROVAL_COPY.returnReasonHelper}
+            inputStyle={styles.multilineInput}
+            label={HSE_APPROVAL_COPY.returnReasonLabel}
             multiline
             placeholder="Descreva o motivo..."
-            placeholderTextColor="#6B7280"
-            style={styles.input}
             value={returnReason}
             onChangeText={(value) => {
               setReturnReason(value);
@@ -84,34 +84,29 @@ export function HseReturnDialog({
             }}
           />
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-
           <View style={styles.actions}>
-            <Pressable
+            <Button
               accessibilityLabel={HSE_APPROVAL_COPY.cancel}
-              accessibilityRole="button"
               disabled={isReturning}
-              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
+              style={styles.actionButton}
+              variant="secondary"
               onPress={handleClose}
             >
-              <Text style={styles.cancelText}>{HSE_APPROVAL_COPY.cancel}</Text>
-            </Pressable>
+              {HSE_APPROVAL_COPY.cancel}
+            </Button>
 
-            <Pressable
+            <Button
               accessibilityLabel={
                 isReturning ? HSE_APPROVAL_COPY.returning : HSE_APPROVAL_COPY.returnDialogAction
               }
-              accessibilityRole="button"
               disabled={isReturning}
-              style={({ pressed }) => [styles.confirmButton, pressed && styles.pressed]}
+              loading={isReturning}
+              style={styles.actionButton}
+              variant="destructive"
               onPress={handleConfirm}
             >
-              {isReturning ? (
-                <ActivityIndicator color="#FEE2E2" size="small" />
-              ) : (
-                <Text style={styles.confirmText}>{HSE_APPROVAL_COPY.returnDialogAction}</Text>
-              )}
-            </Pressable>
+              {HSE_APPROVAL_COPY.returnDialogAction}
+            </Button>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -120,85 +115,37 @@ export function HseReturnDialog({
 }
 
 const styles = StyleSheet.create({
+  actionButton: {
+    flex: 1,
+  },
   actions: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 8,
+    gap: spacing[2],
+    marginTop: spacing[2],
   },
   backdrop: {
     flex: 1,
   },
-  cancelButton: {
-    alignItems: "center",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
-    flex: 1,
-    justifyContent: "center",
-    minHeight: 48,
-  },
-  cancelText: {
-    color: "#D1D5DB",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  confirmButton: {
-    alignItems: "center",
-    backgroundColor: "#DC2626",
-    borderRadius: 8,
-    flex: 1,
-    justifyContent: "center",
-    minHeight: 48,
-  },
-  confirmText: {
-    color: "#FEE2E2",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  error: {
-    color: "#F87171",
-    fontSize: 13,
-  },
-  helper: {
-    color: "#9CA3AF",
-    fontSize: 12,
-  },
-  input: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 12,
-    borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 15,
+  multilineInput: {
     maxHeight: 160,
     minHeight: 100,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  label: {
-    color: "#F9FAFB",
-    fontSize: 14,
-    fontWeight: "600",
   },
   overlay: {
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: overlay.scrim,
     flex: 1,
     justifyContent: "flex-end",
   },
-  pressed: {
-    opacity: 0.85,
-  },
   sheet: {
-    backgroundColor: "#111827",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.dialog,
+    borderTopRightRadius: radius.dialog,
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[4],
   },
   title: {
-    color: "#F9FAFB",
-    fontSize: 18,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
+    fontWeight: typography.cardTitle.fontWeight,
   },
 });

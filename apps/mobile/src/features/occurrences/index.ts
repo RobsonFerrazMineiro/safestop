@@ -7,10 +7,12 @@ export type {
 } from "./types";
 export {
   useOccurrences,
+  useOperationalOccurrences,
   useOccurrence,
   useCreateOccurrence,
   useOccurrenceDraft,
   useOccurrenceAreas,
   useOccurrenceContractors,
   useOccurrenceContracts,
+  useOccurrenceListFilterOptions,
 } from "./hooks";

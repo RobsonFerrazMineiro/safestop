@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
-  ActivityIndicator,
   BackHandler,
   KeyboardAvoidingView,
   Platform,
@@ -12,12 +11,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors } from "@safestop/ui";
+import { colors, radius, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button, TextField } from "@/components/ui";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
@@ -393,17 +392,15 @@ export function PreventiveStopCreateScreen() {
               )}
             />
 
-            <Text style={styles.label}>Local *</Text>
             <Controller
               control={control}
               name="locationDescription"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
+                <TextField
                   accessibilityLabel="Local"
-                  editable={!isCreating}
+                  disabled={isCreating}
+                  label="Local *"
                   placeholder="Ex: Galpão 3"
-                  placeholderTextColor="#6B7280"
-                  style={styles.input}
                   value={value}
                   onBlur={() => {
                     onBlur();
@@ -414,17 +411,15 @@ export function PreventiveStopCreateScreen() {
               )}
             />
 
-            <Text style={styles.label}>Atividade *</Text>
             <Controller
               control={control}
               name="taskDescription"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
+                <TextField
                   accessibilityLabel="Atividade"
-                  editable={!isCreating}
+                  disabled={isCreating}
+                  label="Atividade *"
                   placeholder="Atividade sendo realizada"
-                  placeholderTextColor="#6B7280"
-                  style={styles.input}
                   value={value}
                   onBlur={() => {
                     onBlur();
@@ -435,18 +430,17 @@ export function PreventiveStopCreateScreen() {
               )}
             />
 
-            <Text style={styles.label}>Condição insegura *</Text>
             <Controller
               control={control}
               name="conditionDescription"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
+                <TextField
                   accessibilityLabel="Condição insegura"
-                  editable={!isCreating}
+                  disabled={isCreating}
+                  inputStyle={styles.multilineLarge}
+                  label="Condição insegura *"
                   multiline
                   placeholder="Descreva a condição identificada"
-                  placeholderTextColor="#6B7280"
-                  style={[styles.input, styles.multilineLarge]}
                   value={value}
                   onBlur={() => {
                     onBlur();
@@ -532,18 +526,17 @@ export function PreventiveStopCreateScreen() {
               <Text style={styles.error}>Não foi possível carregar os contratos.</Text>
             ) : null}
 
-            <Text style={styles.label}>Medida imediata (opcional)</Text>
             <Controller
               control={control}
               name="immediateActionDescription"
               render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
+                <TextField
                   accessibilityLabel="Medida imediata"
-                  editable={!isCreating}
+                  disabled={isCreating}
+                  inputStyle={styles.multilineSmall}
+                  label="Medida imediata (opcional)"
                   multiline
                   placeholder="Medida tomada no local, se houver"
-                  placeholderTextColor="#6B7280"
-                  style={[styles.input, styles.multilineSmall]}
                   value={value ?? ""}
                   onBlur={() => {
                     onBlur();
@@ -562,29 +555,17 @@ export function PreventiveStopCreateScreen() {
           </View>
         </ScrollView>
 
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-          <Pressable
+        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing[4]) }]}>
+          <Button
             accessibilityLabel="Paralisar atividade"
-            accessibilityRole="button"
             disabled={!canSubmit}
-            style={({ pressed }) => [
-              styles.submitButton,
-              !canSubmit && styles.submitButtonDisabled,
-              pressed && canSubmit && styles.buttonPressed,
-            ]}
+            loading={isCreating}
             onPress={() => {
               void handleSubmit(onSubmit)();
             }}
           >
-            {isCreating ? (
-              <View style={styles.loadingRow}>
-                <ActivityIndicator color="#0F1115" />
-                <Text style={styles.submitButtonText}>Registrando...</Text>
-              </View>
-            ) : (
-              <Text style={styles.submitButtonText}>Paralisar atividade</Text>
-            )}
-          </Pressable>
+            {isCreating ? "Registrando..." : "Paralisar atividade"}
+          </Button>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -593,83 +574,64 @@ export function PreventiveStopCreateScreen() {
 
 const styles = StyleSheet.create({
   backLink: {
-    color: "#F97316",
-    fontSize: 14,
+    color: colors.primary,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
-  buttonPressed: {
-    opacity: 0.85,
-  },
   container: {
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
   },
   content: {
-    gap: 12,
-    padding: 16,
+    gap: spacing[3],
+    padding: spacing[4],
   },
   draftBanner: {
     alignSelf: "stretch",
-    backgroundColor: "#374151",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radius.button,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[3],
   },
   draftBannerText: {
-    color: "#D1D5DB",
-    fontSize: 13,
+    color: colors.foreground,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
   },
   error: {
-    color: "#F87171",
-    fontSize: 14,
+    color: colors.destructive,
+    fontSize: typography.label.fontSize,
     textAlign: "center",
   },
   footer: {
-    backgroundColor: "#0F1115",
-    borderTopColor: "#1F2937",
+    backgroundColor: colors.background,
+    borderTopColor: colors.border,
     borderTopWidth: 1,
     bottom: 0,
     left: 0,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[3],
     position: "absolute",
     right: 0,
   },
   form: {
-    gap: 10,
+    gap: spacing[3],
   },
   geoHint: {
-    color: "#6B7280",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
   },
   hint: {
-    color: "#9CA3AF",
-    fontSize: 13,
-  },
-  input: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 16,
-    minHeight: 48,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
   },
   keyboardView: {
     flex: 1,
   },
   label: {
-    color: "#D1D5DB",
-    fontSize: 14,
+    color: colors.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
-  },
-  loadingRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 8,
   },
   multilineLarge: {
     minHeight: 96,
@@ -680,41 +642,28 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
   },
   offlineBanner: {
-    backgroundColor: "#450A0A",
-    borderRadius: 8,
-    color: "#FCA5A5",
-    fontSize: 14,
+    backgroundColor: statusChip.destructive.background,
+    borderColor: statusChip.destructive.border,
+    borderRadius: radius.button,
+    borderWidth: 1,
+    color: statusChip.destructive.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[3],
     textAlign: "center",
   },
   savingHint: {
-    color: "#6B7280",
-    fontSize: 12,
-  },
-  submitButton: {
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 52,
-  },
-  submitButtonDisabled: {
-    opacity: 0.5,
-  },
-  submitButtonText: {
-    color: colors.background,
-    fontSize: 16,
-    fontWeight: "700",
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
   },
   subtitle: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.label.fontSize,
   },
   title: {
-    color: "#F9FAFB",
-    fontSize: 24,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
+    fontWeight: typography.cardTitle.fontWeight,
   },
 });

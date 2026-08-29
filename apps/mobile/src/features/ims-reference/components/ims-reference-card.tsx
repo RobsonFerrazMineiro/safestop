@@ -1,10 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import type { OccurrenceDetails } from "@safestop/types";
+import { colors, typography } from "@safestop/ui";
 
-import {
-  formatOccurrenceDate,
-  getOccurrenceStatusLabel,
-} from "@/features/occurrences/utils/occurrence-labels";
+import { Button, Card, StatusBadge } from "@/components/ui";
+import { formatOccurrenceDate } from "@/features/occurrences/utils/occurrence-labels";
 
 import { IMS_REFERENCE_COPY } from "../utils/ims-reference-copy";
 
@@ -18,10 +17,8 @@ export function ImsReferenceCard({ occurrence, canUpdate, onEdit }: ImsReference
   const code = occurrence.imsReferenceCode?.trim() ?? "—";
 
   return (
-    <View style={styles.container}>
-      <View style={styles.badgeRow}>
-        <Text style={styles.badge}>{getOccurrenceStatusLabel(occurrence.status)}</Text>
-      </View>
+    <Card>
+      <StatusBadge status={occurrence.status} />
 
       <View style={styles.field}>
         <Text style={styles.label}>{IMS_REFERENCE_COPY.codeDisplayLabel}</Text>
@@ -65,68 +62,31 @@ export function ImsReferenceCard({ occurrence, canUpdate, onEdit }: ImsReference
       ) : null}
 
       {canUpdate ? (
-        <Pressable
+        <Button
           accessibilityLabel={IMS_REFERENCE_COPY.editCta}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.editButton, pressed && styles.pressed]}
+          variant="secondary"
           onPress={onEdit}
         >
-          <Text style={styles.editText}>{IMS_REFERENCE_COPY.editCta}</Text>
-        </Pressable>
+          {IMS_REFERENCE_COPY.editCta}
+        </Button>
       ) : null}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  badge: {
-    backgroundColor: "#1E3A5F",
-    borderRadius: 999,
-    color: "#BFDBFE",
-    fontSize: 11,
-    fontWeight: "700",
-    overflow: "hidden",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    textTransform: "uppercase",
-  },
-  badgeRow: {
-    flexDirection: "row",
-  },
   code: {
-    color: "#F9FAFB",
+    color: colors.foreground,
     fontFamily: "monospace",
-    fontSize: 20,
+    fontSize: typography.cardTitle.fontSize,
     fontWeight: "700",
-  },
-  container: {
-    backgroundColor: "#111827",
-    borderColor: "#374151",
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 12,
-    padding: 16,
-  },
-  editButton: {
-    alignItems: "center",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 44,
-    paddingHorizontal: 16,
-  },
-  editText: {
-    color: "#D1D5DB",
-    fontSize: 15,
-    fontWeight: "600",
   },
   field: {
     gap: 4,
   },
   label: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     textTransform: "uppercase",
   },
@@ -135,8 +95,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   metaLabel: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     textTransform: "uppercase",
   },
@@ -145,10 +105,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   metaValue: {
-    color: "#F9FAFB",
-    fontSize: 15,
-  },
-  pressed: {
-    opacity: 0.85,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
   },
 });

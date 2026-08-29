@@ -1,5 +1,6 @@
 import { Stack, useSegments } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { colors } from "@safestop/ui";
 
 import { AuthorizationAppGate } from "@/features/authorization/components/authorization-app-gate";
 import { OrganizationEmpty } from "@/features/organization/components/organization-empty";
@@ -43,7 +44,7 @@ export default function AppLayout() {
   if (!isOrganizationsScreen && !isReady) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color="#F97316" size="large" />
+        <ActivityIndicator color={colors.primary} size="large" />
       </View>
     );
   }
@@ -58,7 +59,7 @@ export default function AppLayout() {
 const styles = StyleSheet.create({
   loading: {
     alignItems: "center",
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
     justifyContent: "center",
   },

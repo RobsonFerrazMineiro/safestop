@@ -1,7 +1,9 @@
 import { useRouter } from "expo-router";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { DASHBOARD_METRIC_CATALOG } from "@safestop/types";
+import { colors, radius, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button } from "@/components/ui";
 import { DashboardOfflineNotice } from "./dashboard-offline-notice";
 import { PendingKpiCard } from "./pending-kpi-card";
 import { DASHBOARD_COPY } from "../utils/dashboard-copy";
@@ -100,20 +102,15 @@ export function MobileHomePendingSection({
       {showError ? (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>{DASHBOARD_COPY.loadError}</Text>
-          <Pressable
-            accessibilityLabel={DASHBOARD_COPY.retry}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.retryButton, pressed && styles.pressed]}
-            onPress={onRetry}
-          >
-            <Text style={styles.retryButtonText}>{DASHBOARD_COPY.retry}</Text>
-          </Pressable>
+          <Button accessibilityLabel={DASHBOARD_COPY.retry} variant="destructive" onPress={onRetry}>
+            {DASHBOARD_COPY.retry}
+          </Button>
         </View>
       ) : null}
 
       {showInitialLoading ? (
         <View style={styles.loadingBox}>
-          <ActivityIndicator color="#F97316" size="small" />
+          <ActivityIndicator color={colors.primary} size="small" />
         </View>
       ) : null}
 
@@ -161,55 +158,38 @@ export function MobileHomePendingSection({
 
 const styles = StyleSheet.create({
   cards: {
-    gap: 10,
+    gap: spacing[2],
   },
   container: {
-    gap: 12,
+    gap: spacing[3],
     width: "100%",
   },
   errorBox: {
-    backgroundColor: "#450A0A",
-    borderColor: "#DC2626",
-    borderRadius: 8,
+    backgroundColor: statusChip.destructive.background,
+    borderColor: statusChip.destructive.border,
+    borderRadius: radius.card,
     borderWidth: 1,
-    gap: 10,
-    padding: 12,
+    gap: spacing[2],
+    padding: spacing[3],
   },
   errorText: {
-    color: "#FCA5A5",
-    fontSize: 14,
+    color: statusChip.destructive.foreground,
+    fontSize: typography.label.fontSize,
     lineHeight: 20,
   },
   emptyPersonal: {
-    color: "#6B7280",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
     lineHeight: 18,
     textAlign: "center",
   },
   loadingBox: {
     alignItems: "center",
-    paddingVertical: 16,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  retryButton: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    backgroundColor: "#7F1D1D",
-    borderRadius: 6,
-    minHeight: 40,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  retryButtonText: {
-    color: "#FEE2E2",
-    fontSize: 14,
-    fontWeight: "600",
+    paddingVertical: spacing[4],
   },
   sectionTitle: {
-    color: "#D1D5DB",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
     textTransform: "uppercase",
   },

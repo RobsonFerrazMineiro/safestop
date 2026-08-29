@@ -1,4 +1,5 @@
 import { StyleSheet, View } from "react-native";
+import { spacing } from "@safestop/ui";
 
 import type { UserOrganization } from "../types";
 import { OrganizationCard } from "./organization-card";
@@ -8,6 +9,8 @@ type OrganizationListProps = {
   selectedOrganizationId: string | null;
   onSelect: (organizationId: string) => void;
 };
+
+const LIST_MAX_WIDTH = 480;
 
 export function OrganizationList({
   organizations,
@@ -30,6 +33,9 @@ export function OrganizationList({
 
 const styles = StyleSheet.create({
   list: {
-    gap: 12,
+    alignSelf: "center",
+    gap: spacing[3],
+    maxWidth: LIST_MAX_WIDTH,
+    width: "100%",
   },
 });

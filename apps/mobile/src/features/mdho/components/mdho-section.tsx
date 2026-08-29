@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type RefObject } from "react";
 import { Alert, ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import type { OccurrenceDetails } from "@safestop/types";
+import { colors, spacing, statusChip, typography } from "@safestop/ui";
 
 import { CollapsibleSection } from "@/components/collapsible-section";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
@@ -278,7 +279,7 @@ export function MdhoSection({
       ) : null}
 
       {isAssessmentLoading || isCatalogLoading ? (
-        <ActivityIndicator color="#2563EB" size="small" />
+        <ActivityIndicator color={colors.info} size="small" />
       ) : null}
 
       {showConflict ? (
@@ -348,22 +349,22 @@ export function MdhoSection({
 }
 
 const styles = StyleSheet.create({
+  collapsedSummary: {
+    color: statusChip.success.foreground,
+    fontSize: typography.label.fontSize,
+    fontWeight: "600",
+  },
   container: {
-    gap: 12,
-    marginTop: 8,
+    gap: spacing[3],
+    marginTop: spacing[2],
   },
   sectionTitle: {
-    borderTopColor: "#1F2937",
+    borderTopColor: colors.border,
     borderTopWidth: 1,
-    color: "#93C5FD",
-    fontSize: 13,
+    color: statusChip.info.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
-    paddingTop: 12,
+    paddingTop: spacing[3],
     textTransform: "uppercase",
-  },
-  collapsedSummary: {
-    color: "#86EFAC",
-    fontSize: 14,
-    fontWeight: "600",
   },
 });

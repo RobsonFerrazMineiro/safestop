@@ -1,14 +1,11 @@
 import type { OccurrenceSummary } from "@safestop/types";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { colors, typography } from "@safestop/ui";
 
+import { Card, StatusBadge } from "@/components/ui";
+import { formatOccurrenceDate } from "@/features/occurrences/utils/occurrence-labels";
 import { stopWorkDetailRoute } from "@/lib/auth/routes";
-
-import {
-  formatOccurrenceDate,
-  getOccurrenceSeverityLabel,
-  getOccurrenceStatusLabel,
-} from "@/features/occurrences/utils/occurrence-labels";
 
 type PreventiveStopCardProps = {
   preventiveStop: OccurrenceSummary;
@@ -18,78 +15,72 @@ export function PreventiveStopCard({ preventiveStop }: PreventiveStopCardProps) 
   const router = useRouter();
 
   return (
-    <Pressable
+    <Card
       accessibilityLabel={`Paralisação ${preventiveStop.publicCode}`}
-      accessibilityRole="button"
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      variant="muted"
       onPress={() => {
         router.push(stopWorkDetailRoute(preventiveStop.id));
       }}
     >
       <View style={styles.header}>
         <Text style={styles.code}>{preventiveStop.publicCode}</Text>
-        <Text style={styles.severity}>{getOccurrenceSeverityLabel(preventiveStop.severity)}</Text>
+        <StatusBadge severity={preventiveStop.severity} />
       </View>
 
       <Text style={styles.title}>{preventiveStop.title}</Text>
 
-      <Text style={styles.meta}>
-        {getOccurrenceStatusLabel(preventiveStop.status)}
-        {preventiveStop.areaName ? ` · ${preventiveStop.areaName}` : ""}
-      </Text>
+      <View style={styles.metaRow}>
+        <StatusBadge status={preventiveStop.status} />
+        {preventiveStop.areaName ? (
+          <Text style={styles.area}>· {preventiveStop.areaName}</Text>
+        ) : null}
+      </View>
 
       {preventiveStop.contractorOrganizationName ? (
         <Text style={styles.company}>{preventiveStop.contractorOrganizationName}</Text>
       ) : null}
 
       <Text style={styles.date}>{formatOccurrenceDate(preventiveStop.createdAt)}</Text>
-    </Pressable>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 8,
-    padding: 16,
-  },
-  cardPressed: {
-    opacity: 0.85,
+  area: {
+    color: colors.foregroundMuted,
+    flex: 1,
+    fontSize: typography.helper.fontSize,
   },
   code: {
-    color: "#F97316",
+    color: colors.primary,
+    flex: 1,
     fontFamily: "monospace",
-    fontSize: 13,
+    fontSize: typography.helper.fontSize,
     fontWeight: "700",
   },
   company: {
-    color: "#9CA3AF",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
   },
   date: {
-    color: "#6B7280",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
   },
   header: {
     alignItems: "center",
     flexDirection: "row",
+    gap: 8,
     justifyContent: "space-between",
   },
-  meta: {
-    color: "#9CA3AF",
-    fontSize: 13,
-  },
-  severity: {
-    color: "#FBBF24",
-    fontSize: 12,
-    fontWeight: "600",
+  metaRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
   },
   title: {
-    color: "#F9FAFB",
-    fontSize: 16,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "600",
   },
 });

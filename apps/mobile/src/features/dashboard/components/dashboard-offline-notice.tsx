@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { radius, spacing, statusChip, typography } from "@safestop/ui";
 
 import { DASHBOARD_COPY } from "../utils/dashboard-copy";
 
@@ -12,16 +13,16 @@ export function DashboardOfflineNotice() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#1E3A5F",
-    borderColor: "#2563EB",
-    borderRadius: 8,
+    backgroundColor: statusChip.info.background,
+    borderColor: statusChip.info.border,
+    borderRadius: radius.input,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
   },
   text: {
-    color: "#93C5FD",
-    fontSize: 13,
+    color: statusChip.info.foreground,
+    fontSize: typography.helper.fontSize,
     lineHeight: 18,
   },
 });

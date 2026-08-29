@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { colors, spacing, typography } from "@safestop/ui";
 
 import { HSE_APPROVAL_COPY } from "../utils/hse-approval-copy";
 
@@ -13,18 +14,18 @@ export function HseApprovalEmpty() {
 
 const styles = StyleSheet.create({
   body: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.label.fontSize,
     lineHeight: 20,
     textAlign: "center",
   },
   container: {
-    gap: 8,
-    paddingVertical: 32,
+    gap: spacing[2],
+    paddingVertical: spacing[8],
   },
   title: {
-    color: "#F9FAFB",
-    fontSize: 16,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "700",
     textAlign: "center",
   },

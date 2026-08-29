@@ -1,16 +1,17 @@
 import { useState } from "react";
 import {
-  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { colors, overlay, radius, spacing, statusChip, typography } from "@safestop/ui";
+
+import { Button, TextField } from "@/components/ui";
 
 import { IMS_REFERENCE_COPY } from "../utils/ims-reference-copy";
 
@@ -88,78 +89,65 @@ export function ImsEditDialog({
       >
         <Pressable accessibilityLabel="Fechar" style={styles.backdrop} onPress={handleClose} />
 
-        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+        <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing[4]) }]}>
           <Text style={styles.title}>{IMS_REFERENCE_COPY.editTitle}</Text>
 
           <Text style={styles.currentLabel}>{IMS_REFERENCE_COPY.currentCodeLabel}</Text>
           <Text style={styles.currentCode}>{currentCode}</Text>
 
-          <Text style={styles.label}>{IMS_REFERENCE_COPY.newCodeLabel}</Text>
-          <TextInput
-            accessibilityLabel={IMS_REFERENCE_COPY.newCodeLabel}
+          <TextField
             autoCapitalize="characters"
             autoCorrect={false}
-            editable={!isUpdating}
+            disabled={isUpdating}
+            error={codeError ?? undefined}
+            inputStyle={styles.monospaceInput}
+            label={IMS_REFERENCE_COPY.newCodeLabel}
             placeholder={IMS_REFERENCE_COPY.placeholder}
-            placeholderTextColor="#6B7280"
-            style={[styles.input, codeError ? styles.inputError : null]}
             value={newCode}
             onChangeText={(value) => {
               setNewCode(value);
               setCodeError(null);
             }}
           />
-          {codeError ? <Text style={styles.error}>{codeError}</Text> : null}
 
-          <Text style={styles.label}>{IMS_REFERENCE_COPY.reasonLabel}</Text>
-          <Text style={styles.helper}>{IMS_REFERENCE_COPY.reasonHelper}</Text>
-          <TextInput
-            accessibilityLabel={IMS_REFERENCE_COPY.reasonLabel}
-            editable={!isUpdating}
+          <TextField
+            disabled={isUpdating}
+            error={reasonError ?? undefined}
+            helperText={IMS_REFERENCE_COPY.reasonHelper}
+            label={IMS_REFERENCE_COPY.reasonLabel}
             multiline
             placeholder="Descreva o motivo..."
-            placeholderTextColor="#6B7280"
-            style={[styles.textarea, reasonError ? styles.inputError : null]}
             value={updateReason}
             onChangeText={(value) => {
               setUpdateReason(value);
               setReasonError(null);
             }}
           />
-          {reasonError ? <Text style={styles.error}>{reasonError}</Text> : null}
 
           {!isOnline ? <Text style={styles.offline}>{IMS_REFERENCE_COPY.offlineToast}</Text> : null}
 
           <View style={styles.actions}>
-            <Pressable
+            <Button
               accessibilityLabel={IMS_REFERENCE_COPY.cancel}
-              accessibilityRole="button"
               disabled={isUpdating}
-              style={({ pressed }) => [styles.cancelButton, pressed && styles.pressed]}
+              style={styles.actionButton}
+              variant="secondary"
               onPress={handleClose}
             >
-              <Text style={styles.cancelText}>{IMS_REFERENCE_COPY.cancel}</Text>
-            </Pressable>
+              {IMS_REFERENCE_COPY.cancel}
+            </Button>
 
-            <Pressable
+            <Button
               accessibilityLabel={
                 isUpdating ? IMS_REFERENCE_COPY.saving : IMS_REFERENCE_COPY.saveEditCta
               }
-              accessibilityRole="button"
-              disabled={isUpdating}
-              style={({ pressed }) => [
-                styles.confirmButton,
-                isUpdating && styles.buttonDisabled,
-                pressed && !isUpdating && styles.pressed,
-              ]}
+              disabled={isUpdating || !isOnline}
+              loading={isUpdating}
+              style={styles.actionButton}
               onPress={handleConfirm}
             >
-              {isUpdating ? (
-                <ActivityIndicator color="#EFF6FF" size="small" />
-              ) : (
-                <Text style={styles.confirmText}>{IMS_REFERENCE_COPY.saveEditCta}</Text>
-              )}
-            </Pressable>
+              {IMS_REFERENCE_COPY.saveEditCta}
+            </Button>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -168,118 +156,53 @@ export function ImsEditDialog({
 }
 
 const styles = StyleSheet.create({
+  actionButton: {
+    flex: 1,
+  },
   actions: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 8,
+    gap: spacing[2],
+    marginTop: spacing[2],
   },
   backdrop: {
     flex: 1,
   },
-  cancelButton: {
-    alignItems: "center",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
-    flex: 1,
-    justifyContent: "center",
-    minHeight: 48,
-  },
-  cancelText: {
-    color: "#D1D5DB",
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  confirmButton: {
-    alignItems: "center",
-    backgroundColor: "#2563EB",
-    borderRadius: 8,
-    flex: 1,
-    justifyContent: "center",
-    minHeight: 48,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  confirmText: {
-    color: "#EFF6FF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
   currentCode: {
-    color: "#F9FAFB",
+    color: colors.foreground,
     fontFamily: "monospace",
-    fontSize: 16,
-    marginBottom: 8,
+    fontSize: typography.cardTitle.fontSize,
+    marginBottom: spacing[2],
   },
   currentLabel: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     textTransform: "uppercase",
   },
-  error: {
-    color: "#F87171",
-    fontSize: 13,
-  },
-  helper: {
-    color: "#9CA3AF",
-    fontSize: 12,
-  },
-  input: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
-    color: "#F9FAFB",
+  monospaceInput: {
     fontFamily: "monospace",
-    fontSize: 16,
-    minHeight: 48,
-    paddingHorizontal: 12,
-  },
-  inputError: {
-    borderColor: "#F87171",
-  },
-  label: {
-    color: "#F9FAFB",
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: typography.cardTitle.fontSize,
   },
   offline: {
-    color: "#93C5FD",
-    fontSize: 13,
+    color: statusChip.info.foreground,
+    fontSize: typography.caption.fontSize,
   },
   overlay: {
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: overlay.scrim,
     flex: 1,
     justifyContent: "flex-end",
   },
-  pressed: {
-    opacity: 0.85,
-  },
   sheet: {
-    backgroundColor: "#111827",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-  },
-  textarea: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 12,
-    borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 15,
-    maxHeight: 120,
-    minHeight: 80,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.dialog,
+    borderTopRightRadius: radius.dialog,
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[4],
   },
   title: {
-    color: "#F9FAFB",
-    fontSize: 18,
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
     fontWeight: "700",
   },
 });

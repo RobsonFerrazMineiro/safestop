@@ -1,14 +1,9 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { validateActionItemSchema } from "@safestop/validation";
+import { colors, overlay, radius, spacing, statusChip, typography } from "@safestop/ui";
+
+import { Button, TextField } from "@/components/ui";
 
 import { ACTION_PLAN_COPY } from "../utils/action-plan-copy";
 
@@ -70,71 +65,70 @@ export function ActionPlanValidateSheet({
               <Pressable
                 accessibilityRole="button"
                 disabled={!isOnline || isValidating}
-                style={[styles.approveButton, (!isOnline || isValidating) && styles.disabled]}
+                style={({ pressed }) => [
+                  styles.approveButton,
+                  (!isOnline || isValidating) && styles.disabled,
+                  pressed && isOnline && !isValidating && styles.pressed,
+                ]}
                 onPress={() => {
                   void onApprove().then(resetAndClose);
                 }}
               >
                 {isValidating ? (
-                  <ActivityIndicator color="#DCFCE7" />
+                  <ActivityIndicator color={statusChip.success.foreground} />
                 ) : (
                   <Text style={styles.approveText}>{ACTION_PLAN_COPY.approve}</Text>
                 )}
               </Pressable>
 
-              <Pressable
+              <Button
                 accessibilityRole="button"
                 disabled={!isOnline || isValidating}
-                style={[styles.rejectButton, (!isOnline || isValidating) && styles.disabled]}
+                variant="destructive"
                 onPress={() => {
                   setMode("reject");
                 }}
               >
-                <Text style={styles.rejectText}>{ACTION_PLAN_COPY.reject}</Text>
-              </Pressable>
+                {ACTION_PLAN_COPY.reject}
+              </Button>
 
-              <Pressable
-                accessibilityRole="button"
-                style={styles.cancelButton}
-                onPress={resetAndClose}
-              >
-                <Text style={styles.cancelText}>{ACTION_PLAN_COPY.cancel}</Text>
-              </Pressable>
+              <Button accessibilityRole="button" variant="ghost" onPress={resetAndClose}>
+                {ACTION_PLAN_COPY.cancel}
+              </Button>
             </View>
           ) : (
             <View style={styles.content}>
               <Text style={styles.title}>{ACTION_PLAN_COPY.rejectTitle}</Text>
-              <Text style={styles.label}>{ACTION_PLAN_COPY.rejectNoteLabel}</Text>
-              <TextInput
-                editable={isOnline && !isValidating}
+              <TextField
+                disabled={!isOnline || isValidating}
+                error={error ?? undefined}
+                label={ACTION_PLAN_COPY.rejectNoteLabel}
                 multiline
                 placeholder="Descreva o motivo"
-                placeholderTextColor="#6B7280"
-                style={styles.textarea}
                 value={note}
                 onChangeText={setNote}
               />
-              {error ? <Text style={styles.error}>{error}</Text> : null}
-              <Pressable
+              <Button
                 accessibilityRole="button"
                 disabled={!isOnline || isValidating}
-                style={[styles.rejectButton, (!isOnline || isValidating) && styles.disabled]}
+                loading={isValidating}
+                variant="destructive"
                 onPress={() => {
                   void handleReject();
                 }}
               >
-                <Text style={styles.rejectText}>{ACTION_PLAN_COPY.reject}</Text>
-              </Pressable>
-              <Pressable
+                {ACTION_PLAN_COPY.reject}
+              </Button>
+              <Button
                 accessibilityRole="button"
-                style={styles.cancelButton}
+                variant="ghost"
                 onPress={() => {
                   setMode("choose");
                   setError(null);
                 }}
               >
-                <Text style={styles.cancelText}>{ACTION_PLAN_COPY.cancel}</Text>
-              </Pressable>
+                {ACTION_PLAN_COPY.cancel}
+              </Button>
             </View>
           )}
         </Pressable>
@@ -146,83 +140,43 @@ export function ActionPlanValidateSheet({
 const styles = StyleSheet.create({
   approveButton: {
     alignItems: "center",
-    backgroundColor: "#14532D",
+    backgroundColor: statusChip.success.background,
+    borderColor: statusChip.success.border,
     borderRadius: 10,
+    borderWidth: 1,
     justifyContent: "center",
     minHeight: 48,
   },
   approveText: {
-    color: "#DCFCE7",
-    fontSize: 16,
+    color: statusChip.success.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "700",
   },
   backdrop: {
-    backgroundColor: "rgba(0,0,0,0.55)",
+    backgroundColor: overlay.scrim,
     flex: 1,
     justifyContent: "flex-end",
   },
-  cancelButton: {
-    alignItems: "center",
-    minHeight: 44,
-    justifyContent: "center",
-  },
-  cancelText: {
-    color: "#9CA3AF",
-    fontSize: 15,
-    fontWeight: "600",
-  },
   content: {
-    gap: 12,
-    paddingBottom: 24,
+    gap: spacing[3],
+    paddingBottom: spacing[6],
   },
   disabled: {
     opacity: 0.45,
   },
-  error: {
-    color: "#FCA5A5",
-    fontSize: 13,
-  },
-  label: {
-    color: "#93C5FD",
-    fontSize: 12,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  rejectButton: {
-    alignItems: "center",
-    backgroundColor: "#450A0A",
-    borderRadius: 10,
-    borderColor: "#EF4444",
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 48,
-  },
-  rejectText: {
-    color: "#FCA5A5",
-    fontSize: 16,
-    fontWeight: "700",
+  pressed: {
+    opacity: 0.85,
   },
   sheet: {
-    backgroundColor: "#0B1220",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-  textarea: {
-    backgroundColor: "#111827",
-    borderColor: "#374151",
-    borderRadius: 10,
-    borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 15,
-    minHeight: 96,
-    padding: 12,
-    textAlignVertical: "top",
+    backgroundColor: colors.background,
+    borderTopLeftRadius: radius.dialog,
+    borderTopRightRadius: radius.dialog,
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[4],
   },
   title: {
-    color: "#F9FAFB",
-    fontSize: 18,
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
     fontWeight: "700",
   },
 });

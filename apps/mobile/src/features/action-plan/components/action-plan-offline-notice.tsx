@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { statusChip, spacing, typography } from "@safestop/ui";
 
 import { ACTION_PLAN_COPY } from "../utils/action-plan-copy";
 
@@ -12,16 +13,16 @@ export function ActionPlanOfflineNotice() {
 
 const styles = StyleSheet.create({
   banner: {
-    backgroundColor: "#422006",
-    borderColor: "#D97706",
+    backgroundColor: statusChip.warning.background,
+    borderColor: statusChip.warning.border,
     borderRadius: 10,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
   },
   text: {
-    color: "#FDE68A",
-    fontSize: 13,
+    color: statusChip.warning.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     lineHeight: 18,
   },

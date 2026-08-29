@@ -1,16 +1,10 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import type { MdhoCatalogCategory } from "@safestop/types";
 import { MDHO_RETURN_REASON_MAX_LENGTH, MDHO_RETURN_REASON_MIN_LENGTH } from "@safestop/types";
+import { colors, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button, TextField } from "@/components/ui";
 import { formatOccurrenceDate } from "@/features/occurrences/utils/occurrence-labels";
 
 import type { MdhoAssessmentEnriched } from "../services/map-mdho";
@@ -109,73 +103,56 @@ export function MdhoReviewPanel({
             <>
               {showReturnForm ? (
                 <View style={styles.returnForm}>
-                  <Text style={styles.returnLabel}>Motivo da devolução</Text>
-                  <TextInput
+                  <TextField
                     accessibilityLabel="Motivo da devolução do MDHO"
-                    editable={!isReturning && isOnline}
+                    disabled={isReturning || !isOnline}
+                    error={returnError ?? undefined}
+                    inputStyle={styles.returnInput}
+                    label="Motivo da devolução"
                     multiline
                     placeholder="Descreva o motivo..."
-                    placeholderTextColor="#6B7280"
-                    style={styles.returnInput}
                     value={returnReason}
                     onChangeText={(value) => {
                       setReturnReason(value);
                       setReturnError(null);
                     }}
                   />
-                  {returnError ? <Text style={styles.error}>{returnError}</Text> : null}
-                  <Pressable
+                  <Button
                     accessibilityLabel="Confirmar devolução do MDHO"
-                    accessibilityRole="button"
                     disabled={!canSubmitReturn}
-                    style={({ pressed }) => [
-                      styles.returnButton,
-                      !canSubmitReturn && styles.buttonDisabled,
-                      pressed && canSubmitReturn && styles.pressed,
-                    ]}
+                    loading={isReturning}
+                    variant="destructive"
                     onPress={confirmReturn}
                   >
-                    {isReturning ? (
-                      <ActivityIndicator color="#FEE2E2" size="small" />
-                    ) : (
-                      <Text style={styles.returnButtonText}>Devolver MDHO</Text>
-                    )}
-                  </Pressable>
+                    Devolver MDHO
+                  </Button>
                 </View>
               ) : (
-                <Pressable
+                <Button
                   accessibilityLabel="Devolver MDHO"
-                  accessibilityRole="button"
                   disabled={!isOnline || isApproving || isReturning}
-                  style={({ pressed }) => [styles.returnOutlineButton, pressed && styles.pressed]}
+                  variant="destructive"
                   onPress={() => {
                     setShowReturnForm(true);
                   }}
                 >
-                  <Text style={styles.returnOutlineText}>Devolver MDHO</Text>
-                </Pressable>
+                  Devolver MDHO
+                </Button>
               )}
             </>
           ) : null}
 
           {canApprove ? (
-            <Pressable
+            <Button
               accessibilityLabel={isApproving ? "Aprovando MDHO" : "Aprovar MDHO"}
-              accessibilityRole="button"
               disabled={!isOnline || isApproving || isReturning}
-              style={({ pressed }) => [
-                styles.approveButton,
-                (!isOnline || isApproving || isReturning) && styles.buttonDisabled,
-                pressed && isOnline && !isApproving && !isReturning && styles.pressed,
-              ]}
+              loading={isApproving}
+              style={styles.approveButton}
+              variant="secondary"
               onPress={confirmApprove}
             >
-              {isApproving ? (
-                <ActivityIndicator color="#EFF6FF" size="small" />
-              ) : (
-                <Text style={styles.approveText}>Aprovar MDHO</Text>
-              )}
-            </Pressable>
+              Aprovar MDHO
+            </Button>
           ) : null}
         </View>
       ) : null}
@@ -185,106 +162,47 @@ export function MdhoReviewPanel({
 
 const styles = StyleSheet.create({
   actions: {
-    gap: 12,
+    gap: spacing[3],
   },
   approveButton: {
-    alignItems: "center",
-    backgroundColor: "#2563EB",
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: 16,
-  },
-  approveText: {
-    color: "#EFF6FF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  buttonDisabled: {
-    opacity: 0.5,
+    backgroundColor: colors.info,
+    borderColor: colors.info,
   },
   container: {
-    gap: 12,
-  },
-  error: {
-    color: "#F87171",
-    fontSize: 13,
+    gap: spacing[3],
   },
   metaField: {
     flex: 1,
-    gap: 4,
+    gap: spacing[1],
   },
   metaLabel: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     textTransform: "uppercase",
   },
   metaRow: {
     flexDirection: "row",
-    gap: 16,
+    gap: spacing[4],
   },
   metaValue: {
-    color: "#F9FAFB",
-    fontSize: 15,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
   },
   offline: {
-    color: "#93C5FD",
-    fontSize: 13,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  returnButton: {
-    alignItems: "center",
-    backgroundColor: "#DC2626",
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 44,
-    paddingHorizontal: 16,
-  },
-  returnButtonText: {
-    color: "#FEE2E2",
-    fontSize: 14,
-    fontWeight: "700",
+    color: statusChip.info.foreground,
+    fontSize: typography.helper.fontSize,
   },
   returnForm: {
-    gap: 8,
+    gap: spacing[2],
   },
   returnInput: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 12,
-    borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 15,
     maxHeight: 120,
     minHeight: 80,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  returnLabel: {
-    color: "#D1D5DB",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  returnOutlineButton: {
-    alignItems: "center",
-    borderColor: "#DC2626",
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: 16,
-  },
-  returnOutlineText: {
-    color: "#FCA5A5",
-    fontSize: 15,
-    fontWeight: "700",
   },
   status: {
-    color: "#93C5FD",
-    fontSize: 14,
+    color: statusChip.info.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
 });

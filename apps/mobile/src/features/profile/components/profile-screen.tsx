@@ -10,12 +10,12 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "@safestop/ui";
+import { colors, controlHeight, radius, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button, TextField } from "@/components/ui";
 import { useAuth } from "@/hooks/use-auth";
 import { authRoutes } from "@/lib/auth/routes";
 
@@ -114,52 +114,44 @@ function ProfileForm({ profile, email, isUpdating, onSubmitProfile }: ProfileFor
       <ReadOnlyField label="E-mail" value={email ?? "—"} />
 
       <View style={styles.field}>
-        <Text style={styles.label}>Nome completo</Text>
         <Controller
           control={control}
           name="fullName"
           rules={{ required: "Nome completo é obrigatório." }}
           render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-            <>
-              <TextInput
-                accessibilityLabel="Nome completo"
-                autoCapitalize="words"
-                autoCorrect={false}
-                editable={!isFormDisabled}
-                placeholder="Seu nome completo"
-                placeholderTextColor="#6B7280"
-                style={styles.input}
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-              />
-              {error ? <Text style={styles.fieldError}>{error.message}</Text> : null}
-            </>
+            <TextField
+              accessibilityLabel="Nome completo"
+              autoCapitalize="words"
+              autoCorrect={false}
+              disabled={isFormDisabled}
+              error={error?.message}
+              label="Nome completo"
+              placeholder="Seu nome completo"
+              value={value}
+              onBlur={onBlur}
+              onChangeText={onChange}
+            />
           )}
         />
       </View>
 
       <View style={styles.field}>
-        <Text style={styles.label}>Telefone</Text>
         <Controller
           control={control}
           name="phone"
           render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
-            <>
-              <TextInput
-                accessibilityLabel="Telefone"
-                editable={!isFormDisabled}
-                keyboardType="phone-pad"
-                placeholder="(00) 00000-0000"
-                placeholderTextColor="#6B7280"
-                style={styles.input}
-                textContentType="telephoneNumber"
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-              />
-              {error ? <Text style={styles.fieldError}>{error.message}</Text> : null}
-            </>
+            <TextField
+              accessibilityLabel="Telefone"
+              disabled={isFormDisabled}
+              error={error?.message}
+              keyboardType="phone-pad"
+              label="Telefone"
+              placeholder="(00) 00000-0000"
+              textContentType="telephoneNumber"
+              value={value}
+              onBlur={onBlur}
+              onChangeText={onChange}
+            />
           )}
         />
       </View>
@@ -175,23 +167,16 @@ function ProfileForm({ profile, email, isUpdating, onSubmitProfile }: ProfileFor
 
       {formError ? <Text style={styles.formError}>{formError}</Text> : null}
 
-      <Pressable
+      <Button
         accessibilityLabel="Salvar alterações"
-        accessibilityRole="button"
         disabled={isFormDisabled}
-        style={({ pressed }) => [
-          styles.submitButton,
-          isFormDisabled && styles.submitButtonDisabled,
-          pressed && !isFormDisabled && styles.submitButtonPressed,
-        ]}
+        loading={isUpdating}
         onPress={() => {
           void handleSubmit(onSubmit)();
         }}
       >
-        <Text style={styles.submitButtonText}>
-          {isUpdating ? "Salvando..." : "Salvar alterações"}
-        </Text>
-      </Pressable>
+        {isUpdating ? "Salvando..." : "Salvar alterações"}
+      </Button>
     </View>
   );
 }
@@ -256,19 +241,16 @@ export function ProfileScreen() {
                 }}
               />
 
-              <Pressable
+              <Button
                 accessibilityLabel="Sair"
-                accessibilityRole="button"
-                style={({ pressed }) => [
-                  styles.signOutButton,
-                  pressed && styles.signOutButtonPressed,
-                ]}
+                style={styles.signOutButton}
+                variant="destructive"
                 onPress={() => {
                   void handleSignOut();
                 }}
               >
-                <Text style={styles.signOutButtonText}>Sair</Text>
-              </Pressable>
+                Sair
+              </Button>
             </>
           ) : null}
         </ScrollView>
@@ -279,137 +261,84 @@ export function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
   },
   keyboardView: {
     flex: 1,
   },
   scrollContent: {
-    gap: 24,
-    paddingBottom: 32,
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    gap: spacing[6],
+    paddingBottom: spacing[8],
+    paddingHorizontal: spacing[6],
+    paddingVertical: spacing[4],
   },
   signOutButton: {
-    alignItems: "center",
-    backgroundColor: "#374151",
-    borderColor: "#4B5563",
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    marginTop: 8,
-    minHeight: 48,
-  },
-  signOutButtonPressed: {
-    opacity: 0.85,
-  },
-  signOutButtonText: {
-    color: colors.destructive,
-    fontSize: 16,
-    fontWeight: "600",
+    marginTop: spacing[2],
   },
   header: {
-    gap: 8,
+    gap: spacing[2],
   },
   backLink: {
     alignSelf: "flex-start",
-    minHeight: 44,
+    minHeight: controlHeight.mobile,
     justifyContent: "center",
   },
   backLinkPressed: {
     opacity: 0.8,
   },
   backLinkText: {
-    color: "#FB923C",
-    fontSize: 14,
+    color: colors.primary,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
   title: {
-    color: "#F9FAFB",
-    fontSize: 28,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontSize: typography.sectionTitle.fontSize,
+    fontWeight: typography.sectionTitle.fontWeight,
   },
   subtitle: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.label.fontSize,
   },
   form: {
-    gap: 16,
+    gap: spacing[4],
   },
   inactiveBanner: {
-    backgroundColor: "rgba(120, 53, 15, 0.35)",
-    borderColor: "rgba(180, 83, 9, 0.6)",
-    borderRadius: 8,
+    backgroundColor: statusChip.warning.background,
+    borderColor: statusChip.warning.border,
+    borderRadius: radius.button,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[3],
   },
   inactiveBannerText: {
-    color: "#FDE68A",
-    fontSize: 14,
+    color: statusChip.warning.foreground,
+    fontSize: typography.label.fontSize,
     lineHeight: 20,
   },
   field: {
-    gap: 8,
-  },
-  label: {
-    color: "#E5E7EB",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  input: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 16,
-    minHeight: 48,
-    paddingHorizontal: 12,
-  },
-  fieldError: {
-    color: "#FCA5A5",
-    fontSize: 13,
+    gap: spacing[2],
   },
   readOnlyField: {
-    gap: 4,
+    gap: spacing[1],
   },
   readOnlyLabel: {
-    color: "#9CA3AF",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
     fontWeight: "500",
   },
   readOnlyValue: {
-    color: "#E5E7EB",
-    fontSize: 15,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
   },
   readOnlyGrid: {
-    gap: 12,
-    marginTop: 8,
+    gap: spacing[3],
+    marginTop: spacing[2],
   },
   formError: {
-    color: "#FCA5A5",
-    fontSize: 14,
+    color: colors.destructive,
+    fontSize: typography.label.fontSize,
     textAlign: "center",
-  },
-  submitButton: {
-    alignItems: "center",
-    backgroundColor: colors.primary,
-    borderRadius: 8,
-    justifyContent: "center",
-    marginTop: 8,
-    minHeight: 48,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
-  },
-  submitButtonPressed: {
-    opacity: 0.85,
-  },
-  submitButtonText: {
-    color: colors.background,
-    fontSize: 16,
-    fontWeight: "700",
   },
 });

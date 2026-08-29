@@ -4,14 +4,14 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, spacing, typography } from "@safestop/ui";
 
+import { Button, TextField } from "@/components/ui";
 import { useAuth } from "@/hooks/use-auth";
 import { useAuthGuard } from "@/hooks/use-auth-guard";
 import { LOGIN_ERROR_MESSAGE } from "@/lib/auth/errors";
@@ -28,6 +28,7 @@ export default function LoginScreen() {
   useAuthGuard("unauthenticated");
 
   const isBusy = isAuthLoading || isSubmitting;
+  const canSubmit = !isBusy && email.trim().length > 0 && password.length > 0;
 
   async function handleSubmit() {
     setErrorMessage(null);
@@ -48,7 +49,7 @@ export default function LoginScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContent}>
-          <ActivityIndicator size="large" color="#F97316" />
+          <ActivityIndicator color={colors.primary} size="large" />
         </View>
       </SafeAreaView>
     );
@@ -65,32 +66,28 @@ export default function LoginScreen() {
           <Text style={styles.subtitle}>Entre com suas credenciais</Text>
 
           <View style={styles.form}>
-            <Text style={styles.label}>E-mail</Text>
-            <TextInput
+            <TextField
               accessibilityLabel="E-mail"
               autoCapitalize="none"
               autoComplete="email"
               autoCorrect={false}
-              editable={!isBusy}
+              disabled={isBusy}
               keyboardType="email-address"
+              label="E-mail"
               placeholder="seu@email.com"
-              placeholderTextColor="#6B7280"
-              style={styles.input}
               textContentType="emailAddress"
               value={email}
               onChangeText={setEmail}
             />
 
-            <Text style={styles.label}>Senha</Text>
-            <TextInput
+            <TextField
               accessibilityLabel="Senha"
               autoCapitalize="none"
               autoComplete="password"
-              editable={!isBusy}
+              disabled={isBusy}
+              label="Senha"
               placeholder="••••••••"
-              placeholderTextColor="#6B7280"
               secureTextEntry
-              style={styles.input}
               textContentType="password"
               value={password}
               onChangeText={setPassword}
@@ -98,25 +95,17 @@ export default function LoginScreen() {
 
             {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
 
-            <Pressable
+            <Button
               accessibilityLabel="Entrar"
-              accessibilityRole="button"
-              disabled={isBusy || !email.trim() || !password}
-              style={({ pressed }) => [
-                styles.button,
-                (isBusy || !email.trim() || !password) && styles.buttonDisabled,
-                pressed && !isBusy && styles.buttonPressed,
-              ]}
+              disabled={!canSubmit}
+              loading={isSubmitting}
+              style={styles.submitButton}
               onPress={() => {
                 void handleSubmit();
               }}
             >
-              {isSubmitting ? (
-                <ActivityIndicator color="#0F1115" />
-              ) : (
-                <Text style={styles.buttonText}>Entrar</Text>
-              )}
-            </Pressable>
+              Entrar
+            </Button>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -126,75 +115,44 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: colors.background,
     flex: 1,
-    backgroundColor: "#0F1115",
+  },
+  content: {
+    flex: 1,
+    gap: spacing[6],
+    justifyContent: "center",
+    paddingHorizontal: spacing[6],
+  },
+  error: {
+    color: colors.destructive,
+    fontSize: typography.label.fontSize,
+    textAlign: "center",
+  },
+  form: {
+    gap: spacing[3],
   },
   keyboardView: {
     flex: 1,
   },
   loadingContent: {
-    flex: 1,
     alignItems: "center",
-    justifyContent: "center",
-  },
-  content: {
     flex: 1,
     justifyContent: "center",
-    gap: 24,
-    paddingHorizontal: 24,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: "700",
-    color: "#F97316",
-    textAlign: "center",
+  submitButton: {
+    marginTop: spacing[2],
   },
   subtitle: {
-    fontSize: 16,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "500",
-    color: "#F9FAFB",
     textAlign: "center",
   },
-  form: {
-    gap: 12,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#D1D5DB",
-  },
-  input: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 16,
-    minHeight: 48,
-    paddingHorizontal: 12,
-  },
-  error: {
-    color: "#F87171",
-    fontSize: 14,
+  title: {
+    color: colors.primary,
+    fontSize: typography.pageTitle.fontSize,
+    fontWeight: typography.pageTitle.fontWeight,
     textAlign: "center",
-  },
-  button: {
-    alignItems: "center",
-    backgroundColor: "#F97316",
-    borderRadius: 8,
-    justifyContent: "center",
-    marginTop: 8,
-    minHeight: 48,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonPressed: {
-    opacity: 0.85,
-  },
-  buttonText: {
-    color: "#0F1115",
-    fontSize: 16,
-    fontWeight: "700",
   },
 });

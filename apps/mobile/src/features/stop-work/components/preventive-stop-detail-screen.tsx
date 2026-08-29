@@ -13,16 +13,15 @@ import { useRouter } from "expo-router";
 import type { OccurrenceTimelineItem, OccurrenceDetails } from "@safestop/types";
 import { shouldShowActionPlanSection } from "@safestop/types";
 
+import { colors, radius, spacing, typography } from "@safestop/ui";
+
+import { StatusBadge } from "@/components/ui";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { EvidencePreviewModal, EvidenceSection, type EvidenceListItem } from "@/features/evidence";
 import { HseActionsFooter, type HseActionsFooterState } from "@/features/hse-approval";
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
-import {
-  formatOccurrenceDate,
-  getOccurrenceSeverityLabel,
-  getOccurrenceStatusLabel,
-} from "@/features/occurrences/utils/occurrence-labels";
+import { formatOccurrenceDate } from "@/features/occurrences/utils/occurrence-labels";
 import { CommentComposerBar, OccurrenceTimelineList, useCreateComment } from "@/features/timeline";
 import { EvaluationSection } from "@/features/ver-e-agir";
 import {
@@ -254,10 +253,10 @@ export function PreventiveStopDetailScreen({
         <Text style={styles.code}>{preventiveStop.publicCode}</Text>
         <Text style={styles.title}>{preventiveStop.title}</Text>
 
-        <Text style={styles.meta}>
-          {getOccurrenceStatusLabel(preventiveStop.status)} ·{" "}
-          {getOccurrenceSeverityLabel(preventiveStop.severity)}
-        </Text>
+        <View style={styles.badgeRow}>
+          <StatusBadge status={preventiveStop.status} />
+          <StatusBadge severity={preventiveStop.severity} />
+        </View>
 
         {shouldShowInterdicaoBanner(preventiveStop.status) ? <InterdicaoBanner /> : null}
 
@@ -475,77 +474,83 @@ export function PreventiveStopDetailScreen({
 
 const styles = StyleSheet.create({
   backLink: {
-    color: "#F97316",
-    fontSize: 14,
+    color: colors.primary,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
+  },
+  badgeRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing[2],
   },
   buttonPressed: {
     opacity: 0.85,
   },
   code: {
-    color: "#F97316",
+    color: colors.primary,
     fontFamily: "monospace",
-    fontSize: 14,
+    fontSize: typography.helper.fontSize,
     fontWeight: "700",
   },
   container: {
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
   },
   field: {
-    gap: 4,
+    gap: spacing[1],
   },
   fieldLabel: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     textTransform: "uppercase",
   },
   fieldValue: {
-    color: "#F9FAFB",
-    fontSize: 15,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
   },
   flex: {
     flex: 1,
   },
   headerContent: {
-    gap: 12,
+    gap: spacing[3],
   },
   homeButtonFloating: {
     alignItems: "center",
-    backgroundColor: "#374151",
-    borderRadius: 8,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radius.button,
     bottom: 96,
     justifyContent: "center",
     minHeight: 40,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing[3],
     position: "absolute",
-    right: 16,
+    right: spacing[4],
     zIndex: 2,
   },
   homeButtonText: {
-    color: "#F9FAFB",
-    fontSize: 13,
+    color: colors.foreground,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
   },
   homeButtonWithStickyFooter: {
     bottom: 168,
   },
   leadershipCards: {
-    gap: 12,
+    gap: spacing[3],
   },
   leadershipSection: {
-    gap: 12,
+    gap: spacing[3],
   },
   registrationContent: {
-    gap: 12,
+    gap: spacing[3],
   },
   registrationSection: {
-    gap: 8,
+    gap: spacing[2],
   },
   registrationToggle: {
-    color: "#FB923C",
-    fontSize: 14,
+    color: colors.primary,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
   stickyFooterHost: {
@@ -554,23 +559,19 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 3,
   },
-  meta: {
-    color: "#9CA3AF",
-    fontSize: 14,
-  },
   sectionTitle: {
-    borderTopColor: "#1F2937",
+    borderTopColor: colors.border,
     borderTopWidth: 1,
-    color: "#D1D5DB",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
-    marginTop: 8,
-    paddingTop: 12,
+    marginTop: spacing[2],
+    paddingTop: spacing[3],
     textTransform: "uppercase",
   },
   title: {
-    color: "#F9FAFB",
-    fontSize: 22,
-    fontWeight: "700",
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
+    fontWeight: typography.cardTitle.fontWeight,
   },
 });

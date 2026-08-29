@@ -1,9 +1,10 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { colors, spacing, typography } from "@safestop/ui";
 
 export function OrganizationLoading() {
   return (
     <View accessibilityRole="progressbar" style={styles.container}>
-      <ActivityIndicator color="#F97316" size="large" />
+      <ActivityIndicator color={colors.primary} size="large" />
       <Text style={styles.text}>Carregando organizações...</Text>
     </View>
   );
@@ -12,13 +13,13 @@ export function OrganizationLoading() {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
-    gap: 12,
+    gap: spacing[3],
     justifyContent: "center",
   },
   text: {
-    color: "#D1D5DB",
-    fontSize: 16,
+    color: colors.foregroundMuted,
+    fontSize: typography.body.fontSize,
   },
 });

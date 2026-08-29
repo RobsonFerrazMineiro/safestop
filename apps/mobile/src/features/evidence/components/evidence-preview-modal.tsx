@@ -1,10 +1,11 @@
 import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, spacing, typography } from "@safestop/ui";
 
+import { Button } from "@/components/ui";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 
 import { useEvidenceSignedUrl } from "../hooks/use-evidence-signed-url";
-import { evidenceColors } from "../theme/colors";
 import type { EvidenceListItem } from "../types";
 import { formatEvidenceDate, getAttachmentTypeLabel } from "../utils/evidence-labels";
 
@@ -12,6 +13,7 @@ type EvidencePreviewModalProps = {
   occurrenceId: string;
   evidence: EvidenceListItem | null;
   visible: boolean;
+  isDeleting?: boolean;
   onClose: () => void;
   onDelete?: (item: EvidenceListItem) => void;
 };
@@ -20,6 +22,7 @@ export function EvidencePreviewModal({
   occurrenceId,
   evidence,
   visible,
+  isDeleting = false,
   onClose,
   onDelete,
 }: EvidencePreviewModalProps) {
@@ -49,19 +52,19 @@ export function EvidencePreviewModal({
 
         <View style={styles.imageContainer}>
           {isLoading ? (
-            <ActivityIndicator color={evidenceColors.primary} size="large" />
+            <ActivityIndicator color={colors.primary} size="large" />
           ) : isError || !signedUrl ? (
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>Não foi possível carregar a imagem.</Text>
-              <Pressable
+              <Button
                 accessibilityLabel="Tentar novamente"
-                accessibilityRole="button"
+                variant="ghost"
                 onPress={() => {
                   void refetch();
                 }}
               >
-                <Text style={styles.retryLink}>Tentar novamente</Text>
-              </Pressable>
+                Tentar novamente
+              </Button>
             </View>
           ) : (
             <Image
@@ -83,16 +86,18 @@ export function EvidencePreviewModal({
           {evidence.caption ? <Text style={styles.caption}>{evidence.caption}</Text> : null}
 
           {canDelete && onDelete ? (
-            <Pressable
+            <Button
               accessibilityLabel="Remover evidência"
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed]}
+              disabled={isDeleting}
+              loading={isDeleting}
+              variant="destructive"
+              style={styles.deleteButton}
               onPress={() => {
                 onDelete(evidence);
               }}
             >
-              <Text style={styles.deleteText}>Remover</Text>
-            </Pressable>
+              Remover
+            </Button>
           ) : null}
         </View>
       </SafeAreaView>
@@ -102,53 +107,43 @@ export function EvidencePreviewModal({
 
 const styles = StyleSheet.create({
   caption: {
-    color: evidenceColors.foregroundLabel,
-    fontSize: 14,
-    marginTop: 8,
+    color: colors.foregroundMuted,
+    fontSize: typography.body.fontSize,
+    marginTop: spacing[2],
   },
   close: {
-    color: evidenceColors.foreground,
+    color: colors.foreground,
     fontSize: 24,
     fontWeight: "600",
   },
   container: {
-    backgroundColor: evidenceColors.background,
+    backgroundColor: colors.background,
     flex: 1,
   },
   deleteButton: {
     alignSelf: "flex-start",
-    borderColor: evidenceColors.destructive,
-    borderRadius: 8,
-    borderWidth: 1,
-    marginTop: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  deleteText: {
-    color: evidenceColors.destructive,
-    fontSize: 14,
-    fontWeight: "600",
+    marginTop: spacing[4],
   },
   errorBox: {
     alignItems: "center",
-    gap: 8,
-    padding: 16,
+    gap: spacing[2],
+    padding: spacing[4],
   },
   errorText: {
-    color: evidenceColors.foregroundMuted,
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.body.fontSize,
     textAlign: "center",
   },
   fileName: {
-    color: evidenceColors.foreground,
-    fontSize: 16,
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
     fontWeight: "600",
-    marginTop: 4,
+    marginTop: spacing[1],
   },
   header: {
     alignItems: "flex-end",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
   },
   image: {
     height: "100%",
@@ -158,29 +153,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing[4],
   },
   meta: {
-    borderTopColor: evidenceColors.borderSubtle,
+    borderTopColor: colors.border,
     borderTopWidth: 1,
-    padding: 16,
+    padding: spacing[4],
   },
   metaLine: {
-    color: evidenceColors.foregroundMuted,
-    fontSize: 13,
-    marginTop: 4,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  retryLink: {
-    color: evidenceColors.primary,
-    fontSize: 14,
-    fontWeight: "600",
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
+    marginTop: spacing[1],
   },
   typeLabel: {
-    color: evidenceColors.foregroundMuted,
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     textTransform: "uppercase",
   },

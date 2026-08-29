@@ -1,5 +1,7 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { radius, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button } from "@/components/ui";
 import { confirmAction } from "@/lib/confirm-action";
 
 import { useConfirmNotificationAwareness } from "../hooks";
@@ -40,61 +42,33 @@ export function NotificationAwarenessBanner({
   return (
     <View accessibilityRole="text" style={styles.container}>
       <Text style={styles.message}>{NOTIFICATION_COPY.awarenessBanner}</Text>
-      <Pressable
+      <Button
         accessibilityLabel={NOTIFICATION_COPY.confirmAwarenessCta}
-        accessibilityRole="button"
-        disabled={!isOnline || isConfirming}
-        style={({ pressed }) => [
-          styles.button,
-          (!isOnline || isConfirming) && styles.buttonDisabled,
-          pressed && isOnline && !isConfirming && styles.pressed,
-        ]}
+        disabled={!isOnline}
+        loading={isConfirming}
         onPress={() => {
           void handleConfirm();
         }}
       >
-        {isConfirming ? (
-          <ActivityIndicator color="#FFFBEB" size="small" />
-        ) : (
-          <Text style={styles.buttonText}>{NOTIFICATION_COPY.confirmAwarenessCta}</Text>
-        )}
-      </Pressable>
+        {NOTIFICATION_COPY.confirmAwarenessCta}
+      </Button>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    alignItems: "center",
-    backgroundColor: "#D97706",
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 44,
-    paddingHorizontal: 12,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: "#FFFBEB",
-    fontSize: 14,
-    fontWeight: "700",
-  },
   container: {
-    backgroundColor: "#78350F",
-    borderColor: "#D97706",
-    borderRadius: 12,
+    backgroundColor: statusChip.warning.background,
+    borderColor: statusChip.warning.border,
+    borderRadius: radius.card,
     borderWidth: 1,
-    gap: 10,
-    padding: 14,
+    gap: spacing[2],
+    padding: spacing[3],
   },
   message: {
-    color: "#FDE68A",
-    fontSize: 14,
+    color: statusChip.warning.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
     lineHeight: 20,
-  },
-  pressed: {
-    opacity: 0.85,
   },
 });

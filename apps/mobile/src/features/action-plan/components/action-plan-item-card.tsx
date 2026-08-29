@@ -1,11 +1,13 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import {
   canSubmitActionItem,
   canValidateActionItem,
-  type ActionItemPriority,
   type ActionItemStatus,
   type ActionPlanGuardContext,
 } from "@safestop/types";
+import { colors, spacing, statusChip, typography } from "@safestop/ui";
+
+import { Button, Card, StatusBadge } from "@/components/ui";
 
 import type { ActionItemEnriched } from "../types";
 import { ACTION_PLAN_COPY } from "../utils/action-plan-copy";
@@ -26,19 +28,6 @@ type ActionPlanItemCardProps = {
   onSubmit: () => void;
   onValidate: () => void;
 };
-
-function priorityColor(priority: ActionItemPriority): string {
-  switch (priority) {
-    case "CRITICAL":
-      return "#FCA5A5";
-    case "HIGH":
-      return "#FDBA74";
-    case "MEDIUM":
-      return "#93C5FD";
-    default:
-      return "#A7F3D0";
-  }
-}
 
 export function ActionPlanItemCard({
   item,
@@ -62,15 +51,13 @@ export function ActionPlanItemCard({
     context: guardContext,
   });
 
+  const actionDisabled = !isOnline || isBusy;
+
   return (
-    <View style={styles.card}>
+    <Card>
       <View style={styles.headerRow}>
         <Text style={styles.title}>{item.title}</Text>
-        <View style={[styles.priorityBadge, { borderColor: priorityColor(item.priority) }]}>
-          <Text style={[styles.priorityText, { color: priorityColor(item.priority) }]}>
-            {formatActionItemPriority(item.priority)}
-          </Text>
-        </View>
+        <StatusBadge label={formatActionItemPriority(item.priority)} severity={item.priority} />
       </View>
 
       <Text style={styles.meta}>
@@ -91,166 +78,86 @@ export function ActionPlanItemCard({
 
       <View style={styles.actions}>
         {canStart ? (
-          <Pressable
+          <Button
             accessibilityLabel={ACTION_PLAN_COPY.start}
-            accessibilityRole="button"
-            disabled={!isOnline || isBusy}
-            style={({ pressed }) => [
-              styles.primaryButton,
-              (!isOnline || isBusy) && styles.disabled,
-              pressed && isOnline && !isBusy && styles.pressed,
-            ]}
+            disabled={actionDisabled}
+            style={styles.actionButton}
             onPress={onStart}
           >
-            <Text style={styles.primaryButtonText}>{ACTION_PLAN_COPY.start}</Text>
-          </Pressable>
+            {ACTION_PLAN_COPY.start}
+          </Button>
         ) : null}
 
         {canSubmit && item.status === "IN_PROGRESS" ? (
-          <Pressable
+          <Button
             accessibilityLabel={ACTION_PLAN_COPY.submit}
-            accessibilityRole="button"
-            disabled={!isOnline || isBusy}
-            style={({ pressed }) => [
-              styles.primaryButton,
-              (!isOnline || isBusy) && styles.disabled,
-              pressed && isOnline && !isBusy && styles.pressed,
-            ]}
+            disabled={actionDisabled}
+            style={styles.actionButton}
             onPress={onSubmit}
           >
-            <Text style={styles.primaryButtonText}>{ACTION_PLAN_COPY.submit}</Text>
-          </Pressable>
+            {ACTION_PLAN_COPY.submit}
+          </Button>
         ) : null}
 
         {canValidate ? (
-          <Pressable
+          <Button
             accessibilityLabel={ACTION_PLAN_COPY.approve}
-            accessibilityRole="button"
-            disabled={!isOnline || isBusy}
-            style={({ pressed }) => [
-              styles.validateButton,
-              (!isOnline || isBusy) && styles.disabled,
-              pressed && isOnline && !isBusy && styles.pressed,
-            ]}
+            disabled={actionDisabled}
+            style={styles.actionButton}
+            variant="secondary"
             onPress={onValidate}
           >
-            <Text style={styles.validateButtonText}>{ACTION_PLAN_COPY.approve}</Text>
-          </Pressable>
+            {ACTION_PLAN_COPY.approve}
+          </Button>
         ) : null}
       </View>
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
+  actionButton: {
+    minWidth: 96,
+  },
   actions: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
-    marginTop: 12,
-  },
-  card: {
-    backgroundColor: "#111827",
-    borderColor: "#1F2937",
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 6,
-    padding: 14,
-  },
-  disabled: {
-    opacity: 0.45,
+    gap: spacing[2],
+    marginTop: spacing[3],
   },
   due: {
-    color: "#9CA3AF",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
   },
   headerRow: {
     alignItems: "flex-start",
     flexDirection: "row",
-    gap: 8,
+    gap: spacing[2],
     justifyContent: "space-between",
   },
   meta: {
-    color: "#D1D5DB",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
   },
   overdueChip: {
     alignSelf: "flex-start",
-    backgroundColor: "#450A0A",
-    borderColor: "#EF4444",
+    backgroundColor: statusChip.destructive.background,
+    borderColor: statusChip.destructive.border,
     borderRadius: 999,
     borderWidth: 1,
-    marginTop: 4,
+    marginTop: spacing[1],
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
   overdueText: {
-    color: "#FCA5A5",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-  primaryButton: {
-    alignItems: "center",
-    backgroundColor: "#2563EB",
-    borderRadius: 10,
-    justifyContent: "center",
-    minHeight: 44,
-    minWidth: 96,
-    paddingHorizontal: 16,
-  },
-  primaryButtonText: {
-    color: "#EFF6FF",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  priorityBadge: {
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  priorityText: {
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-  },
-  secondaryButton: {
-    alignItems: "center",
-    backgroundColor: "#1E3A5F",
-    borderColor: "#2563EB",
-    borderRadius: 10,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 44,
-    minWidth: 96,
-    paddingHorizontal: 16,
-  },
-  secondaryButtonText: {
-    color: "#DBEAFE",
-    fontSize: 15,
+    color: statusChip.destructive.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
   },
   title: {
-    color: "#F9FAFB",
+    color: colors.foreground,
     flex: 1,
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  validateButton: {
-    alignItems: "center",
-    backgroundColor: "#14532D",
-    borderRadius: 10,
-    justifyContent: "center",
-    minHeight: 44,
-    minWidth: 96,
-    paddingHorizontal: 16,
-  },
-  validateButtonText: {
-    color: "#DCFCE7",
-    fontSize: 15,
+    fontSize: typography.body.fontSize,
     fontWeight: "700",
   },
 });

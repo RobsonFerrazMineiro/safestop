@@ -10,7 +10,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, controlHeight, radius, spacing, statusChip, typography } from "@safestop/ui";
 
+import { Button, Card } from "@/components/ui";
 import { Can } from "@/features/authorization/components/can";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { MobileHomePendingSection, useHomePendingData } from "@/features/dashboard";
@@ -74,9 +76,9 @@ export default function AuthenticatedHomeScreen() {
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
-            colors={["#F97316"]}
+            colors={[colors.primary]}
             refreshing={isRefreshingHome || isPendingFetching}
-            tintColor="#F97316"
+            tintColor={colors.primary}
             onRefresh={() => {
               void handleRefresh();
             }}
@@ -84,35 +86,34 @@ export default function AuthenticatedHomeScreen() {
         }
       >
         <Text style={styles.title}>SafeStop</Text>
-        <Text style={styles.subtitle}>Sessão autenticada</Text>
-        <Text style={styles.email}>{user?.email ?? "Usuário autenticado"}</Text>
+        {user?.email ? <Text style={styles.email}>{user.email}</Text> : null}
 
         {activeOrganization ? (
-          <View style={styles.organizationBadge}>
+          <Card style={styles.organizationCard} variant="muted">
             <Text style={styles.organizationLabel}>Organização ativa</Text>
             <Text style={styles.organizationName}>{activeOrganization.name}</Text>
             {activeOrganization.code ? (
               <Text style={styles.organizationCode}>{activeOrganization.code}</Text>
             ) : null}
-          </View>
+          </Card>
         ) : null}
 
         {hasMultipleOrganizations ? (
-          <Pressable
+          <Button
             accessibilityLabel="Trocar organização"
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.switchOrgButton, pressed && styles.buttonPressed]}
+            style={styles.fullWidthShortcut}
+            variant="secondary"
             onPress={() => {
               router.push(authRoutes.organizations);
             }}
           >
-            <Text style={styles.switchOrgButtonText}>Trocar organização</Text>
-          </Pressable>
+            Trocar organização
+          </Button>
         ) : null}
 
         {isRefreshing ? (
           <View style={styles.refreshing}>
-            <ActivityIndicator color="#F97316" size="small" />
+            <ActivityIndicator color={colors.primary} size="small" />
             <Text style={styles.refreshingText}>Revalidando sessão…</Text>
           </View>
         ) : null}
@@ -128,253 +129,172 @@ export default function AuthenticatedHomeScreen() {
           Atalhos
         </Text>
 
-        <Can permission="occurrence.read">
-          <Pressable
-            accessibilityLabel="Ver paralisações"
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.occurrencesButton, pressed && styles.buttonPressed]}
-            onPress={() => {
-              router.push(stopWorkRoute);
-            }}
-          >
-            <Text style={styles.occurrencesButtonText}>Paralisações</Text>
-          </Pressable>
-        </Can>
+        <View style={styles.shortcuts}>
+          <Can permission="occurrence.read">
+            <Button
+              accessibilityLabel="Ver paralisações"
+              style={styles.fullWidthShortcut}
+              onPress={() => {
+                router.push(stopWorkRoute);
+              }}
+            >
+              Paralisações
+            </Button>
+          </Can>
 
-        <Can permission="occurrence.create">
-          <Pressable
-            accessibilityLabel="Nova paralisação preventiva"
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.createButton, pressed && styles.buttonPressed]}
-            onPress={() => {
-              router.push(stopWorkNewRoute);
-            }}
-          >
-            <Text style={styles.createButtonText}>Nova Paralisação</Text>
-          </Pressable>
-        </Can>
+          <Can permission="occurrence.create">
+            <Button
+              accessibilityLabel="Nova paralisação preventiva"
+              style={styles.fullWidthShortcut}
+              variant="secondary"
+              onPress={() => {
+                router.push(stopWorkNewRoute);
+              }}
+            >
+              Nova Paralisação
+            </Button>
+          </Can>
 
-        {canViewNotifications ? (
-          <Pressable
-            accessibilityLabel={notificationBadgeLabel}
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.notificationsButton, pressed && styles.buttonPressed]}
-            onPress={() => {
-              router.push(notificationsRoute);
-            }}
-          >
-            <View style={styles.notificationsButtonInner}>
-              <Text style={styles.notificationsButtonText}>Notificações</Text>
+          {canViewNotifications ? (
+            <Pressable
+              accessibilityLabel={notificationBadgeLabel}
+              accessibilityRole="button"
+              style={({ pressed }) => [
+                styles.notificationShortcut,
+                pressed && styles.shortcutPressed,
+              ]}
+              onPress={() => {
+                router.push(notificationsRoute);
+              }}
+            >
+              <Text style={styles.notificationShortcutText}>Notificações</Text>
               <NotificationTabBadge counts={{ unreadCount, pendingAwarenessCount }} />
-            </View>
-          </Pressable>
-        ) : null}
+            </Pressable>
+          ) : null}
 
-        {canViewHseQueue ? (
-          <Pressable
-            accessibilityLabel="Aprovação HSE"
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.hseButton, pressed && styles.buttonPressed]}
+          {canViewHseQueue ? (
+            <Button
+              accessibilityLabel="Aprovação HSE"
+              style={[styles.fullWidthShortcut, styles.hseShortcut]}
+              variant="secondary"
+              onPress={() => {
+                router.push(hseApprovalQueueRoute);
+              }}
+            >
+              Aprovação HSE
+            </Button>
+          ) : null}
+
+          <Button
+            accessibilityLabel="Meu perfil"
+            style={styles.fullWidthShortcut}
+            variant="ghost"
             onPress={() => {
-              router.push(hseApprovalQueueRoute);
+              router.push(authRoutes.profile);
             }}
           >
-            <Text style={styles.hseButtonText}>Aprovação HSE</Text>
-          </Pressable>
-        ) : null}
-
-        <Pressable
-          accessibilityLabel="Meu perfil"
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.profileButton, pressed && styles.buttonPressed]}
-          onPress={() => {
-            router.push(authRoutes.profile);
-          }}
-        >
-          <Text style={styles.profileButtonText}>Meu perfil</Text>
-        </Pressable>
+            Meu perfil
+          </Button>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  buttonPressed: {
-    opacity: 0.85,
-  },
   container: {
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
   },
-  createButton: {
-    alignItems: "center",
-    backgroundColor: "#1E3A5F",
-    borderColor: "#2563EB",
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 48,
-    minWidth: 200,
-    paddingHorizontal: 24,
-  },
-  createButtonText: {
-    color: "#DBEAFE",
-    fontSize: 16,
-    fontWeight: "700",
-  },
   email: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.label.fontSize,
     textAlign: "center",
   },
-  hseButton: {
+  fullWidthShortcut: {
+    alignSelf: "stretch",
+    width: "100%",
+  },
+  hseShortcut: {
+    backgroundColor: statusChip.warning.background,
+    borderColor: statusChip.warning.border,
+  },
+  notificationShortcut: {
     alignItems: "center",
-    backgroundColor: "#92400E",
-    borderColor: "#D97706",
-    borderRadius: 8,
+    alignSelf: "stretch",
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.border,
+    borderRadius: radius.button,
     borderWidth: 1,
-    justifyContent: "center",
-    marginTop: 8,
-    minHeight: 48,
-    minWidth: 200,
-    paddingHorizontal: 24,
-  },
-  hseButtonText: {
-    color: "#FDE68A",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  notificationsButton: {
-    alignItems: "center",
-    backgroundColor: "#1E3A5F",
-    borderColor: "#2563EB",
-    borderRadius: 8,
-    borderWidth: 1,
-    justifyContent: "center",
-    marginTop: 8,
-    minHeight: 48,
-    minWidth: 200,
-    paddingHorizontal: 24,
-  },
-  notificationsButtonInner: {
-    alignItems: "center",
     flexDirection: "row",
-    gap: 8,
-    position: "relative",
-  },
-  notificationsButtonText: {
-    color: "#DBEAFE",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  occurrencesButton: {
-    alignItems: "center",
-    backgroundColor: "#F97316",
-    borderRadius: 8,
+    gap: spacing[2],
     justifyContent: "center",
-    marginTop: 8,
-    minHeight: 48,
-    minWidth: 200,
-    paddingHorizontal: 24,
+    minHeight: controlHeight.mobile,
+    paddingHorizontal: spacing[4],
   },
-  occurrencesButtonText: {
-    color: "#0F1115",
-    fontSize: 16,
+  notificationShortcutText: {
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "700",
   },
-  organizationBadge: {
+  organizationCard: {
     alignItems: "center",
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 8,
-    borderWidth: 1,
-    gap: 4,
-    marginTop: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    marginTop: spacing[2],
     width: "100%",
   },
   organizationCode: {
-    color: "#6B7280",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
     textAlign: "center",
   },
   organizationLabel: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     textTransform: "uppercase",
   },
   organizationName: {
-    color: "#F9FAFB",
-    fontSize: 16,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "700",
     textAlign: "center",
-  },
-  profileButton: {
-    alignItems: "center",
-    backgroundColor: "#374151",
-    borderRadius: 8,
-    justifyContent: "center",
-    marginTop: 8,
-    minHeight: 48,
-    minWidth: 200,
-    paddingHorizontal: 24,
-  },
-  profileButtonText: {
-    color: "#F9FAFB",
-    fontSize: 16,
-    fontWeight: "600",
   },
   refreshing: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 8,
-    marginTop: 8,
+    gap: spacing[2],
+    marginTop: spacing[2],
   },
   refreshingText: {
-    color: "#9CA3AF",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
   },
   scrollContent: {
     alignItems: "center",
-    gap: 12,
-    paddingBottom: 32,
-    paddingHorizontal: 24,
-    paddingTop: 16,
+    gap: spacing[3],
+    paddingBottom: spacing[8],
+    paddingHorizontal: spacing[6],
+    paddingTop: spacing[4],
+  },
+  shortcuts: {
+    alignSelf: "stretch",
+    gap: spacing[2],
+    width: "100%",
   },
   shortcutsTitle: {
     alignSelf: "stretch",
-    color: "#D1D5DB",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
-    marginTop: 8,
+    marginTop: spacing[2],
     textTransform: "uppercase",
   },
-  subtitle: {
-    color: "#F9FAFB",
-    fontSize: 18,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  switchOrgButton: {
-    alignItems: "center",
-    backgroundColor: "#374151",
-    borderRadius: 8,
-    justifyContent: "center",
-    marginTop: 4,
-    minHeight: 44,
-    minWidth: 200,
-    paddingHorizontal: 20,
-  },
-  switchOrgButtonText: {
-    color: "#F9FAFB",
-    fontSize: 14,
-    fontWeight: "600",
+  shortcutPressed: {
+    opacity: 0.85,
   },
   title: {
-    color: "#F97316",
-    fontSize: 32,
-    fontWeight: "700",
+    color: colors.primary,
+    fontSize: typography.pageTitle.fontSize,
+    fontWeight: typography.pageTitle.fontWeight,
   },
 });

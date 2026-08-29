@@ -3,6 +3,9 @@ import { occurrenceQueryKeys } from "@safestop/query-keys";
 
 export { occurrenceQueryKeys };
 
+/** Lista tenant-scoped — 30s (OCCURRENCE-FOUNDATION-DECISIONS.md). */
+export const OCCURRENCE_LIST_STALE_TIME_MS = 30_000;
+
 export type OccurrenceAreaOption = {
   id: string;
   name: string;

@@ -1,10 +1,11 @@
 import { StyleSheet, Text, View } from "react-native";
+import type { MdhoCatalogCategory } from "@safestop/types";
+import { colors, spacing, statusChip, typography } from "@safestop/ui";
 
 import { formatOccurrenceDate } from "@/features/occurrences/utils/occurrence-labels";
 
 import type { MdhoAssessmentEnriched } from "../services/map-mdho";
 import { MdhoReadOnlyView } from "./mdho-read-only-view";
-import type { MdhoCatalogCategory } from "@safestop/types";
 
 type MdhoSummaryProps = {
   assessment: MdhoAssessmentEnriched;
@@ -42,43 +43,43 @@ export function MdhoSummary({ assessment, catalog, hideImsHint = false }: MdhoSu
 const styles = StyleSheet.create({
   badge: {
     alignSelf: "flex-start",
-    backgroundColor: "#14532D",
-    borderColor: "#16A34A",
+    backgroundColor: statusChip.success.background,
+    borderColor: statusChip.success.border,
     borderRadius: 999,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[1],
   },
   badgeText: {
-    color: "#BBF7D0",
-    fontSize: 12,
+    color: statusChip.success.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
     textTransform: "uppercase",
   },
   container: {
-    gap: 12,
+    gap: spacing[3],
   },
   hint: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.label.fontSize,
     fontStyle: "italic",
   },
   metaField: {
     flex: 1,
-    gap: 4,
+    gap: spacing[1],
   },
   metaLabel: {
-    color: "#9CA3AF",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
     textTransform: "uppercase",
   },
   metaRow: {
     flexDirection: "row",
-    gap: 16,
+    gap: spacing[4],
   },
   metaValue: {
-    color: "#F9FAFB",
-    fontSize: 15,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
   },
 });

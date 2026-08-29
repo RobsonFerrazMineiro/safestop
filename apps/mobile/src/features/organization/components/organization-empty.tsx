@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { colors, spacing, typography } from "@safestop/ui";
 
 export function OrganizationEmpty() {
   return (
@@ -15,21 +16,21 @@ export function OrganizationEmpty() {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
-    gap: 12,
+    gap: spacing[3],
     justifyContent: "center",
-    paddingHorizontal: 24,
-  },
-  title: {
-    color: "#F9FAFB",
-    fontSize: 20,
-    fontWeight: "700",
-    textAlign: "center",
+    paddingHorizontal: spacing[6],
   },
   text: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.body.fontSize,
+    textAlign: "center",
+  },
+  title: {
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
+    fontWeight: "700",
     textAlign: "center",
   },
 });

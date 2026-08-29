@@ -1,24 +1,25 @@
+import type { OccurrenceListFilters } from "@safestop/types";
+
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
+import { useOperationalOccurrences } from "@/features/occurrences/hooks/use-operational-occurrences";
 import { useDashboardAttention } from "@/features/dashboard/hooks/use-dashboard-attention";
 
-import { usePreventiveStops } from "./use-preventive-stops";
 import { DASHBOARD_ATTENTION, type DashboardAttentionFilter } from "../utils/dashboard-list-params";
 
 type UseStopWorkListViewOptions = {
   dashboardAttention?: DashboardAttentionFilter | null;
-  imsReferenceCode?: string;
+  operationalFilters?: OccurrenceListFilters;
 };
 
 export function useStopWorkListView({
   dashboardAttention = null,
-  imsReferenceCode,
-}: UseStopWorkListViewOptions) {
+  operationalFilters = {},
+}: UseStopWorkListViewOptions = {}) {
   const { can, canAny } = useAuthorization();
   const isAttentionView = dashboardAttention !== null;
 
-  const occurrencesQuery = usePreventiveStops({
+  const operationalQuery = useOperationalOccurrences(operationalFilters, {
     enabled: !isAttentionView,
-    imsReferenceCode: isAttentionView ? undefined : imsReferenceCode,
   });
   const attentionQuery = useDashboardAttention({ enabled: isAttentionView });
 
@@ -34,11 +35,11 @@ export function useStopWorkListView({
         ? (attentionQuery.attention?.dueSoonItems ?? [])
         : [];
 
-  const isLoading = isAttentionView ? attentionQuery.isLoading : occurrencesQuery.isLoading;
+  const isLoading = isAttentionView ? attentionQuery.isLoading : operationalQuery.isLoading;
 
-  const isFetching = isAttentionView ? attentionQuery.isFetching : occurrencesQuery.isFetching;
+  const isFetching = isAttentionView ? attentionQuery.isFetching : operationalQuery.isFetching;
 
-  const isError = isAttentionView ? attentionQuery.isError : occurrencesQuery.isError;
+  const isError = isAttentionView ? attentionQuery.isError : operationalQuery.isError;
 
   const refetch = () => {
     if (isAttentionView) {
@@ -46,18 +47,26 @@ export function useStopWorkListView({
       return;
     }
 
-    void occurrencesQuery.refetch();
+    void operationalQuery.refetch();
   };
 
   return {
-    preventiveStops: isAttentionView ? [] : occurrencesQuery.preventiveStops,
+    preventiveStops: isAttentionView ? [] : operationalQuery.occurrences,
     attentionItems,
     isAttentionView,
     canViewAttention,
+    hasNext: !isAttentionView && operationalQuery.hasNext,
+    isFetchingNextPage: !isAttentionView && operationalQuery.isFetchingNextPage,
     isLoading,
     isFetching,
     isError,
+    error: isAttentionView ? undefined : operationalQuery.error,
     refetch,
-    canRead: occurrencesQuery.canRead,
+    canRead: operationalQuery.canRead,
+    fetchNextPage: () => {
+      if (!isAttentionView) {
+        void operationalQuery.fetchNextPage();
+      }
+    },
   };
 }

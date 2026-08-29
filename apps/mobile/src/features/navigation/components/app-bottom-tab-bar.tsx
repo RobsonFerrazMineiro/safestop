@@ -1,18 +1,22 @@
 import { usePathname, useRouter } from "expo-router";
+import { Bell, House, List, Plus, User, type LucideIcon } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors } from "@safestop/ui";
+import { colors, controlHeight, elevation, spacing } from "@safestop/ui";
 
 import { stopWorkNewRoute } from "@/lib/auth/routes";
 
 import { usePreventiveStopDraftNavigation } from "../context/preventive-stop-draft-navigation-context";
+
+const TAB_ICON_SIZE = 22;
+const FAB_ICON_SIZE = 28;
 
 type TabItemConfig = {
   key: string;
   label: string;
   href: string;
   match: (pathname: string) => boolean;
-  icon: string;
+  Icon: LucideIcon;
 };
 
 export type AppBottomTabBarProps = {
@@ -40,7 +44,7 @@ const HOME_TAB: TabItemConfig = {
   label: "Início",
   href: "/(app)",
   match: isHomePath,
-  icon: "▦",
+  Icon: House,
 };
 
 const STOP_WORK_TAB: TabItemConfig = {
@@ -48,7 +52,7 @@ const STOP_WORK_TAB: TabItemConfig = {
   label: "Paralisações",
   href: "/(app)/stop-work",
   match: isStopWorkPath,
-  icon: "☰",
+  Icon: List,
 };
 
 const NOTIFICATIONS_TAB: TabItemConfig = {
@@ -56,7 +60,7 @@ const NOTIFICATIONS_TAB: TabItemConfig = {
   label: "Notificações",
   href: "/(app)/notifications",
   match: (pathname) => pathname.includes("/notifications"),
-  icon: "🔔",
+  Icon: Bell,
 };
 
 const PROFILE_TAB: TabItemConfig = {
@@ -64,7 +68,7 @@ const PROFILE_TAB: TabItemConfig = {
   label: "Perfil",
   href: "/(app)/profile",
   match: (pathname) => pathname.includes("/profile"),
-  icon: "👤",
+  Icon: User,
 };
 
 function isFabActive(pathname: string): boolean {
@@ -100,6 +104,8 @@ export function AppBottomTabBar({ state, navigation }: AppBottomTabBarProps) {
 
   function renderTab(item: TabItemConfig, routeIndex: number) {
     const isFocused = state.index === routeIndex || item.match(pathname);
+    const iconColor = isFocused ? colors.primary : colors.foregroundMuted;
+    const TabIcon = item.Icon;
 
     return (
       <Pressable
@@ -120,9 +126,7 @@ export function AppBottomTabBar({ state, navigation }: AppBottomTabBarProps) {
           }
         }}
       >
-        <Text style={[styles.tabIcon, isFocused ? styles.tabIconActive : styles.tabIconInactive]}>
-          {item.icon}
-        </Text>
+        <TabIcon color={iconColor} size={TAB_ICON_SIZE} />
         <Text
           style={[styles.tabLabel, isFocused ? styles.tabLabelActive : styles.tabLabelInactive]}
         >
@@ -152,7 +156,7 @@ export function AppBottomTabBar({ state, navigation }: AppBottomTabBarProps) {
             ]}
             onPress={handleFabPress}
           >
-            <Text style={styles.fabIcon}>+</Text>
+            <Plus color={colors.background} size={FAB_ICON_SIZE} />
           </Pressable>
           <Text
             style={[styles.fabLabel, fabActive ? styles.tabLabelActive : styles.tabLabelInactive]}
@@ -167,6 +171,8 @@ export function AppBottomTabBar({ state, navigation }: AppBottomTabBarProps) {
     </View>
   );
 }
+
+const fabElevation = elevation.overlay.native;
 
 const styles = StyleSheet.create({
   bar: {
@@ -187,24 +193,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: colors.primary,
     borderRadius: 28,
-    elevation: 6,
     height: 56,
     justifyContent: "center",
     marginTop: -28,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
     width: 56,
+    ...fabElevation,
   },
   fabActive: {
     backgroundColor: colors.primaryActive,
-  },
-  fabIcon: {
-    color: colors.background,
-    fontSize: 28,
-    fontWeight: "700",
-    lineHeight: 30,
   },
   fabLabel: {
     fontSize: 11,
@@ -223,19 +219,10 @@ const styles = StyleSheet.create({
   tab: {
     alignItems: "center",
     flex: 1,
-    gap: 2,
+    gap: spacing[1] / 2,
     justifyContent: "center",
-    minHeight: 44,
-    paddingHorizontal: 2,
-  },
-  tabIcon: {
-    fontSize: 18,
-  },
-  tabIconActive: {
-    color: colors.primary,
-  },
-  tabIconInactive: {
-    color: colors.foregroundMuted,
+    minHeight: controlHeight.mobile,
+    paddingHorizontal: spacing[1] / 2,
   },
   tabLabel: {
     fontSize: 11,

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import type { OccurrenceDetails } from "@safestop/types";
 import { registerImsReferenceSchema } from "@safestop/validation";
+import { colors, spacing, statusChip, typography } from "@safestop/ui";
 
 import { CollapsibleSection } from "@/components/collapsible-section";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
@@ -248,28 +249,28 @@ export function ImsReferenceSection({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    gap: 12,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    borderTopColor: "#1F2937",
-    borderTopWidth: 1,
-    color: "#93C5FD",
-    fontSize: 13,
-    fontWeight: "700",
-    paddingTop: 12,
-    textTransform: "uppercase",
-  },
   collapsedSummary: {
-    color: "#E5E7EB",
+    color: colors.foreground,
     fontFamily: "monospace",
-    fontSize: 14,
+    fontSize: typography.body.fontSize,
     fontWeight: "600",
   },
+  container: {
+    gap: spacing[3],
+    marginTop: spacing[2],
+  },
+  sectionTitle: {
+    borderTopColor: colors.border,
+    borderTopWidth: 1,
+    color: statusChip.info.foreground,
+    fontSize: typography.caption.fontSize,
+    fontWeight: "700",
+    paddingTop: spacing[3],
+    textTransform: "uppercase",
+  },
   success: {
-    color: "#86EFAC",
-    fontSize: 14,
+    color: statusChip.success.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "600",
   },
 });

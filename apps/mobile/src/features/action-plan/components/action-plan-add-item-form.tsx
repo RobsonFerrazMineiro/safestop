@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { ActionItemPriority } from "@safestop/types";
 import { ACTION_ITEM_PRIORITIES } from "@safestop/types";
+import { colors, spacing, statusChip, typography } from "@safestop/ui";
+
+import { Button, TextField } from "@/components/ui";
 
 import type { OrganizationMemberOption } from "../types";
 import { ACTION_PLAN_COPY } from "../utils/action-plan-copy";
@@ -61,11 +64,10 @@ export function ActionPlanAddItemForm({
 
   return (
     <View style={styles.container}>
-      <TextInput
-        editable={isOnline && !isSubmitting}
+      <TextField
+        disabled={!isOnline || isSubmitting}
+        error={error ?? undefined}
         placeholder={ACTION_PLAN_COPY.titlePlaceholder}
-        placeholderTextColor="#6B7280"
-        style={styles.input}
         value={title}
         onChangeText={setTitle}
       />
@@ -129,20 +131,19 @@ export function ActionPlanAddItemForm({
         ))}
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-
       <View style={styles.actions}>
-        <Pressable
+        <Button
           accessibilityRole="button"
           disabled={!isOnline || isSubmitting}
-          style={[styles.primaryButton, (!isOnline || isSubmitting) && styles.disabled]}
+          loading={isSubmitting}
+          style={styles.submitButton}
           onPress={handleSubmit}
         >
-          <Text style={styles.primaryButtonText}>{ACTION_PLAN_COPY.addAction}</Text>
-        </Pressable>
-        <Pressable accessibilityRole="button" style={styles.cancelButton} onPress={onCancel}>
-          <Text style={styles.cancelText}>{ACTION_PLAN_COPY.cancel}</Text>
-        </Pressable>
+          {ACTION_PLAN_COPY.addAction}
+        </Button>
+        <Button accessibilityRole="button" variant="ghost" onPress={onCancel}>
+          {ACTION_PLAN_COPY.cancel}
+        </Button>
       </View>
     </View>
   );
@@ -151,87 +152,49 @@ export function ActionPlanAddItemForm({
 const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
-    gap: 12,
-    marginTop: 8,
-  },
-  cancelButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-    paddingHorizontal: 12,
-  },
-  cancelText: {
-    color: "#9CA3AF",
-    fontSize: 15,
-    fontWeight: "600",
+    gap: spacing[3],
+    marginTop: spacing[2],
   },
   chip: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
     borderRadius: 999,
     borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
   },
   chipRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: spacing[2],
   },
   chipSelected: {
-    backgroundColor: "#1E3A5F",
-    borderColor: "#2563EB",
+    backgroundColor: statusChip.info.background,
+    borderColor: statusChip.info.border,
   },
   chipText: {
-    color: "#D1D5DB",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
   },
   chipTextSelected: {
-    color: "#DBEAFE",
+    color: statusChip.info.foreground,
   },
   container: {
-    backgroundColor: "#0B1220",
-    borderColor: "#1F2937",
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
     borderRadius: 12,
     borderWidth: 1,
-    gap: 10,
+    gap: spacing[2],
     padding: 14,
   },
-  disabled: {
-    opacity: 0.45,
-  },
-  error: {
-    color: "#FCA5A5",
-    fontSize: 13,
-  },
-  input: {
-    backgroundColor: "#111827",
-    borderColor: "#374151",
-    borderRadius: 10,
-    borderWidth: 1,
-    color: "#F9FAFB",
-    fontSize: 15,
-    minHeight: 48,
-    paddingHorizontal: 12,
-  },
   label: {
-    color: "#93C5FD",
-    fontSize: 12,
+    color: statusChip.info.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
     textTransform: "uppercase",
   },
-  primaryButton: {
-    alignItems: "center",
-    backgroundColor: "#2563EB",
-    borderRadius: 10,
+  submitButton: {
     flex: 1,
-    justifyContent: "center",
-    minHeight: 44,
-  },
-  primaryButtonText: {
-    color: "#EFF6FF",
-    fontSize: 15,
-    fontWeight: "700",
   },
 });

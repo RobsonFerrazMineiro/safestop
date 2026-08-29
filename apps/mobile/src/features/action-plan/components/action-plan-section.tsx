@@ -8,6 +8,9 @@ import {
   isActionPlanActiveStatus,
   shouldShowActionPlanSection,
 } from "@safestop/types";
+import { colors, spacing, statusChip, typography } from "@safestop/ui";
+
+import { Button } from "@/components/ui";
 
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
@@ -299,7 +302,7 @@ export function ActionPlanSection({
         <Text accessibilityRole="header" style={styles.sectionTitle}>
           {ACTION_PLAN_COPY.sectionTitle}
         </Text>
-        <ActivityIndicator color="#93C5FD" />
+        <ActivityIndicator color={colors.info} />
         <Text style={styles.loading}>{ACTION_PLAN_COPY.loading}</Text>
       </View>
     );
@@ -317,14 +320,14 @@ export function ActionPlanSection({
         {canCreate ? (
           <>
             <Text style={styles.emptyBody}>{ACTION_PLAN_COPY.emptyBody}</Text>
-            <Pressable
+            <Button
               accessibilityRole="button"
               disabled={!isOnline || isCreating}
-              style={[styles.primaryButton, (!isOnline || isCreating) && styles.disabled]}
+              loading={isCreating}
               onPress={handleCreatePlan}
             >
-              <Text style={styles.primaryButtonText}>{ACTION_PLAN_COPY.createPlan}</Text>
-            </Pressable>
+              {ACTION_PLAN_COPY.createPlan}
+            </Button>
           </>
         ) : (
           <View accessibilityRole="text" style={styles.awaitingBanner}>
@@ -390,7 +393,7 @@ export function ActionPlanSection({
         </Pressable>
       </View>
 
-      {isItemsLoading ? <ActivityIndicator color="#93C5FD" /> : null}
+      {isItemsLoading ? <ActivityIndicator color={colors.info} /> : null}
 
       {visibleItems.map((item) => (
         <ActionPlanItemCard
@@ -416,16 +419,16 @@ export function ActionPlanSection({
       ))}
 
       {canManage && hasActivePlan && !showAddForm ? (
-        <Pressable
+        <Button
           accessibilityRole="button"
           disabled={!isOnline || isBusy}
-          style={[styles.secondaryButton, (!isOnline || isBusy) && styles.disabled]}
+          variant="secondary"
           onPress={() => {
             setShowAddForm(true);
           }}
         >
-          <Text style={styles.secondaryButtonText}>{ACTION_PLAN_COPY.addAction}</Text>
-        </Pressable>
+          {ACTION_PLAN_COPY.addAction}
+        </Button>
       ) : null}
 
       {showAddForm && canManage ? (
@@ -443,14 +446,16 @@ export function ActionPlanSection({
       ) : null}
 
       {canComplete ? (
-        <Pressable
+        <Button
           accessibilityRole="button"
           disabled={!isOnline || isCompleting}
-          style={[styles.completeButton, (!isOnline || isCompleting) && styles.disabled]}
+          loading={isCompleting}
+          style={styles.completeButton}
+          variant="secondary"
           onPress={handleCompletePlan}
         >
-          <Text style={styles.completeButtonText}>{ACTION_PLAN_COPY.completePlan}</Text>
-        </Pressable>
+          {ACTION_PLAN_COPY.completePlan}
+        </Button>
       ) : null}
 
       <ActionPlanSubmitSheet
@@ -483,68 +488,55 @@ export function ActionPlanSection({
 
 const styles = StyleSheet.create({
   awaitingBanner: {
-    backgroundColor: "#1E3A5F",
-    borderColor: "#2563EB",
+    backgroundColor: statusChip.info.background,
+    borderColor: statusChip.info.border,
     borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: spacing[3],
   },
   awaitingText: {
-    color: "#DBEAFE",
-    fontSize: 14,
+    color: statusChip.info.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "600",
   },
   completeButton: {
-    alignItems: "center",
-    backgroundColor: "#312E81",
-    borderRadius: 10,
-    justifyContent: "center",
-    minHeight: 44,
-    marginTop: 4,
-  },
-  completeButtonText: {
-    color: "#E0E7FF",
-    fontSize: 15,
-    fontWeight: "700",
+    marginTop: spacing[1],
   },
   completeHint: {
-    color: "#A5B4FC",
-    fontSize: 13,
+    color: statusChip.info.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
   },
   container: {
-    gap: 12,
-    marginTop: 8,
-  },
-  disabled: {
-    opacity: 0.45,
+    gap: spacing[3],
+    marginTop: spacing[2],
   },
   emptyBody: {
-    color: "#D1D5DB",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.body.fontSize,
     lineHeight: 20,
   },
   filterChip: {
-    backgroundColor: "#1F2937",
+    backgroundColor: colors.surfaceMuted,
     borderRadius: 999,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: spacing[2],
   },
   filterChipActive: {
-    backgroundColor: "#1E3A5F",
+    backgroundColor: statusChip.info.background,
   },
   filterRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: spacing[2],
   },
   filterText: {
-    color: "#9CA3AF",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
   },
   filterTextActive: {
-    color: "#DBEAFE",
+    color: statusChip.info.foreground,
   },
   headerRow: {
     alignItems: "center",
@@ -552,57 +544,31 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   loading: {
-    color: "#9CA3AF",
-    fontSize: 13,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
   },
   planStatus: {
-    color: "#E5E7EB",
-    fontSize: 14,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "600",
-  },
-  primaryButton: {
-    alignItems: "center",
-    backgroundColor: "#2563EB",
-    borderRadius: 10,
-    justifyContent: "center",
-    minHeight: 48,
-  },
-  primaryButtonText: {
-    color: "#EFF6FF",
-    fontSize: 16,
-    fontWeight: "700",
   },
   progress: {
-    color: "#93C5FD",
-    fontSize: 13,
+    color: statusChip.info.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "600",
   },
-  secondaryButton: {
-    alignItems: "center",
-    backgroundColor: "#1E3A5F",
-    borderColor: "#2563EB",
-    borderRadius: 10,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 44,
-  },
-  secondaryButtonText: {
-    color: "#DBEAFE",
-    fontSize: 15,
-    fontWeight: "700",
-  },
   sectionTitle: {
-    borderTopColor: "#1F2937",
+    borderTopColor: colors.border,
     borderTopWidth: 1,
-    color: "#93C5FD",
-    fontSize: 13,
+    color: statusChip.info.foreground,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
-    paddingTop: 12,
+    paddingTop: spacing[3],
     textTransform: "uppercase",
   },
   success: {
-    color: "#86EFAC",
-    fontSize: 14,
+    color: statusChip.success.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "600",
   },
 });

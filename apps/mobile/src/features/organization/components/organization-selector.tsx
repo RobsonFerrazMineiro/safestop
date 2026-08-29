@@ -1,14 +1,18 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors, spacing, typography } from "@safestop/ui";
 
+import { Button } from "@/components/ui";
 import { authRoutes } from "@/lib/auth/routes";
 
 import { useActiveOrganization } from "../hooks/use-active-organization";
 import { OrganizationEmpty } from "./organization-empty";
 import { OrganizationList } from "./organization-list";
 import { OrganizationLoading } from "./organization-loading";
+
+const CONTENT_MAX_WIDTH = 480;
 
 export function OrganizationSelectorScreen() {
   const router = useRouter();
@@ -75,21 +79,16 @@ export function OrganizationSelectorScreen() {
           onSelect={setSelectedOrganizationId}
         />
 
-        <Pressable
+        <Button
           accessibilityLabel="Continuar"
-          accessibilityRole="button"
           disabled={!selectedOrganizationId || isSubmitting}
-          style={({ pressed }) => [
-            styles.button,
-            (!selectedOrganizationId || isSubmitting) && styles.buttonDisabled,
-            pressed && selectedOrganizationId && !isSubmitting && styles.buttonPressed,
-          ]}
+          loading={isSubmitting}
           onPress={() => {
             void handleConfirmSelection();
           }}
         >
-          <Text style={styles.buttonText}>{isSubmitting ? "Confirmando..." : "Continuar"}</Text>
-        </Pressable>
+          Continuar
+        </Button>
       </ScrollView>
     </SafeAreaView>
   );
@@ -97,42 +96,27 @@ export function OrganizationSelectorScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
   },
   content: {
-    gap: 24,
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    alignSelf: "center",
+    gap: spacing[6],
+    maxWidth: CONTENT_MAX_WIDTH,
+    paddingHorizontal: spacing[6],
+    paddingVertical: spacing[4],
+    width: "100%",
   },
   header: {
-    gap: 8,
-  },
-  title: {
-    color: "#F9FAFB",
-    fontSize: 28,
-    fontWeight: "700",
+    gap: spacing[2],
   },
   subtitle: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.body.fontSize,
   },
-  button: {
-    alignItems: "center",
-    backgroundColor: "#F97316",
-    borderRadius: 8,
-    justifyContent: "center",
-    minHeight: 48,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonPressed: {
-    opacity: 0.85,
-  },
-  buttonText: {
-    color: "#0F1115",
-    fontSize: 16,
-    fontWeight: "700",
+  title: {
+    color: colors.foreground,
+    fontSize: typography.sectionTitle.fontSize,
+    fontWeight: typography.sectionTitle.fontWeight,
   },
 });

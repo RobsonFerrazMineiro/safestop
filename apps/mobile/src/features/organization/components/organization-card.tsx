@@ -1,4 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors, radius, spacing, typography } from "@safestop/ui";
+
+import { Card } from "@/components/ui";
 
 import type { UserOrganization } from "../types";
 
@@ -14,82 +17,83 @@ export function OrganizationCard({ organization, isSelected, onSelect }: Organiz
       accessibilityLabel={`Selecionar ${organization.name}`}
       accessibilityRole="button"
       accessibilityState={{ selected: isSelected }}
-      style={({ pressed }) => [
-        styles.card,
-        isSelected && styles.cardSelected,
-        pressed && styles.cardPressed,
-      ]}
+      style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
       onPress={() => {
         onSelect(organization.id);
       }}
     >
-      <View style={styles.logoPlaceholder}>
-        <Text style={styles.logoText}>{organization.name.slice(0, 1).toUpperCase()}</Text>
-      </View>
+      <Card style={[styles.card, isSelected && styles.cardSelected]}>
+        <View style={styles.row}>
+          <View style={styles.logoPlaceholder}>
+            <Text style={styles.logoText}>{organization.name.slice(0, 1).toUpperCase()}</Text>
+          </View>
 
-      <View style={styles.content}>
-        <Text style={styles.name}>{organization.name}</Text>
-        {organization.code ? <Text style={styles.code}>{organization.code}</Text> : null}
-        <Text selectable style={styles.id}>
-          {organization.id}
-        </Text>
-        <Text style={styles.type}>{organization.organizationType}</Text>
-      </View>
+          <View style={styles.content}>
+            <Text style={styles.name}>{organization.name}</Text>
+            {organization.code ? <Text style={styles.code}>{organization.code}</Text> : null}
+            <Text selectable style={styles.id}>
+              {organization.id}
+            </Text>
+            <Text style={styles.type}>{organization.organizationType}</Text>
+          </View>
+        </View>
+      </Card>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    alignItems: "center",
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 12,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 16,
-    padding: 16,
+    padding: spacing[4],
   },
   cardSelected: {
-    borderColor: "#F97316",
+    borderColor: colors.primary,
   },
-  cardPressed: {
-    opacity: 0.85,
+  code: {
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
+  },
+  content: {
+    flex: 1,
+    gap: spacing[1],
+  },
+  id: {
+    color: colors.foregroundMuted,
+    fontFamily: "monospace",
+    fontSize: typography.caption.fontSize,
   },
   logoPlaceholder: {
     alignItems: "center",
-    backgroundColor: "#374151",
-    borderRadius: 24,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radius.badge,
     height: 48,
     justifyContent: "center",
     width: 48,
   },
   logoText: {
-    color: "#F97316",
-    fontSize: 20,
+    color: colors.primary,
+    fontSize: typography.cardTitle.fontSize,
     fontWeight: "700",
-  },
-  content: {
-    flex: 1,
-    gap: 4,
   },
   name: {
-    color: "#F9FAFB",
-    fontSize: 16,
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
     fontWeight: "700",
   },
-  code: {
-    color: "#9CA3AF",
-    fontSize: 13,
+  pressed: {
+    opacity: 0.85,
   },
-  id: {
-    color: "#6B7280",
-    fontFamily: "monospace",
-    fontSize: 11,
+  pressable: {
+    width: "100%",
+  },
+  row: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[4],
   },
   type: {
-    color: "#6B7280",
-    fontSize: 12,
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
     textTransform: "uppercase",
   },
 });

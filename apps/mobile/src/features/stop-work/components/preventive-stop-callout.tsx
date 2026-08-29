@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { radius, spacing, statusChip, typography } from "@safestop/ui";
 
 export function PreventiveStopCallout() {
   return (
@@ -12,20 +13,22 @@ export function PreventiveStopCallout() {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    backgroundColor: "#1E3A8A",
-    borderRadius: 12,
+    backgroundColor: statusChip.info.background,
+    borderColor: statusChip.info.border,
+    borderRadius: radius.card,
+    borderWidth: 1,
     flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    gap: spacing[3],
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[3],
   },
   icon: {
-    fontSize: 16,
+    fontSize: typography.body.fontSize,
   },
   text: {
-    color: "#DBEAFE",
+    color: statusChip.info.foreground,
     flex: 1,
-    fontSize: 14,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
 });

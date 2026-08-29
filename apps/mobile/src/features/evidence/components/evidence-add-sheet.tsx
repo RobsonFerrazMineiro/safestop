@@ -1,6 +1,7 @@
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { colors, overlay, radius, spacing, typography } from "@safestop/ui";
 
-import { evidenceColors } from "../theme/colors";
+import { Button } from "@/components/ui";
 
 type EvidenceAddSheetProps = {
   visible: boolean;
@@ -25,34 +26,27 @@ export function EvidenceAddSheet({
 
           <Text style={styles.title}>Adicionar evidência</Text>
 
-          <Pressable
+          <Button
             accessibilityLabel="Tirar foto"
-            accessibilityRole="button"
             disabled={isBusy}
-            style={({ pressed }) => [styles.action, pressed && !isBusy && styles.pressed]}
+            variant="secondary"
             onPress={onPickCamera}
           >
-            <Text style={styles.actionText}>Tirar foto</Text>
-          </Pressable>
+            Tirar foto
+          </Button>
 
-          <Pressable
+          <Button
             accessibilityLabel="Escolher da galeria"
-            accessibilityRole="button"
             disabled={isBusy}
-            style={({ pressed }) => [styles.action, pressed && !isBusy && styles.pressed]}
+            variant="secondary"
             onPress={onPickLibrary}
           >
-            <Text style={styles.actionText}>Escolher da galeria</Text>
-          </Pressable>
+            Escolher da galeria
+          </Button>
 
-          <Pressable
-            accessibilityLabel="Cancelar"
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.cancel, pressed && styles.pressed]}
-            onPress={onClose}
-          >
-            <Text style={styles.cancelText}>Cancelar</Text>
-          </Pressable>
+          <Button accessibilityLabel="Cancelar" variant="ghost" onPress={onClose}>
+            Cancelar
+          </Button>
         </Pressable>
       </Pressable>
     </Modal>
@@ -60,61 +54,32 @@ export function EvidenceAddSheet({
 }
 
 const styles = StyleSheet.create({
-  action: {
-    alignItems: "center",
-    backgroundColor: evidenceColors.surface,
-    borderColor: evidenceColors.border,
-    borderRadius: 12,
-    borderWidth: 1,
-    justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: 16,
-  },
-  actionText: {
-    color: evidenceColors.foreground,
-    fontSize: 16,
-    fontWeight: "600",
-  },
   backdrop: {
-    backgroundColor: evidenceColors.overlay,
+    backgroundColor: overlay.scrim,
     flex: 1,
     justifyContent: "flex-end",
   },
-  cancel: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 44,
-    marginTop: 8,
-  },
-  cancelText: {
-    color: evidenceColors.foregroundMuted,
-    fontSize: 15,
-    fontWeight: "600",
-  },
   handle: {
     alignSelf: "center",
-    backgroundColor: evidenceColors.border,
+    backgroundColor: colors.border,
     borderRadius: 999,
     height: 4,
-    marginBottom: 16,
+    marginBottom: spacing[4],
     width: 40,
   },
-  pressed: {
-    opacity: 0.85,
-  },
   sheet: {
-    backgroundColor: evidenceColors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    gap: 12,
-    paddingBottom: 32,
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    backgroundColor: colors.background,
+    borderTopLeftRadius: radius.dialog,
+    borderTopRightRadius: radius.dialog,
+    gap: spacing[3],
+    paddingBottom: spacing[8],
+    paddingHorizontal: spacing[5],
+    paddingTop: spacing[3],
   },
   title: {
-    color: evidenceColors.foreground,
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 4,
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
+    fontWeight: typography.cardTitle.fontWeight,
+    marginBottom: spacing[1],
   },
 });
