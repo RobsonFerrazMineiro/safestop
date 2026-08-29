@@ -2094,6 +2094,20 @@ export type Database = {
         }
         Returns: Json
       }
+      list_operational_occurrences: {
+        Args: {
+          p_area_id?: string
+          p_contractor_organization_id?: string
+          p_cursor?: Json
+          p_ims_reference_code?: string
+          p_limit?: number
+          p_organization_id: string
+          p_search?: string
+          p_severity?: string[]
+          p_status?: string[]
+        }
+        Returns: Json
+      }
       list_organization_contractors: {
         Args: { target_organization_id: string }
         Returns: Json

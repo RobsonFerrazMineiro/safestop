@@ -3,11 +3,23 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createPreventiveStopSchema, type CreatePreventiveStopInput } from "@safestop/validation";
 import { OCCURRENCE_SEVERITIES, type OccurrenceSeverity } from "@safestop/types";
-import Link from "next/link";
+import { occurrenceSeverityTone, type StatusChipFamily } from "@safestop/ui";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
+import { FormField } from "@/components/form-field";
+import { PageHeader } from "@/components/page-header";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -23,35 +35,101 @@ import { cn } from "@/lib/utils";
 import { useRequirePermission } from "@/features/authorization";
 import { formatOccurrenceSeverity } from "@/features/occurrences/utils/format-labels";
 
+import { usePreventiveStopDraft } from "../hooks/use-preventive-stop-draft";
 import {
   useCreatePreventiveStop,
   usePreventiveStopAreas,
   usePreventiveStopContractors,
 } from "../hooks/use-stop-work";
+import { hasPreventiveStopDraftContent } from "../stores/preventive-stop-draft-store";
+import {
+  EMPTY_ACTIVE_CONTRACTORS_MESSAGE,
+  getPreventiveStopCreateControlState,
+} from "../utils/preventive-stop-create-controls";
+import {
+  isInternalPreventiveStopCreateExit,
+  resolveCreateLeaveConfirmAction,
+  resolveCreatePopStateAction,
+  shouldPromptPreventiveStopCreateLeave,
+} from "../utils/preventive-stop-create-leave";
 import { StopWorkError, StopWorkLoading } from "./stop-work-states";
 
-const defaultValues: CreatePreventiveStopInput = {
-  taskDescription: "",
-  locationDescription: "",
-  conditionDescription: "",
-  immediateActionDescription: "",
-  severity: "MEDIUM",
-  areaId: "",
-  contractorOrganizationId: "",
+const DRAFT_DEBOUNCE_MS = 400;
+
+const SEVERITY_CHIP_CLASSES: Record<StatusChipFamily, string> = {
+  success: "border-status-success-border bg-status-success-bg text-status-success-fg",
+  warning: "border-status-warning-border bg-status-warning-bg text-status-warning-fg",
+  destructive:
+    "border-status-destructive-border bg-status-destructive-bg text-status-destructive-fg",
+  info: "border-status-info-border bg-status-info-bg text-status-info-fg",
+  primary: "border-status-primary-border bg-status-primary-bg text-status-primary-fg",
+  muted: "border-status-muted-border bg-status-muted-bg text-status-muted-fg",
 };
 
-function FieldError({ message }: { message?: string }) {
-  if (!message) {
-    return null;
-  }
+type SelectOption = {
+  id: string;
+  name: string;
+  code?: string | null;
+};
 
-  return <p className="text-sm text-destructive">{message}</p>;
+type DraftSelectControlProps = {
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
+  disabled: boolean;
+  value: string;
+  placeholder: string;
+  options: SelectOption[];
+  onValueChange: (value: string) => void;
+};
+
+function DraftSelectControl({
+  id,
+  "aria-describedby": describedBy,
+  "aria-invalid": invalid,
+  disabled,
+  value,
+  placeholder,
+  options,
+  onValueChange,
+}: DraftSelectControlProps) {
+  return (
+    <Select disabled={disabled} onValueChange={onValueChange} value={value || undefined}>
+      <SelectTrigger
+        aria-describedby={describedBy}
+        aria-invalid={invalid}
+        className="w-full"
+        id={id}
+      >
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent>
+        {options.map((option) => (
+          <SelectItem key={option.id} value={option.id}>
+            {option.name}
+            {option.code ? ` (${option.code})` : ""}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function toFormValues(draft: Partial<CreatePreventiveStopInput>): CreatePreventiveStopInput {
+  return {
+    taskDescription: draft.taskDescription ?? "",
+    locationDescription: draft.locationDescription ?? "",
+    conditionDescription: draft.conditionDescription ?? "",
+    immediateActionDescription: draft.immediateActionDescription ?? "",
+    severity: draft.severity ?? "MEDIUM",
+    areaId: draft.areaId ?? "",
+    contractorOrganizationId: draft.contractorOrganizationId ?? "",
+  };
 }
 
 export function StopWorkCreateContainer() {
   useRequirePermission("occurrence.create");
 
-  const router = useRouter();
   const {
     areas,
     isLoading: isAreasLoading,
@@ -64,20 +142,15 @@ export function StopWorkCreateContainer() {
     isError: isContractorsError,
     error: contractorsError,
   } = usePreventiveStopContractors();
-  const { createPreventiveStop, isCreating, error: createError, reset } = useCreatePreventiveStop();
-  const [formError, setFormError] = useState<string | null>(null);
-
   const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-  } = useForm<CreatePreventiveStopInput>({
-    resolver: zodResolver(createPreventiveStopSchema),
-    defaultValues,
-  });
+    draft,
+    flushDraft,
+    clearDraft,
+    hasLocalDraft,
+    isReady: isDraftReady,
+  } = usePreventiveStopDraft();
 
-  if (isAreasLoading || isContractorsLoading) {
+  if (isAreasLoading || isContractorsLoading || !isDraftReady) {
     return <StopWorkLoading message="Carregando formulário..." />;
   }
 
@@ -93,12 +166,198 @@ export function StopWorkCreateContainer() {
     );
   }
 
+  return (
+    <StopWorkCreateForm
+      areas={areas}
+      clearDraft={clearDraft}
+      contractors={contractors}
+      flushDraft={flushDraft}
+      hasLocalDraft={hasLocalDraft}
+      initialValues={toFormValues(draft)}
+    />
+  );
+}
+
+type StopWorkCreateFormProps = {
+  areas: SelectOption[];
+  contractors: SelectOption[];
+  initialValues: CreatePreventiveStopInput;
+  hasLocalDraft: boolean;
+  flushDraft: (values: CreatePreventiveStopInput) => void;
+  clearDraft: () => void;
+};
+
+function StopWorkCreateForm({
+  areas,
+  contractors,
+  initialValues,
+  hasLocalDraft,
+  flushDraft,
+  clearDraft,
+}: StopWorkCreateFormProps) {
+  const router = useRouter();
+  const { createPreventiveStop, isCreating, error: createError, reset } = useCreatePreventiveStop();
+  const [formError, setFormError] = useState<string | null>(null);
+  const [leaveOpen, setLeaveOpen] = useState(false);
+  const pendingHrefRef = useRef<string | null>(null);
+  const pendingHistoryLeaveRef = useRef(false);
+  const allowLeaveRef = useRef(false);
+  const restoringGuardRef = useRef(false);
+  const debounceRef = useRef<number | undefined>(undefined);
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    getValues,
+    watch,
+    formState: { errors },
+  } = useForm<CreatePreventiveStopInput>({
+    resolver: zodResolver(createPreventiveStopSchema),
+    defaultValues: initialValues,
+  });
+
+  useEffect(() => {
+    const subscription = watch((values) => {
+      window.clearTimeout(debounceRef.current);
+      debounceRef.current = window.setTimeout(() => {
+        flushDraft(values as CreatePreventiveStopInput);
+      }, DRAFT_DEBOUNCE_MS);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      window.clearTimeout(debounceRef.current);
+    };
+  }, [flushDraft, watch]);
+
+  useEffect(() => {
+    function persistDraftNow() {
+      if (allowLeaveRef.current) {
+        return;
+      }
+
+      flushDraft(getValues());
+    }
+
+    function onBeforeUnload(event: BeforeUnloadEvent) {
+      if (
+        !shouldPromptPreventiveStopCreateLeave({
+          allowLeave: allowLeaveRef.current,
+          values: getValues(),
+        })
+      ) {
+        return;
+      }
+
+      persistDraftNow();
+      event.preventDefault();
+      event.returnValue = "";
+    }
+
+    function onPageHide() {
+      persistDraftNow();
+    }
+
+    function onPopState() {
+      const action = resolveCreatePopStateAction({
+        allowLeave: allowLeaveRef.current,
+        isRestoringGuard: restoringGuardRef.current,
+        hasRelevantContent: hasPreventiveStopDraftContent(getValues()),
+      });
+
+      if (action === "ignore") {
+        restoringGuardRef.current = false;
+        return;
+      }
+
+      persistDraftNow();
+
+      if (action === "allow") {
+        return;
+      }
+
+      restoringGuardRef.current = true;
+      pendingHistoryLeaveRef.current = true;
+      pendingHrefRef.current = null;
+      window.history.go(1);
+      setLeaveOpen(true);
+    }
+
+    window.addEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("popstate", onPopState);
+
+    return () => {
+      persistDraftNow();
+      window.removeEventListener("beforeunload", onBeforeUnload);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, [flushDraft, getValues]);
+
+  useEffect(() => {
+    function onDocumentClick(event: MouseEvent) {
+      if (allowLeaveRef.current || event.defaultPrevented) {
+        return;
+      }
+
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+        return;
+      }
+
+      const target = event.target;
+
+      if (!(target instanceof Element)) {
+        return;
+      }
+
+      if (target.closest('[data-slot="alert-dialog"]')) {
+        return;
+      }
+
+      const anchor = target.closest("a[href]");
+
+      if (!(anchor instanceof HTMLAnchorElement)) {
+        return;
+      }
+
+      const href = anchor.getAttribute("href");
+
+      if (!href || !isInternalPreventiveStopCreateExit(href, window.location.origin)) {
+        return;
+      }
+
+      if (
+        !shouldPromptPreventiveStopCreateLeave({
+          allowLeave: allowLeaveRef.current,
+          values: getValues(),
+        })
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      pendingHistoryLeaveRef.current = false;
+      pendingHrefRef.current = href;
+      setLeaveOpen(true);
+    }
+
+    document.addEventListener("click", onDocumentClick, true);
+    return () => {
+      document.removeEventListener("click", onDocumentClick, true);
+    };
+  }, [getValues]);
+
   async function onSubmit(values: CreatePreventiveStopInput) {
     setFormError(null);
     reset();
 
     try {
       const created = await createPreventiveStop(values);
+      allowLeaveRef.current = true;
+      clearDraft();
       router.replace(`/stop-work/${created.id}`);
     } catch (error) {
       const message =
@@ -109,20 +368,71 @@ export function StopWorkCreateContainer() {
     }
   }
 
+  function cancelLeave() {
+    restoringGuardRef.current = false;
+    pendingHistoryLeaveRef.current = false;
+    pendingHrefRef.current = null;
+    setLeaveOpen(false);
+  }
+
+  function confirmLeave() {
+    flushDraft(getValues());
+    allowLeaveRef.current = true;
+    restoringGuardRef.current = false;
+
+    const action = resolveCreateLeaveConfirmAction({
+      isHistoryLeave: pendingHistoryLeaveRef.current,
+      pendingHref: pendingHrefRef.current,
+    });
+
+    pendingHistoryLeaveRef.current = false;
+    pendingHrefRef.current = null;
+    setLeaveOpen(false);
+
+    if (action.type === "history-back") {
+      window.history.back();
+      return;
+    }
+
+    router.push(action.href);
+  }
+
   const mutationMessage = createError instanceof Error ? createError.message : null;
-  const isFormDisabled = isCreating || areas.length === 0 || contractors.length === 0;
+  const {
+    isAreaDisabled,
+    isContractorDisabled,
+    areIndependentFieldsDisabled,
+    isSubmitDisabled,
+    showEmptyContractorsMessage,
+  } = getPreventiveStopCreateControlState({
+    isCreating,
+    areasCount: areas.length,
+    contractorsCount: contractors.length,
+  });
+  const severityErrorId = errors.severity?.message ? "severity-error" : undefined;
+  const showDraftBanner = hasLocalDraft || hasPreventiveStopDraftContent(watch());
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-6 py-10">
-      <header className="flex flex-col gap-2">
-        <Link className="text-sm text-primary hover:text-primary/90" href="/stop-work">
-          ← Voltar para paralisações
-        </Link>
-        <h1 className="text-3xl font-bold">Nova Paralisação Preventiva</h1>
-        <p className="text-sm text-muted-foreground">
-          Preencha os dados mínimos para registrar a paralisação na organização ativa.
+    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-6 py-10">
+      <PageHeader
+        backHref="/stop-work"
+        backLabel="Voltar para paralisações"
+        subtitle="Preencha os dados mínimos para registrar a paralisação na organização ativa."
+        title="Nova Paralisação Preventiva"
+      />
+
+      {showDraftBanner ? (
+        <p className="rounded-lg border border-status-muted-border bg-status-muted-bg px-3 py-2 text-sm text-status-muted-fg">
+          Rascunho salvo neste dispositivo
         </p>
-      </header>
+      ) : null}
+
+      <p
+        className="rounded-lg border border-status-info-border bg-status-info-bg px-3 py-2 text-sm text-status-info-fg"
+        role="note"
+      >
+        Preenchimento otimizado para menos de 60 segundos
+      </p>
 
       <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
         <Card className="gap-4 py-4">
@@ -130,81 +440,57 @@ export function StopWorkCreateContainer() {
             <CardTitle className="text-base">Onde e quem</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 px-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="areaId">
-                Área
-              </label>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <Controller
                 control={control}
                 name="areaId"
                 render={({ field }) => (
-                  <Select
-                    disabled={isFormDisabled}
-                    onValueChange={field.onChange}
-                    value={field.value || undefined}
-                  >
-                    <SelectTrigger className="w-full" id="areaId">
-                      <SelectValue placeholder="Selecione uma área" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {areas.map((area) => (
-                        <SelectItem key={area.id} value={area.id}>
-                          {area.name}
-                          {area.code ? ` (${area.code})` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormField error={errors.areaId?.message} id="areaId" label="Área">
+                    <DraftSelectControl
+                      disabled={isAreaDisabled}
+                      options={areas}
+                      placeholder="Selecione uma área"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    />
+                  </FormField>
                 )}
               />
-              <FieldError message={errors.areaId?.message} />
-            </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="locationDescription">
-                Local
-              </label>
-              <Textarea
-                disabled={isFormDisabled}
+              <FormField
+                error={errors.locationDescription?.message}
                 id="locationDescription"
-                {...register("locationDescription")}
-              />
-              <FieldError message={errors.locationDescription?.message} />
+                label="Local"
+              >
+                <Textarea
+                  disabled={areIndependentFieldsDisabled}
+                  {...register("locationDescription")}
+                />
+              </FormField>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="contractorOrganizationId">
-                Contratada
-              </label>
-              <Controller
-                control={control}
-                name="contractorOrganizationId"
-                render={({ field }) => (
-                  <Select
-                    disabled={isFormDisabled}
+            <Controller
+              control={control}
+              name="contractorOrganizationId"
+              render={({ field }) => (
+                <FormField
+                  error={errors.contractorOrganizationId?.message}
+                  id="contractorOrganizationId"
+                  label="Contratada"
+                >
+                  <DraftSelectControl
+                    disabled={isContractorDisabled}
+                    options={contractors}
+                    placeholder="Selecione a empresa"
+                    value={field.value}
                     onValueChange={field.onChange}
-                    value={field.value || undefined}
-                  >
-                    <SelectTrigger className="w-full" id="contractorOrganizationId">
-                      <SelectValue placeholder="Selecione a empresa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {contractors.map((contractor) => (
-                        <SelectItem key={contractor.id} value={contractor.id}>
-                          {contractor.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-              <FieldError message={errors.contractorOrganizationId?.message} />
-              {contractors.length === 0 ? (
-                <p className="text-sm text-amber-200">
-                  Nenhuma contratada com contrato ativo nesta organização.
-                </p>
-              ) : null}
-            </div>
+                  />
+                </FormField>
+              )}
+            />
+            {showEmptyContractorsMessage ? (
+              <p className="text-sm text-status-warning-fg">{EMPTY_ACTIVE_CONTRACTORS_MESSAGE}</p>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -213,32 +499,27 @@ export function StopWorkCreateContainer() {
             <CardTitle className="text-base">O que está acontecendo</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 px-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="taskDescription">
-                Atividade
-              </label>
-              <Textarea
-                disabled={isFormDisabled}
-                id="taskDescription"
-                {...register("taskDescription")}
-              />
-              <FieldError message={errors.taskDescription?.message} />
-            </div>
+            <FormField
+              error={errors.taskDescription?.message}
+              id="taskDescription"
+              label="Atividade"
+            >
+              <Textarea disabled={areIndependentFieldsDisabled} {...register("taskDescription")} />
+            </FormField>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="conditionDescription">
-                Condição insegura
-              </label>
+            <FormField
+              error={errors.conditionDescription?.message}
+              id="conditionDescription"
+              label="Condição insegura"
+            >
               <Textarea
-                disabled={isFormDisabled}
-                id="conditionDescription"
+                disabled={areIndependentFieldsDisabled}
                 {...register("conditionDescription")}
               />
-              <FieldError message={errors.conditionDescription?.message} />
-            </div>
+            </FormField>
 
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium" id="severity-label">
+              <span className="text-sm font-medium text-foreground" id="severity-label">
                 Criticidade
               </span>
               <Controller
@@ -246,9 +527,11 @@ export function StopWorkCreateContainer() {
                 name="severity"
                 render={({ field }) => (
                   <RadioGroup
+                    aria-describedby={severityErrorId}
+                    aria-invalid={errors.severity ? true : undefined}
                     aria-labelledby="severity-label"
                     className="grid grid-cols-2 gap-2 sm:grid-cols-4"
-                    disabled={isFormDisabled}
+                    disabled={areIndependentFieldsDisabled}
                     onValueChange={(value) => {
                       field.onChange(value as OccurrenceSeverity);
                     }}
@@ -256,15 +539,16 @@ export function StopWorkCreateContainer() {
                   >
                     {OCCURRENCE_SEVERITIES.map((severity) => {
                       const selected = field.value === severity;
+                      const family = occurrenceSeverityTone[severity];
 
                       return (
                         <label
                           className={cn(
                             "flex cursor-pointer items-center justify-center rounded-lg border px-3 py-2 text-sm font-medium transition",
                             selected
-                              ? "border-primary bg-primary/15 text-foreground"
+                              ? SEVERITY_CHIP_CLASSES[family]
                               : "border-border text-muted-foreground hover:border-primary/50",
-                            isFormDisabled ? "cursor-not-allowed opacity-50" : "",
+                            areIndependentFieldsDisabled ? "cursor-not-allowed opacity-50" : "",
                           )}
                           key={severity}
                         >
@@ -276,7 +560,11 @@ export function StopWorkCreateContainer() {
                   </RadioGroup>
                 )}
               />
-              <FieldError message={errors.severity?.message} />
+              {errors.severity?.message ? (
+                <p className="text-sm text-destructive" id="severity-error" role="alert">
+                  {errors.severity.message}
+                </p>
+              ) : null}
             </div>
           </CardContent>
         </Card>
@@ -286,16 +574,12 @@ export function StopWorkCreateContainer() {
             <CardTitle className="text-base">Complemento</CardTitle>
           </CardHeader>
           <CardContent className="px-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium" htmlFor="immediateActionDescription">
-                Medida imediata (opcional)
-              </label>
+            <FormField id="immediateActionDescription" label="Medida imediata (opcional)">
               <Textarea
-                disabled={isFormDisabled}
-                id="immediateActionDescription"
+                disabled={areIndependentFieldsDisabled}
                 {...register("immediateActionDescription")}
               />
-            </div>
+            </FormField>
           </CardContent>
         </Card>
 
@@ -305,10 +589,41 @@ export function StopWorkCreateContainer() {
           </p>
         ) : null}
 
-        <Button disabled={isFormDisabled} size="lg" type="submit">
+        <Button className="w-full" disabled={isSubmitDisabled} size="lg" type="submit">
           {isCreating ? "Registrando..." : "Registrar paralisação"}
         </Button>
       </form>
+
+      <AlertDialog
+        onOpenChange={(open) => {
+          if (!open && !allowLeaveRef.current) {
+            cancelLeave();
+          }
+        }}
+        open={leaveOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sair sem concluir a paralisação?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Seu preenchimento foi salvo neste dispositivo e continuará disponível quando você
+              voltar para Nova Paralisação.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel type="button">Continuar preenchendo</AlertDialogCancel>
+            <AlertDialogAction
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmLeave();
+              }}
+            >
+              Salvar e sair
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }

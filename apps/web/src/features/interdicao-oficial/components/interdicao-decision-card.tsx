@@ -103,16 +103,13 @@ export function InterdicaoDecisionCard({
     <>
       <div
         aria-label="Interdição Oficial"
-        className="flex h-full flex-col gap-4 rounded-lg border border-red-700/50 bg-red-950/20 p-4"
+        className="flex h-full flex-col gap-4 rounded-lg border border-status-destructive-border bg-status-destructive-bg p-4"
       >
-        <div className="flex items-start gap-3">
-          <span aria-hidden="true" className="text-lg text-red-400">
-            🔒
-          </span>
-          <div className="flex flex-col gap-1">
-            <h3 className="text-base font-semibold text-red-100">Interdição Oficial</h3>
-            <p className="text-sm text-red-200/80">Manter atividade formalmente interditada</p>
-          </div>
+        <div className="flex flex-col gap-1">
+          <h3 className="text-base font-semibold text-status-destructive-fg">Interdição Oficial</h3>
+          <p className="text-sm text-status-destructive-fg/80">
+            Manter atividade formalmente interditada
+          </p>
         </div>
 
         {isOffline ? (
@@ -120,8 +117,8 @@ export function InterdicaoDecisionCard({
         ) : null}
 
         <label className="flex flex-col gap-2" htmlFor="interdicao-decision-reason">
-          <span className="text-sm font-medium text-gray-200">
-            Justificativa técnica <span className="text-red-400">*</span>
+          <span className="text-sm font-medium text-foreground">
+            Justificativa técnica <span className="text-destructive">*</span>
           </span>
           <Textarea
             className="min-h-32"
@@ -138,23 +135,23 @@ export function InterdicaoDecisionCard({
           />
         </label>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-400">
-          <span className={isTooShort || isTooLong ? "text-red-400" : undefined}>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+          <span className={isTooShort || isTooLong ? "text-destructive" : undefined}>
             {trimmedLength}/{OCCURRENCE_DECISION_REASON_MAX_LENGTH}
           </span>
           <span>Mínimo 10 caracteres</span>
         </div>
 
         {validationError ? (
-          <p className="text-sm text-red-400" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             {validationError}
           </p>
         ) : isTooShort ? (
-          <p className="text-sm text-red-400" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             Informe uma justificativa técnica com pelo menos 10 caracteres.
           </p>
         ) : isTooLong ? (
-          <p className="text-sm text-red-400" role="alert">
+          <p className="text-sm text-destructive" role="alert">
             A justificativa técnica deve ter no máximo 4000 caracteres.
           </p>
         ) : null}
@@ -189,9 +186,7 @@ export function InterdicaoDecisionCard({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-red-100">
-              Confirmar Interdição Oficial?
-            </AlertDialogTitle>
+            <AlertDialogTitle>Confirmar Interdição Oficial?</AlertDialogTitle>
             <AlertDialogDescription>
               A atividade permanecerá formalmente interditada. Esta decisão não pode ser desfeita
               nesta etapa.

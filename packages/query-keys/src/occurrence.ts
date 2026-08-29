@@ -35,4 +35,6 @@ export const occurrenceQueryKeys = {
     [...occurrenceQueryKeys.detail(organizationId, occurrenceId), "mdho"] as const,
   mdhoCatalog: (organizationId: string) =>
     [TENANT_QUERY_KEY_PREFIX, organizationId, "mdho", "catalog"] as const,
+  participants: (organizationId: string, occurrenceId: string) =>
+    [TENANT_QUERY_KEY_PREFIX, organizationId, "occurrence-participants", occurrenceId] as const,
 };

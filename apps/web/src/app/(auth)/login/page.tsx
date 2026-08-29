@@ -2,6 +2,7 @@
 
 import { type FormEvent, useState, useSyncExternalStore } from "react";
 
+import { FormField } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -84,15 +85,11 @@ function LoginForm() {
       </header>
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-2 text-left">
-          <label className="text-sm font-medium" htmlFor="email">
-            E-mail
-          </label>
+        <FormField describedBy={errorMessage ? "login-error" : undefined} id="email" label="E-mail">
           <Input
             autoComplete="email"
             data-testid="login-email"
             disabled={isLoading || isSubmitting}
-            id="email"
             name="email"
             suppressHydrationWarning
             onChange={(event) => setEmail(event.target.value)}
@@ -100,17 +97,17 @@ function LoginForm() {
             type="email"
             value={email}
           />
-        </div>
+        </FormField>
 
-        <div className="flex flex-col gap-2 text-left">
-          <label className="text-sm font-medium" htmlFor="password">
-            Senha
-          </label>
+        <FormField
+          describedBy={errorMessage ? "login-error" : undefined}
+          id="password"
+          label="Senha"
+        >
           <Input
             autoComplete="current-password"
             data-testid="login-password"
             disabled={isLoading || isSubmitting}
-            id="password"
             name="password"
             suppressHydrationWarning
             onChange={(event) => setPassword(event.target.value)}
@@ -118,12 +115,13 @@ function LoginForm() {
             type="password"
             value={password}
           />
-        </div>
+        </FormField>
 
         {errorMessage ? (
           <p
             className="rounded-lg border border-destructive/60 bg-destructive/10 px-3 py-2 text-sm text-destructive"
             data-testid="login-error"
+            id="login-error"
             role="alert"
           >
             {errorMessage}

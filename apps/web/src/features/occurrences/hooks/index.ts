@@ -1,3 +1,5 @@
+export { useOccurrenceListFilterOptions } from "./use-occurrence-list-filter-options";
+export { useOperationalOccurrences } from "./use-operational-occurrences";
 export {
   useContractorOrganizations,
   useCreateOccurrence,

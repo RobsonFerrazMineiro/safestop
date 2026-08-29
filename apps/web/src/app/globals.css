@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Scan explícito: Next/Turbopack não descobre sozinho classes em src/features e src/components. */
+@source "../**/*.{ts,tsx}";
+
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -48,6 +51,38 @@
   --chart-3: #16a34a;
   --chart-4: #facc15;
   --chart-5: #9ca3af;
+
+  /* Chip families (status + criticidade) — spec 0a.1. Não redefinem --primary/--destructive. */
+  --status-success-fg: #bbf7d0;
+  --status-success-bg: #14532d;
+  --status-success-border: #16a34a;
+  --status-warning-fg: #fde68a;
+  --status-warning-bg: #422006;
+  --status-warning-border: #facc15;
+  --status-destructive-fg: #fecaca;
+  --status-destructive-bg: #7f1d1d;
+  --status-destructive-border: #dc2626;
+  --status-info-fg: #bfdbfe;
+  --status-info-bg: #1e3a5f;
+  --status-info-border: #2563eb;
+  --status-primary-fg: #ffedd5;
+  --status-primary-bg: #7c2d12;
+  --status-primary-border: #f97316;
+  --status-muted-fg: #9ca3af;
+  --status-muted-bg: #20242d;
+  --status-muted-border: #2e3440;
+
+  /* Elevation 0–2 (box-shadow). elevation.overlay TS ≠ --overlay scrim. */
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.28), 0 1px 3px rgba(0, 0, 0, 0.18);
+  --elevation-2: 0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.35);
+
+  /* Backdrop único dialog/drawer/AlertDialog */
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  /* Control height: Web h-9 / Mobile touch 44 */
+  --control-height-web: 36px;
+  --control-height-mobile: 44px;
 }
 
 .dark {
@@ -71,6 +106,34 @@
   --border: #2e3440;
   --input: #2e3440;
   --ring: #f97316;
+
+  --status-success-fg: #bbf7d0;
+  --status-success-bg: #14532d;
+  --status-success-border: #16a34a;
+  --status-warning-fg: #fde68a;
+  --status-warning-bg: #422006;
+  --status-warning-border: #facc15;
+  --status-destructive-fg: #fecaca;
+  --status-destructive-bg: #7f1d1d;
+  --status-destructive-border: #dc2626;
+  --status-info-fg: #bfdbfe;
+  --status-info-bg: #1e3a5f;
+  --status-info-border: #2563eb;
+  --status-primary-fg: #ffedd5;
+  --status-primary-bg: #7c2d12;
+  --status-primary-border: #f97316;
+  --status-muted-fg: #9ca3af;
+  --status-muted-bg: #20242d;
+  --status-muted-border: #2e3440;
+
+  --elevation-0: none;
+  --elevation-1: 0 1px 2px rgba(0, 0, 0, 0.28), 0 1px 3px rgba(0, 0, 0, 0.18);
+  --elevation-2: 0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.35);
+
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --control-height-web: 36px;
+  --control-height-mobile: 44px;
 }
 
 @theme inline {
@@ -98,6 +161,30 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-status-success-fg: var(--status-success-fg);
+  --color-status-success-bg: var(--status-success-bg);
+  --color-status-success-border: var(--status-success-border);
+  --color-status-warning-fg: var(--status-warning-fg);
+  --color-status-warning-bg: var(--status-warning-bg);
+  --color-status-warning-border: var(--status-warning-border);
+  --color-status-destructive-fg: var(--status-destructive-fg);
+  --color-status-destructive-bg: var(--status-destructive-bg);
+  --color-status-destructive-border: var(--status-destructive-border);
+  --color-status-info-fg: var(--status-info-fg);
+  --color-status-info-bg: var(--status-info-bg);
+  --color-status-info-border: var(--status-info-border);
+  --color-status-primary-fg: var(--status-primary-fg);
+  --color-status-primary-bg: var(--status-primary-bg);
+  --color-status-primary-border: var(--status-primary-border);
+  --color-status-muted-fg: var(--status-muted-fg);
+  --color-status-muted-bg: var(--status-muted-bg);
+  --color-status-muted-border: var(--status-muted-border);
+  --color-overlay: var(--overlay);
+  --shadow-elevation-0: var(--elevation-0);
+  --shadow-elevation-1: var(--elevation-1);
+  --shadow-elevation-2: var(--elevation-2);
+  --spacing-control-height-web: var(--control-height-web);
+  --spacing-control-height-mobile: var(--control-height-mobile);
   --radius-sm: calc(var(--radius) * 0.75);
   --radius-md: var(--radius);
   --radius-lg: 12px;

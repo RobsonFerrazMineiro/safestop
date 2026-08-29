@@ -4,26 +4,35 @@
 -- Contém dados estruturais estáveis previstos na documentação oficial:
 --   - catálogo oficial de papéis (docs/database.md §6.1, docs/workflow.md §3);
 --   - catálogo oficial de permissões (docs/database.md §6.2);
---   - usuários Auth de QA local com perfil via trigger on_auth_user_created;
---   - organizações, unidades, áreas, contratos, organization_contacts e vínculos organization_members para cenários QA;
+--   - usuários Auth de QA local + personas operacionais (profiles via trigger);
+--   - organizações técnicas QA (Alpha/Beta/Gamma/Delta/Epsilon) e vínculos.
 --
--- Stop Work / PP (Sprint 2.1 — A-R2): IDs de teste documentados ao final deste arquivo.
+-- Personas OPERACIONAIS (Hydro QA / contratada / gerenciadora) e a massa de
+-- Paralisações ficam em supabase/seeds/operational-local.sql (carregado em
+-- seguida por config.toml [db.seed]). Auth users operacionais são criados
+-- AQUI para reutilizar o único mecanismo de provisionamento (auth.users).
 --
--- Cenários QA:
---   qa-field@safestop.local    — 1 org, HSE de Campo (F3/F8)
---   qa-multi@safestop.local    — 2 orgs, papéis distintos (F4/F5 cross-tenant)
---   qa-noorg@safestop.local    — 0 orgs (OrganizationEmpty F7)
---   qa-noperm@safestop.local   — 1 org, sem member_roles (hasNoPermissions F9)
+-- Senha local comum (todos os Auth deste seed + operacional):
+--   SafeStop-QA-Local-2026
+--
+-- Stop Work / PP (Sprint 2.1 — A-R2): IDs de teste documentados ao final.
+--
+-- Personas TÉCNICAS QA (logins estáveis — não alterar e-mail/UUID):
+--   qa-field@safestop.local     — 1 org, HSE de Campo (F3/F8)
+--   qa-multi@safestop.local     — 2 orgs, papéis distintos (F4/F5 cross-tenant)
+--   qa-noorg@safestop.local     — 0 orgs (OrganizationEmpty F7)
+--   qa-noperm@safestop.local    — 1 org, sem member_roles (hasNoPermissions F9)
 --   qa-emptyrole@safestop.local — 1 org, papel sem role_permissions (F2)
 --   qa-dualrole@safestop.local  — 1 org, HSE + Gestor no mesmo vínculo (F10)
 --   qa-gestor@safestop.local    — 1 org, Gestor (occurrence.read, sem occurrence.create)
---   qa-platform@safestop.local  — PLATFORM_ADMIN + papel plataforma (bypass UI)
+--   qa-platform@safestop.local  — PLATFORM_ADMIN técnico (bypass; scripts QA)
+--   superadmin@safestop.local   — PLATFORM_ADMIN humano (Administrador SafeStop)
 --   qa-supervisor@safestop.local — 1 org, Supervisor HSE (occurrence.evaluate — VA-*)
 --   qa-fiscal@safestop.local    — 1 org, Fiscal do Contrato (evaluate, sem confirm_interdiction — IO-*)
 --   qa-lideranca@safestop.local — 1 org, Liderança HSE (mdho.approve/return — MDHO-*)
 --   qa-dual-hse@safestop.local   — 1 org, Supervisor + Liderança HSE (HSE-07 autoaprovação)
 --
--- Idempotente: seguro executar múltiplas vezes (supabase db reset).
+-- Idempotente: seguro executar via `pnpm supabase:db:reset`.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
@@ -467,62 +476,132 @@ declare
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000001',
       'email', 'qa-field@safestop.local',
-      'full_name', 'QA Campo SafeStop'
+      'full_name', 'QA — HSE de Campo (Alpha)'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000002',
       'email', 'qa-multi@safestop.local',
-      'full_name', 'QA Multi Org SafeStop'
+      'full_name', 'QA — Multi Tenant'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000003',
       'email', 'qa-noorg@safestop.local',
-      'full_name', 'QA Sem Org SafeStop'
+      'full_name', 'QA — Sem Organização'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000004',
       'email', 'qa-noperm@safestop.local',
-      'full_name', 'QA Sem Permissões SafeStop'
+      'full_name', 'QA — Sem Permissões'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000005',
       'email', 'qa-platform@safestop.local',
-      'full_name', 'QA Plataforma SafeStop'
+      'full_name', 'QA — Platform Admin (técnico)'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000006',
       'email', 'qa-emptyrole@safestop.local',
-      'full_name', 'QA Papel Vazio SafeStop'
+      'full_name', 'QA — Papel Vazio'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000007',
       'email', 'qa-dualrole@safestop.local',
-      'full_name', 'QA Papéis Duplos SafeStop'
+      'full_name', 'QA — Dual Role'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000008',
       'email', 'qa-gestor@safestop.local',
-      'full_name', 'QA Gestor SafeStop'
+      'full_name', 'QA — Gestor (Alpha)'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000009',
       'email', 'qa-supervisor@safestop.local',
-      'full_name', 'QA Supervisor HSE SafeStop'
+      'full_name', 'QA — Supervisor HSE (técnico)'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000010',
       'email', 'qa-fiscal@safestop.local',
-      'full_name', 'QA Fiscal SafeStop'
+      'full_name', 'QA — Fiscal (técnico)'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000011',
       'email', 'qa-lideranca@safestop.local',
-      'full_name', 'QA Liderança HSE SafeStop'
+      'full_name', 'QA — Liderança HSE (técnico)'
     ),
     jsonb_build_object(
       'id', 'a0000000-0000-4000-8000-000000000012',
       'email', 'qa-dual-hse@safestop.local',
-      'full_name', 'QA Dual HSE SafeStop'
+      'full_name', 'QA — Dual HSE (técnico)'
+    ),
+    jsonb_build_object(
+      'id', 'a0000000-0000-4000-8000-000000000013',
+      'email', 'superadmin@safestop.local',
+      'full_name', 'Administrador SafeStop'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000001',
+      'email', 'admin.hydro@safestop.local',
+      'full_name', 'Mariana Costa'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000002',
+      'email', 'tst.hydro@safestop.local',
+      'full_name', 'Carlos Almeida'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000003',
+      'email', 'supervisor.hydro@safestop.local',
+      'full_name', 'Ricardo Souza'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000004',
+      'email', 'gerente.hydro@safestop.local',
+      'full_name', 'Fernanda Martins'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000005',
+      'email', 'fiscal.contrato@safestop.local',
+      'full_name', 'João Ferreira'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000006',
+      'email', 'encarregado@safestop.local',
+      'full_name', 'Paulo Nascimento'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000007',
+      'email', 'supervisor.contratada@safestop.local',
+      'full_name', 'André Lima'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000008',
+      'email', 'preposto@safestop.local',
+      'full_name', 'Marcelo Rocha'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000009',
+      'email', 'tst.contratada@safestop.local',
+      'full_name', 'Juliana Santos'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000010',
+      'email', 'supervisor.hse@safestop.local',
+      'full_name', 'Roberto Mendes'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000011',
+      'email', 'engenharia@safestop.local',
+      'full_name', 'Camila Ribeiro'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000012',
+      'email', 'supervisor.gerenciadora@safestop.local',
+      'full_name', 'Eduardo Barros'
+    ),
+    jsonb_build_object(
+      'id', 'a1000000-0000-4000-8000-000000000013',
+      'email', 'lideranca.hse@safestop.local',
+      'full_name', 'Patrícia Gomes'
     )
   );
   v_user jsonb;
@@ -706,6 +785,13 @@ values
     'a0000000-0000-4000-8000-000000000012',
     'INTERNAL',
     true
+  ),
+  (
+    'c0000000-0000-4000-8000-000000000013',
+    'b0000000-0000-4000-8000-000000000004',
+    'a0000000-0000-4000-8000-000000000013',
+    'PLATFORM_ADMIN',
+    true
   )
 on conflict (organization_id, profile_id) do update set
   membership_type = excluded.membership_type,
@@ -725,7 +811,8 @@ on conflict (organization_id, profile_id) do update set
 --   qa-dualrole  — HSE + Gestor no mesmo vínculo Alpha (F10: união runtime)
 --   qa-gestor    — Gestor na Alpha (occurrence.read, sem occurrence.create)
 --   qa-noorg     — sem vínculos (F7)
---   qa-platform  — Administrador da Plataforma na Delta (PLATFORM_ADMIN bypass)
+--   qa-platform  — Administrador da Plataforma na Delta (PLATFORM_ADMIN técnico)
+--   superadmin   — Administrador SafeStop na Delta (PLATFORM_ADMIN humano)
 --   qa-supervisor — Supervisor HSE na Alpha (occurrence.evaluate — Sprint 2.4 VA-*)
 --   qa-fiscal     — Fiscal do Contrato na Alpha (evaluate, sem confirm_interdiction — Sprint 2.5 IO-*)
 --   qa-lideranca  — Liderança HSE na Alpha (mdho.approve/return — Sprint 2.6 MDHO-*)
@@ -825,6 +912,15 @@ from public.organization_members om
 cross join public.roles r
 where om.id = 'c0000000-0000-4000-8000-000000000012'
   and r.name in ('Supervisor HSE', 'Liderança HSE')
+  and r.organization_id is null
+on conflict (organization_member_id, role_id) do nothing;
+
+insert into public.member_roles (organization_member_id, role_id)
+select om.id, r.id
+from public.organization_members om
+cross join public.roles r
+where om.id = 'c0000000-0000-4000-8000-000000000013'
+  and r.name = 'Administrador da Plataforma'
   and r.organization_id is null
 on conflict (organization_member_id, role_id) do nothing;
 
@@ -1090,3 +1186,10 @@ on conflict (id) do update set
 --   c0000000-0000-4000-8000-000000000012  vínculo org Alpha
 --
 -- docs/decisions/HSE-APPROVAL-DECISIONS.md (PO-HSE-1…PO-HSE-27)
+--
+-- Super Admin humano (além do qa-platform técnico):
+--   a0000000-0000-4000-8000-000000000013  superadmin@safestop.local
+--   c0000000-0000-4000-8000-000000000013  vínculo PLATFORM_ADMIN na Delta
+--
+-- Personas operacionais + massa Hydro QA: supabase/seeds/operational-local.sql
+-- Senha local comum: SafeStop-QA-Local-2026

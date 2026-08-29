@@ -72,11 +72,25 @@ export type OccurrenceStatusHistoryEntry = {
 };
 
 /**
- * Filtros opcionais da listagem tenant-scoped.
+ * Filtros opcionais da listagem tenant-scoped (lista operacional).
+ * Não misturar com OccurrenceReportFilters (`list_occurrences_report`).
+ *
+ * Paginação e busca textual são consumidas por `list_operational_occurrences`
+ * (PR-D1 / PO-UX-10). `getOccurrences` PostgREST ainda ignora search/área/
+ * contratada/paginação até o wiring da lista (fora de D1.2).
  */
 export type OccurrenceListFilters = {
   status?: OccurrenceStatus[];
+  /** Criticidade única na UI — o builder envia `p_severity` como array de 1. */
   severity?: OccurrenceSeverity;
   /** Contains normalizado — PO-IMS-10 (Sprint 2.8). */
   imsReferenceCode?: string;
+  /** Contains case-insensitive nos campos da RPC (não só public_code). */
+  search?: string;
+  areaId?: string;
+  contractorOrganizationId?: string;
+  pagination?: {
+    cursor?: { sortValue: string; id: string } | null;
+    limit?: number;
+  };
 };

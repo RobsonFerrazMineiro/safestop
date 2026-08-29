@@ -12,6 +12,7 @@ import {
   DASHBOARD_OCCURRENCE_STATUS_FAMILY_LABELS,
 } from "@safestop/types";
 
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Can, useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
@@ -227,28 +228,28 @@ export function DashboardPage() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-10">
-      <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold text-gray-100">Dashboard</h1>
-          <p className="text-sm text-gray-400">
-            Visão operacional da organização ativa
-            {activeOrganization ? ` — ${activeOrganization.name}` : ""}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3 lg:items-end">
-          <DashboardPeriodFilter activePreset={periodPreset} onChange={setPeriodPreset} />
-          <Can permission="occurrence.read">
-            <DashboardScopeFiltersPanel filters={scopeFilters} onChange={setScopeFilters} />
-          </Can>
-          <Can permission="occurrence.create">
-            <Button asChild className="hidden lg:inline-flex">
-              <Link href="/stop-work/new">Nova Paralisação</Link>
-            </Button>
-          </Can>
-        </div>
-      </header>
+    <section className="flex w-full flex-col gap-8 px-6 py-10">
+      <PageHeader
+        actions={
+          <div className="flex w-full flex-col gap-3 sm:w-auto lg:items-end">
+            <DashboardPeriodFilter activePreset={periodPreset} onChange={setPeriodPreset} />
+            <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+              <Can permission="occurrence.read">
+                <DashboardScopeFiltersPanel filters={scopeFilters} onChange={setScopeFilters} />
+              </Can>
+              <Can permission="occurrence.create">
+                <Button asChild className="hidden md:inline-flex">
+                  <Link href="/stop-work/new">Nova Paralisação</Link>
+                </Button>
+              </Can>
+            </div>
+          </div>
+        }
+        subtitle={`Visão operacional da organização ativa${
+          activeOrganization ? ` — ${activeOrganization.name}` : ""
+        }`}
+        title="Dashboard"
+      />
 
       {isKpisError ? (
         <DashboardSectionError
@@ -307,7 +308,7 @@ export function DashboardPage() {
             ) : (
               <DashboardMainChart
                 buckets={volumeBuckets}
-                emptyMessage="Nenhuma ocorrência neste período"
+                emptyMessage="Nenhuma paralisação neste período"
                 title="Novas paralisações no período"
               />
             )}
@@ -315,22 +316,22 @@ export function DashboardPage() {
 
           <Can permission="occurrence.read">
             {distributionEnabled && !isDistributionLoading && !isDistributionError ? (
-              <div className="hidden flex-col gap-4 lg:flex">
+              <div className="hidden flex-col gap-4 md:flex">
                 <DashboardDistributionChart
                   buckets={statusFamilyBuckets}
                   emptyMessage="Sem dados de distribuição"
-                  title="Ocorrências por situação"
+                  title="Paralisações por situação"
                 />
                 <DashboardDistributionChart
                   buckets={areaBuckets}
-                  emptyMessage="Nenhuma ocorrência neste período"
-                  title="Ocorrências por área"
+                  emptyMessage="Nenhuma paralisação neste período"
+                  title="Paralisações por área"
                 />
                 {contractorBuckets.length > 0 ? (
                   <DashboardDistributionChart
                     buckets={contractorBuckets}
                     emptyMessage="Sem dados por contratada"
-                    title="Ocorrências por contratada"
+                    title="Paralisações por contratada"
                   />
                 ) : null}
               </div>

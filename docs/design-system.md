@@ -475,11 +475,13 @@ Disabled
 
 ---
 
-## `@safestop/ui` — Tokens implementados (Sprint 3.4)
+## `@safestop/ui` — Tokens implementados (Sprint 3.4 + PR-0a)
 
-O pacote `packages/ui` exporta **somente tokens TypeScript** (`colors`, `spacing`, `radius`, `typography`, `componentStates`). Não há componentes visuais compartilhados nesta entrega.
+O pacote `packages/ui` exporta **somente tokens TypeScript** (`colors`, `spacing`, `radius`, `typography`, `componentStates`, `statusChip`, `occurrenceStatusTone`, `occurrenceSeverityTone`, `elevation`, `overlay`, `controlHeight`). Não há componentes visuais compartilhados neste pacote.
 
-**Componentes visuais previstos para P1 (não implementados):** `Button`, `NavigationItem`, `Badge`, `Card`, `EmptyState`, `Skeleton`. Não documentar nem tratar esses componentes como existentes até uma sprint futura.
+**Componentes visuais cross-platform continuam NÃO implementados:** `Button`, `NavigationItem`, `Badge`, `Card`, `EmptyState`, `Skeleton` (e `StatusBadge` / `PageHeader` / `FormField` — estes são Web-only em PRs posteriores, não neste package).
+
+Web consome o **espelho CSS** em `apps/web/src/app/globals.css`. Páginas Web **não** precisam importar `@safestop/ui` em TypeScript neste PR.
 
 ### Cores (`colors.ts`)
 
@@ -502,7 +504,7 @@ O pacote `packages/ui` exporta **somente tokens TypeScript** (`colors`, `spacing
 
 Disabled: `DISABLED_OPACITY = 0.4` (helper `withDisabledOpacity`).
 
-**Web:** `apps/web/src/app/globals.css` espelha a paleta em CSS variables (`--background`, `--surface`, `--primary`, etc.).
+**Web:** `apps/web/src/app/globals.css` espelha a paleta em CSS variables (`--background`, `--surface`, `--primary`, etc.). `--primary` / `--destructive` shadcn **não** foram redefinidos no PR-0a.
 
 ### Spacing (`spacing.ts`)
 
@@ -531,6 +533,102 @@ Fonte oficial do produto: **Inter** (Web via `next/font`; Mobile conforme stack 
 ### Estados (`states.ts`)
 
 Enum de contrato: `default`, `hover`, `pressed`, `focused`, `disabled`, `loading`, `success` — sem implementação visual compartilhada ainda.
+
+Disabled em chips: `DISABLED_OPACITY = 0.4` sobre o token base (`colors.ts`). Focus/hover: `componentStates` existente; não redesenhados no PR-0a.
+
+### Status e criticidade (`status.ts`, `severity.ts`) — PR-0a / spec 0a.1
+
+Receita única de chip: estilo **soft** (`foreground` + `background` + `border` da família). Label textual **sempre** visível. Sem hex exclusivo por status. Sem badge só por cor.
+
+Chaves TypeScript são literais alinhadas a `OCCURRENCE_STATUSES` e `OCCURRENCE_SEVERITIES` em `@safestop/types`. O package `ui` **não** depende de `types` (evita ciclo).
+
+#### Famílias de chip (`statusChip`)
+
+| Família | foreground | background | border | CSS |
+| --- | --- | --- | --- | --- |
+| `success` | `#BBF7D0` | `#14532D` | `#16A34A` | `--status-success-*` |
+| `warning` | `#FDE68A` | `#422006` | `#FACC15` | `--status-warning-*` |
+| `destructive` | `#FECACA` | `#7F1D1D` | `#DC2626` | `--status-destructive-*` |
+| `info` | `#BFDBFE` | `#1E3A5F` | `#2563EB` | `--status-info-*` |
+| `primary` | `#FFEDD5` | `#7C2D12` | `#F97316` | `--status-primary-*` |
+| `muted` | `#9CA3AF` | `#20242D` | `#2E3440` | `--status-muted-*` |
+
+`statusChip.primary` é o **chip** laranja. Não altera `colors.primary` nem `--primary`.
+
+**Âmbar:** default = soft (tabela acima). Alternativa QA: `statusChipWarningSolid` (`#0F1115` sobre `#FACC15`). **Proibido:** texto claro (`#F3F4F6`) sobre âmbar ou vermelho/verde sólidos.
+
+#### Enum status → família (`occurrenceStatusTone`)
+
+| Status | Label | Família |
+| --- | --- | --- |
+| `PARALISACAO_PREVENTIVA` | Paralisação Preventiva | `info` |
+| `EM_AVALIACAO` | Em avaliação | `warning` |
+| `VER_E_AGIR` | Ver e Agir | `warning` |
+| `INTERDICAO_CONFIRMADA` | Interdição confirmada | `destructive` |
+| `MDHO_EM_PREENCHIMENTO` | MDHO em preenchimento | `info` |
+| `AGUARDANDO_APROVACAO_HSE` | Aguardando aprovação HSE | `warning` |
+| `AGUARDANDO_REGISTRO_IMS` | Aguardando registro IMS | `warning` |
+| `EM_TRATATIVA` | Em tratativa | `info` |
+| `AGUARDANDO_VALIDACAO` | Aguardando validação | `warning` |
+| `LIBERADA` | Liberada | `success` |
+| `ENCERRADA` | Encerrada | `muted` |
+| `CANCELADA` | Cancelada | `muted` |
+
+Nenhum dos 12 status usa a família `primary` (reservada a identidade SafeStop, ações, navegação e seleção — não à criticidade).
+
+#### Enum criticidade → família (`occurrenceSeverityTone`)
+
+| Severity | Label | Família |
+| --- | --- | --- |
+| `LOW` | Baixa | `muted` |
+| `MEDIUM` | Média | `warning` |
+| `HIGH` | Alta | `warning` |
+| `CRITICAL` | Crítica | `destructive` |
+
+MEDIUM e HIGH compartilham a família `warning`. Diferenciação visual extra fica no futuro `SeverityBadge` (não nesta foundation). `statusChip.primary` permanece disponível para identidade, ações, navegação e seleção.
+
+### Elevation e overlay (`elevation.ts`) — PR-0a
+
+Sombra preta sóbria, sem glow laranja.
+
+| Token TS | CSS | Uso |
+| --- | --- | --- |
+| `elevation.none` | `--elevation-0: none` | Flat / surface / lista |
+| `elevation.card` | `--elevation-1` | Card de conteúdo |
+| `elevation.overlay` | `--elevation-2` | Popover, dropdown, dialog, sheet |
+| `overlay.scrim` | `--overlay: rgba(0, 0, 0, 0.60)` | Backdrop único de dialog/drawer/AlertDialog |
+
+`elevation.overlay` (sombra) ≠ `--overlay` (scrim). Proibido scrim laranja.
+
+### Control height (`sizing.ts`) — PR-0a
+
+| Token TS | CSS | Valor | Plataforma |
+| --- | --- | --- | --- |
+| `controlHeight.web` | `--control-height-web` | `36px` | Web (`h-9` shadcn) |
+| `controlHeight.mobile` | `--control-height-mobile` | `44px` | Mobile (touch mínimo) |
+
+Nome da spec: `--control-height-mobile` (não `--control-height-touch`). Sem terceira altura “desktop large”.
+
+### Mapeamento CSS × shadcn (desambiguação)
+
+| Token novo | Não colide com |
+| --- | --- |
+| `--status-primary-*` | `--primary` (marca `#F97316`) |
+| `--status-destructive-*` | `--destructive` (shadcn) |
+| `--status-warning-*` | `--warning` (âmbar raw `#FACC15` — chips **não** usam o raw como fundo de texto claro) |
+| `--overlay` | `--elevation-2` / `elevation.overlay` |
+| `--control-height-web` / `--control-height-mobile` | (novos) |
+
+Hex de suporte dos chips (`#422006`, `#7F1D1D`, `#14532D`, `#7C2D12`, `#1E3A5F`, …) são **pares de chip**, não nova paleta de marca.
+
+### Regras normativas (PR-0a)
+
+1. **Dialog destrutivo = Radix AlertDialog** (não `<dialog>` nativo nas confirmações destrutivas). Toast **não** confirma exclusão.
+2. **Toast (Sonner) ≠ ciência.** Toast = feedback efêmero. Ciência = ação explícita + registro (`confirm_notification_awareness`). Nunca auto-ciência por toast, leitura ou dismiss.
+3. Status/criticidade: **sempre label textual** + tokens de família; nunca só cor.
+4. Componentes visuais em `packages/ui` continuam **não implementados**.
+
+Consumo futuro (fora deste PR): `StatusBadge` / `SeverityBadge` leem `occurrenceStatusTone` / `occurrenceSeverityTone` e as vars `--status-{family}-*`. Dialogs usam `var(--overlay)`.
 
 ---
 
@@ -2122,7 +2220,7 @@ Evitar duplicação de **tokens** e **contratos de domínio** entre plataformas.
 
 | Camada | Local | Conteúdo |
 | --- | --- | --- |
-| **Tokens** | `packages/ui` | `colors`, `spacing`, `radius`, `typography`, `componentStates` — **sem React** |
+| **Tokens** | `packages/ui` | `colors`, `spacing`, `radius`, `typography`, `componentStates`, status/criticidade, elevation, overlay, control height — **sem React** |
 | **Primitives Web** | `apps/web/src/components/ui` | shadcn/ui seletivo (Button, Card, Badge, Input, Dialog, Table, …) tematizado via `globals.css` |
 | **UI Mobile** | `apps/mobile/src/**` | Componentes próprios + `StyleSheet`; importa `@safestop/ui` onde aplicável |
 

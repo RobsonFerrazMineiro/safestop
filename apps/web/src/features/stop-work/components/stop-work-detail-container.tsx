@@ -4,14 +4,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 
 import { CollapsibleSection } from "@/components/collapsible-section";
+import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { useRequirePermission } from "@/features/authorization";
 import { EvidenceSection } from "@/features/evidence";
-import {
-  formatOccurrenceSeverity,
-  formatOccurrenceStatus,
-} from "@/features/occurrences/utils/format-labels";
+import { OccurrenceParticipantsSection } from "@/features/occurrence-participants";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { OccurrenceTimeline } from "@/features/timeline";
 import { InterdicaoBanner } from "@/features/interdicao-oficial";
@@ -33,11 +32,19 @@ function formatDateTime(value: string | null): string {
   return new Date(value).toLocaleString("pt-BR");
 }
 
-function DetailField({ label, value }: { label: string; value: string }) {
+function DetailField({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: string;
+  className?: string;
+}) {
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-gray-400">{label}</span>
-      <span className="text-base text-gray-100">{value}</span>
+    <div className={cn("flex flex-col gap-1", className)}>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className="text-base text-foreground">{value}</span>
     </div>
   );
 }
@@ -68,11 +75,11 @@ export function StopWorkDetailContainer() {
 
   if (isNotFound || !stopWork) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-4 px-6 py-10">
-        <Link className="text-sm text-orange-400 hover:text-orange-300" href="/stop-work">
+      <main className="flex min-h-screen w-full flex-col gap-6 px-6 py-10">
+        <Link className="text-sm text-primary hover:text-primary/80" href="/stop-work">
           ← Voltar para paralisações
         </Link>
-        <p className="text-base text-gray-300">Ocorrência não encontrada.</p>
+        <p className="text-base text-muted-foreground">Paralisação não encontrada.</p>
       </main>
     );
   }
@@ -85,27 +92,30 @@ export function StopWorkDetailContainer() {
       : null;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-6 px-6 py-10">
-      <nav aria-label="Breadcrumb" className="text-sm text-gray-400">
-        <Link className="text-orange-400 hover:text-orange-300" href="/stop-work">
+    <main className="flex min-h-screen w-full flex-col gap-6 px-6 py-10">
+      <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
+        <Link className="text-primary hover:text-primary/80" href="/stop-work">
           Paralisações
         </Link>
         <span className="mx-2">/</span>
-        <span className="text-gray-300">{stopWork.publicCode}</span>
+        <span>{stopWork.publicCode}</span>
       </nav>
 
       <header className="flex flex-col gap-2">
-        <span className="font-mono text-sm text-orange-400">{stopWork.publicCode}</span>
-        <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-          <Badge variant="secondary">{formatOccurrenceStatus(stopWork.status)}</Badge>
+        <span className="font-mono text-sm text-primary">{stopWork.publicCode}</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusBadge status={stopWork.status} />
+          <StatusBadge severity={stopWork.severity} />
           {stopWork.status === "INTERDICAO_CONFIRMADA" ? (
-            <Badge className="border-red-600/60 bg-red-950/40 text-red-300" variant="outline">
+            <Badge
+              className="border-status-destructive-border bg-status-destructive-bg font-medium text-status-destructive-fg"
+              variant="outline"
+            >
               Interdição Oficial
             </Badge>
           ) : null}
-          <Badge variant="outline">{formatOccurrenceSeverity(stopWork.severity)}</Badge>
         </div>
-        <h1 className="text-3xl font-bold text-gray-100">{stopWork.title}</h1>
+        <h1 className="text-3xl font-bold text-foreground">{stopWork.title}</h1>
       </header>
 
       {organizationId ? (
@@ -138,7 +148,11 @@ export function StopWorkDetailContainer() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4 px-4">
           <DetailField label="Atividade" value={stopWork.taskDescription} />
-          <DetailField label="Condição insegura" value={stopWork.conditionDescription} />
+          <DetailField
+            className="max-w-3xl"
+            label="Condição insegura"
+            value={stopWork.conditionDescription}
+          />
           {stopWork.immediateActionDescription ? (
             <DetailField label="Ação imediata" value={stopWork.immediateActionDescription} />
           ) : null}
@@ -162,6 +176,8 @@ export function StopWorkDetailContainer() {
           </CollapsibleSection>
         </CardContent>
       </Card>
+
+      <OccurrenceParticipantsSection occurrenceId={stopWork.id} />
 
       <EvidenceSection occurrenceId={stopWork.id} />
 

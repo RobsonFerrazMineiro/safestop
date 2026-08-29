@@ -39,10 +39,10 @@ export function VerEAgirPanel({
   }, [items]);
 
   return (
-    <div className="flex h-full flex-col gap-4 rounded-lg border border-amber-700/40 bg-amber-950/20 p-4">
+    <div className="flex h-full flex-col gap-4 rounded-lg border border-status-warning-border bg-status-warning-bg p-4">
       <div className="flex flex-col gap-1">
-        <h3 className="text-base font-semibold text-amber-100">Ver e Agir</h3>
-        <p className="text-sm text-amber-200/80">Resolução imediata no campo</p>
+        <h3 className="text-base font-semibold text-status-warning-fg">Ver e Agir</h3>
+        <p className="text-sm text-status-warning-fg/80">Resolução imediata no campo</p>
       </div>
 
       {isOffline ? (

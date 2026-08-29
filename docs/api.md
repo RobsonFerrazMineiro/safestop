@@ -275,6 +275,7 @@ Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberaçã
 | `list_action_items_report` | 3.3 | `report.read` + escopo plano | abaixo |
 | `list_awareness_report` | 3.3 | `report.read` (gate explícito) | abaixo |
 | `log_report_export` | 3.3 | `report.read` | abaixo |
+| `list_operational_occurrences` | PR-D1 | `occurrence.read` + `can_access_occurrence` | abaixo — lista operacional, **não** relatório |
 
 \*Remoção de comentário por supervisor usa `occurrence.cancel` na matriz RBAC aprovada — a permissão permanece **reservada** para cancelamento formal de ocorrência (PO-CON-20); não implica RPC `cancel_occurrence` na 2.9.
 
@@ -285,6 +286,8 @@ Clientes **não** atualizam `occurrences.status` diretamente. RPCs de liberaçã
 **Dashboard (3.2):** KPIs agregados **somente** via `get_dashboard_kpis` — drill-down de ações usa listagens client-side filtradas; **sem** RPC `get_dashboard_action_items_attention`.
 
 **Relatórios (3.3):** listagens paginadas via `list_*_report`; exportação CSV/XLSX montada no client + `log_report_export` após sucesso; **sem** RPC de exportação server-side.
+
+**Lista operacional (PR-D1 / PO-UX-10):** `list_operational_occurrences` — gate `occurrence.read` (HSE de Campo lista PP). **Não** é `list_occurrences_report` e **não** exige `report.read`.
 
 **Fora do catálogo operacional 3.3:** `submit_action_plan_for_occurrence_validation`, `submit_correction`, `validate_correction`, `release_occurrence`, `close_occurrence`, `cancel_occurrence`, Push/`notification_deliveries`, `upsert_organization_contact`, `get_dashboard_action_items_attention`, export PDF.
 
@@ -838,6 +841,60 @@ Listagens paginadas e auditoria de exportação. Contrato: `docs/decisions/REPOR
 **Query keys:** `reportKeys` em `@safestop/query-keys`.
 
 **Rotas Web:** `/reports`, `/reports/occurrences`, `/reports/action-items`, `/reports/awareness` — feature `features/reports/`.
+
+---
+
+### RPCs — Lista operacional de Paralisações Preventivas (PR-D1 / PO-UX-10)
+
+RPC **distinta** de `list_occurrences_report`. Não reutilizar filtros, permissão nem colunas de relatório.
+
+Contrato: `docs/database.md` §25.4 · migration `20260825220000_list_operational_occurrences.sql` · tipos: `@safestop/types/operational-occurrence-list.ts`.
+
+#### `list_operational_occurrences(...)`
+
+| Parâmetro | Tipo | Default | Notas |
+|---|---|---|---|
+| `p_organization_id` | uuid | — | obrigatório |
+| `p_search` | text | null | trim; vazio = sem filtro. `ilike` contains em `public_code`, `task_description`, `location_description`, `ims_reference_code`, `areas.name`, nome da contratada (`resolve_organization_display_name`) |
+| `p_area_id` | uuid | null | `occurrences.area_id` |
+| `p_contractor_organization_id` | uuid | null | `occurrences.contractor_organization_id` |
+| `p_status` | text[] | null | enum `OccurrenceStatus` existente |
+| `p_severity` | text[] | null | `LOW` / `MEDIUM` / `HIGH` / `CRITICAL` — a UI envia criticidade única; o builder serializa array de 1 |
+| `p_ims_reference_code` | text | null | contains (`ilike`), mesmo espírito de PO-IMS-10 |
+| `p_cursor` | jsonb | null | keyset `{ "sortValue": string, "id": uuid }` |
+| `p_limit` | integer | 20 | clamp 1–100 |
+
+- Permissão: `occurrence.read` na org alvo (`is_platform_admin()` segue o padrão de membership). **Não** exige `report.read`.
+- Escopo de linha: `organization_id = p_organization_id` + `can_access_occurrence` + RLS (`SECURITY INVOKER`, `search_path = ''`).
+- Ordenação: **fixa** `created_at desc, id desc`. Sem `p_sort_field`. Sem OFFSET.
+- Paginação: keyset. Busca `limit+1`; `hasNext` / `nextCursor` no último item da página.
+- Retorno:
+
+```json
+{
+  "items": [ OccurrenceSummary ],
+  "nextCursor": { "sortValue": "YYYY-MM-DD HH24:MI:SS.US", "id": "uuid" },
+  "hasNext": false
+}
+```
+
+- Item (`OccurrenceSummary`, camelCase): `id`, `publicCode`, `title`, `status`, `severity`, `areaName`, `contractorOrganizationName`, `createdAt`, `createdByName`. Sem colunas 1:N. Sem `statusFamily`.
+- Erros (exceções SQL): `UNAUTHORIZED` (`28000`) · `VALIDATION_ERROR` (`22023`) · `ORGANIZATION_NOT_ALLOWED` / `FORBIDDEN` (`42501`). `FORBIDDEN` = sem `occurrence.read` (não usar o código `PERMISSION_DENIED` dos relatórios).
+- GRANT: `EXECUTE` para `authenticated`. Sem grant para `anon`.
+- Atividade não é FK: entra em `p_search` via `task_description`.
+
+**Diferença vs `list_occurrences_report`:**
+
+| | `list_operational_occurrences` | `list_occurrences_report` |
+|---|---|---|
+| Persona | Lista de cards (Campo / HSE) | Relatório gerencial (Web) |
+| Permissão | `occurrence.read` | `report.read` |
+| Busca `p_search` | vários campos (código, atividade, local, IMS, área, contratada) | só `public_code` |
+| Colunas | 9 (`OccurrenceSummary`) | 19 (`OccurrenceReportRow`) |
+| Ordenação | fixa `created_at` + `id` | allowlist `p_sort_field` |
+| Período / contrato / `hasIms` / `statusFamily` | não | sim |
+
+**Schemas client:** `buildListOperationalOccurrencesRpcArgs`, `mapListOperationalOccurrencesResult`, `mapOccurrenceSummary` em `@safestop/types`. Filtros de UI: `OccurrenceListFilters` (não `OccurrenceReportFilters`).
 
 ---
 

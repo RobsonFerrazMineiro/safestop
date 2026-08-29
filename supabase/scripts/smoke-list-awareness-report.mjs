@@ -178,7 +178,7 @@ async function main() {
     // o usuário autenticado (achado técnico resolve_member_display_name).
     record(
       "REP-AW-04",
-      confirmedItem?.recipientMemberName === "QA Supervisor HSE SafeStop",
+      confirmedItem?.recipientMemberName === "QA — Supervisor HSE (técnico)",
       `recipientMemberName="${confirmedItem?.recipientMemberName}" (destinatário ≠ solicitante)`,
     );
 

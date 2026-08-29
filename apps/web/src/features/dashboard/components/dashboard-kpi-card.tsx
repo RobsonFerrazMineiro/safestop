@@ -7,6 +7,7 @@ import {
   type PermissionCode,
 } from "@safestop/types";
 
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useAuthorization } from "@/features/authorization";
@@ -33,15 +34,15 @@ function hasPermission(
 function toneClasses(tone: ReturnType<typeof toneForMetric>): string {
   switch (tone) {
     case "destructive":
-      return "border-red-800/60 bg-red-950/20";
+      return "border-status-destructive-border bg-status-destructive-bg/40";
     case "warning":
-      return "border-amber-700/50 bg-amber-950/20";
+      return "border-status-warning-border bg-status-warning-bg/40";
     case "info":
-      return "border-blue-800/60 bg-blue-950/20";
+      return "border-status-info-border bg-status-info-bg/40";
     case "success":
-      return "border-green-800/60 bg-green-950/20";
+      return "border-status-success-border bg-status-success-bg/40";
     default:
-      return "border-gray-800 bg-gray-900/40";
+      return "border-border bg-card";
   }
 }
 
@@ -55,50 +56,52 @@ function DashboardKpiCardInner({
   const label = DASHBOARD_METRIC_CATALOG[metricKey].label;
   const href = hrefForMetric(metricKey);
   const tone = toneClasses(toneForMetric(metricKey));
+  const formattedValue = formatDashboardMetricValue(metricKey, value);
 
-  const content = (
+  const body = (
     <>
-      <span className="text-3xl font-bold tabular-nums text-gray-100">
-        {isLoading ? "…" : isError ? "—" : formatDashboardMetricValue(metricKey, value)}
+      <span className="text-3xl font-bold tabular-nums text-foreground">
+        {isLoading ? "…" : isError ? "—" : formattedValue}
       </span>
-      <span className="line-clamp-2 text-sm text-gray-400">{label}</span>
-      {isError ? (
-        <button
-          className="mt-1 text-left text-xs text-orange-400 hover:text-orange-300"
-          type="button"
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            onRetry?.();
-          }}
-        >
-          Tentar novamente
-        </button>
-      ) : null}
+      <span className="line-clamp-2 text-sm text-muted-foreground">{label}</span>
     </>
   );
 
   const className = cn(
-    "flex min-h-[7rem] flex-col justify-between gap-2 rounded-lg border p-4 shadow-sm",
+    "flex min-h-[7rem] flex-col justify-between gap-2 rounded-lg border p-4 text-left shadow-sm",
     tone,
-    href && !isError ? "transition hover:border-border" : "",
   );
 
   if (href && !isError && !isLoading) {
     return (
-      <Link
-        aria-label={`${label}: ${formatDashboardMetricValue(metricKey, value)}`}
-        className={className}
-        href={href}
+      <Button
+        asChild
+        className={cn(className, "h-auto w-full whitespace-normal hover:bg-accent/40")}
+        variant="ghost"
       >
-        {content}
-      </Link>
+        <Link aria-label={`${label}: ${formattedValue}`} href={href}>
+          {body}
+        </Link>
+      </Button>
     );
   }
 
   return (
     <div aria-label={label} className={className} role="group">
-      {content}
+      {body}
+      {isError ? (
+        <Button
+          className="mt-1 h-auto justify-start px-0 text-primary"
+          size="sm"
+          type="button"
+          variant="link"
+          onClick={() => {
+            onRetry?.();
+          }}
+        >
+          Tentar novamente
+        </Button>
+      ) : null}
     </div>
   );
 }

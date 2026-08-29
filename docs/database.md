@@ -398,7 +398,7 @@ Catálogo no seed pode incluir códigos **ainda sem fluxo de produto** nas sub-s
 | Código | Estado |
 |---|---|
 | `occurrence.create` | **Operacional** |
-| `occurrence.read` | **Operacional** |
+| `occurrence.read` | **Operacional** (inclui RPC `list_operational_occurrences` — PR-D1 / PO-UX-10; **não** exige `report.read`) |
 | `occurrence.evaluate` | **Operacional** |
 | `occurrence.confirm_interdiction` | **Operacional** |
 | `mdho.fill` · `mdho.submit` · `mdho.approve` · `mdho.return` | **Operacional** |
@@ -2021,6 +2021,8 @@ Listagens devem utilizar:
 - seleção apenas dos campos necessários;
 - índices adequados.
 
+A lista operacional de Paralisações Preventivas (Web/Mobile) deve usar a RPC `list_operational_occurrences` (filtro e paginação no servidor — PO-UX-10). Não filtrar no cliente sobre um array unbounded. Relatórios gerenciais continuam em `list_occurrences_report` (`report.read`).
+
 Evitar carregar na listagem principal:
 
 - todos os comentários;
@@ -2076,6 +2078,60 @@ Migration `20260822180000_reports_indexes.sql`:
 | Índice | Tabela | Colunas | Uso |
 |---|---|---|---|
 | `occurrences_organization_id_contract_id_created_at_idx` | `occurrences` | `(organization_id, contract_id, created_at)` | Filtro por contrato em `list_occurrences_report` |
+
+---
+
+## 25.4 Lista operacional (PR-D1 / PO-UX-10)
+
+**Implementado:** RPC `list_operational_occurrences` — migration `20260825220000_list_operational_occurrences.sql`.
+
+Lista de cards operacionais (não relatório). **Não** substitui `list_occurrences_report`.
+
+| Item | Valor |
+|---|---|
+| Modo | `SECURITY INVOKER`, `search_path = ''` |
+| Permissão gate | `occurrence.read` na org alvo (`is_platform_admin()` segue o mesmo padrão de membership das RPCs de reports). **Não** exige `report.read`. |
+| Escopo de linha | `organization_id = p_organization_id` + `can_access_occurrence` + RLS de `occurrences` |
+| Ordenação | `created_at desc, id desc` (fixa neste ciclo; sem `p_sort_field`) |
+| Paginação | keyset `{ sortValue, id }` — **sem OFFSET**. `p_limit` clamp 1–100 (default 20). Busca `limit+1`; `hasNext` / `nextCursor` no último item da página. |
+| Retorno | `{ items, nextCursor, hasNext }`. Cada item: `id`, `publicCode`, `title`, `status`, `severity`, `areaName`, `contractorOrganizationName`, `createdAt`, `createdByName` (camelCase, compatível com `OccurrenceSummary`). Sem colunas 1:N. Sem `statusFamily`. |
+
+**Parâmetros:**
+
+```text
+p_organization_id uuid                — obrigatório
+p_search text                         — trim; vazio = sem filtro. contains (ilike) em:
+                                        public_code, task_description (atividade),
+                                        location_description, ims_reference_code,
+                                        areas.name, nome da contratada (helper)
+p_area_id uuid
+p_contractor_organization_id uuid
+p_status text[]                       — enum OccurrenceStatus existente
+p_severity text[]                     — LOW / MEDIUM / HIGH / CRITICAL
+p_ims_reference_code text             — contains, mesmo espírito de PO-IMS-10
+p_cursor jsonb                        — { sortValue, id }
+p_limit integer                       — default 20, clamp 1–100
+```
+
+Não existe `p_activity_id` (atividade não é FK).
+
+**Diferença vs `list_occurrences_report`:** gate `occurrence.read` (Campo lista) vs `report.read`; busca textual ampla vs só `public_code`; 9 campos de card vs 19 colunas de relatório; ordenação fixa `created_at` vs allowlist de sort.
+
+**Helpers reutilizados (não recriados):** `resolve_profile_display_name`, `resolve_organization_display_name`. Escopo estrito: nome apenas.
+
+**Índices novos:** nenhum nesta migration. `occurrences_organization_id_created_at_idx`, `occurrences_organization_id_status_idx`, `occurrences_organization_id_area_id_created_at_idx` e `occurrences_organization_id_contractor_created_at_idx` já cobrem org + ordenação/filtros. `pg_trgm` não criado (sem evidência de EXPLAIN nesta escala).
+
+**Rollback:**
+
+```text
+drop function public.list_operational_occurrences(
+  uuid, text, uuid, uuid, text[], text[], text, jsonb, integer
+);
+```
+
+Não dropar os helpers `resolve_*_display_name`.
+
+**GRANT:** `EXECUTE` para `authenticated` apenas. Sem grant para `anon`.
 
 ---
 

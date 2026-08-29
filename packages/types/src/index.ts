@@ -30,6 +30,26 @@ export type {
 } from "./occurrence";
 
 export {
+  OPERATIONAL_OCCURRENCE_LIST_DEFAULT_LIMIT,
+  OPERATIONAL_OCCURRENCE_LIST_MAX_LIMIT,
+  OPERATIONAL_OCCURRENCE_LIST_RPC_ERROR_CODES,
+  OperationalOccurrenceListRpcError,
+  buildListOperationalOccurrencesRpcArgs,
+  getOperationalOccurrenceListRpcSafeMessage,
+  isOperationalOccurrenceListRpcUnavailableError,
+  mapListOperationalOccurrencesResult,
+  mapOccurrenceSummary,
+  parseOperationalOccurrenceListRpcErrorCode,
+} from "./operational-occurrence-list";
+export type {
+  ListOperationalOccurrencesResult,
+  ListOperationalOccurrencesRpcArgs,
+  OperationalOccurrenceListCursor,
+  OperationalOccurrenceListPagination,
+  OperationalOccurrenceListRpcErrorCode,
+} from "./operational-occurrence-list";
+
+export {
   OCCURRENCE_ATTACHMENT_BUCKET,
   OCCURRENCE_ATTACHMENT_CAPTION_MAX_LENGTH,
   OCCURRENCE_ATTACHMENT_MAX_COUNT_PER_OCCURRENCE,

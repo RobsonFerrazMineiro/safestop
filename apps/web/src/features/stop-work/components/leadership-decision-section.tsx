@@ -80,14 +80,12 @@ export function LeadershipDecisionSection({
       ? "Decisão da liderança"
       : "Avaliação";
 
-  const sectionClassName =
-    occurrence.status === "EM_AVALIACAO" && !hasDecision
-      ? "flex flex-col gap-4 rounded-lg border border-amber-700/40 bg-gray-900/40 p-4"
-      : "flex flex-col gap-4 rounded-lg border border-gray-800 bg-gray-900/40 p-4";
-
   return (
-    <section aria-label={sectionTitle} className={sectionClassName}>
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+    <section
+      aria-label={sectionTitle}
+      className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4"
+    >
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         {sectionTitle}
       </h2>
 
@@ -141,13 +139,13 @@ export function LeadershipDecisionSection({
       {!showConflict && !showAlreadyDecided && vaContext.showPendingEvaluation ? (
         <div className="flex flex-col gap-4">
           <div
-            className="flex items-start gap-3 rounded-lg border border-blue-700/40 bg-blue-950/20 p-4"
+            className="flex items-start gap-3 rounded-lg border border-status-info-border bg-status-info-bg p-4"
             role="status"
           >
-            <span aria-hidden="true" className="text-blue-400">
+            <span aria-hidden="true" className="text-status-info-fg">
               ℹ
             </span>
-            <p className="text-sm text-blue-100">Aguardando avaliação da liderança</p>
+            <p className="text-sm text-status-info-fg">Aguardando avaliação da liderança</p>
           </div>
 
           {vaContext.isOffline ? (
@@ -170,7 +168,7 @@ export function LeadershipDecisionSection({
           <EvaluationContextCard occurrence={occurrence} />
 
           {visibleDecisionCards > 0 ? (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted-foreground">
               Avalie a ocorrência e selecione uma das decisões abaixo:
             </p>
           ) : null}

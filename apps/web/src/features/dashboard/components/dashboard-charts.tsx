@@ -95,7 +95,7 @@ export function DashboardMainChart({ title, buckets, emptyMessage }: DashboardCh
   const isEmpty = buckets.every((bucket) => bucket.count === 0);
 
   return (
-    <Card className="hidden py-4 lg:block">
+    <Card className="hidden py-4 md:block">
       <CardContent className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">{title}</h2>
 
@@ -143,7 +143,7 @@ export function DashboardDistributionChart({ title, buckets, emptyMessage }: Das
   const chartHeight = Math.max(buckets.length * 36, 160);
 
   return (
-    <Card className="hidden py-4 lg:block">
+    <Card className="hidden py-4 md:block">
       <CardContent className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">{title}</h2>
 

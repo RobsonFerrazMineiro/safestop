@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+
 import type { DashboardPeriodPresetId } from "./utils/period-presets";
 import { DASHBOARD_PERIOD_PRESETS } from "./utils/period-presets";
 
@@ -14,32 +16,30 @@ export function DashboardPeriodFilter({ activePreset, onChange }: DashboardPerio
       <div
         aria-label="Período dos indicadores de fluxo"
         className="flex flex-wrap gap-2"
-        role="tablist"
+        role="radiogroup"
       >
         {DASHBOARD_PERIOD_PRESETS.map((preset) => {
           const selected = activePreset === preset.id;
 
           return (
-            <button
+            <Button
               key={preset.id}
-              aria-selected={selected}
-              className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                selected
-                  ? "border-orange-500 bg-orange-500/10 text-orange-200"
-                  : "border-gray-700 text-gray-300 hover:border-gray-500"
-              }`}
-              role="tab"
+              aria-checked={selected}
+              className={selected ? "border-primary bg-primary/10 text-primary" : undefined}
+              role="radio"
+              size="sm"
               type="button"
+              variant="outline"
               onClick={() => {
                 onChange(preset.id);
               }}
             >
               {preset.label}
-            </button>
+            </Button>
           );
         })}
       </div>
-      <p className="text-xs text-gray-500">O período afeta apenas indicadores de fluxo</p>
+      <p className="text-xs text-muted-foreground">O período afeta apenas indicadores de fluxo</p>
     </div>
   );
 }

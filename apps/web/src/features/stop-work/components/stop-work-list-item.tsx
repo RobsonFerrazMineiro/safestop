@@ -1,17 +1,12 @@
 import Link from "next/link";
+import type { OccurrenceSummary } from "@safestop/types";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/status-badge";
 import { Can } from "@/features/authorization";
-import type { OccurrenceSummaryEnriched } from "@/features/occurrences";
-
-import {
-  formatOccurrenceSeverity,
-  formatOccurrenceStatus,
-} from "@/features/occurrences/utils/format-labels";
 
 type StopWorkListItemProps = {
-  item: OccurrenceSummaryEnriched;
+  item: OccurrenceSummary;
 };
 
 function formatDate(value: string): string {
@@ -21,22 +16,23 @@ function formatDate(value: string): string {
 export function StopWorkListItem({ item }: StopWorkListItemProps) {
   return (
     <Link
-      className="grid gap-2 rounded-lg border border-gray-800 bg-gray-900 px-4 py-4 transition hover:border-gray-600 sm:grid-cols-[minmax(0,1fr)_auto]"
+      className="grid gap-2 rounded-lg border border-border bg-card px-4 py-4 transition hover:border-primary/50 sm:grid-cols-[minmax(0,1fr)_auto]"
       href={`/stop-work/${item.id}`}
     >
-      <div className="flex min-w-0 flex-col gap-1">
+      <div className="flex min-w-0 flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-xs text-primary">{item.publicCode}</span>
-          <Badge variant="outline">{formatOccurrenceSeverity(item.severity)}</Badge>
+          <StatusBadge status={item.status} />
+          <StatusBadge severity={item.severity} />
         </div>
-        <span className="truncate text-base font-semibold text-gray-100">{item.title}</span>
-        <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-gray-400">
-          <Badge variant="secondary">{formatOccurrenceStatus(item.status)}</Badge>
+        <span className="truncate text-base font-semibold text-foreground">{item.title}</span>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
           {item.areaName ? <span>{item.areaName}</span> : null}
           {item.contractorOrganizationName ? <span>{item.contractorOrganizationName}</span> : null}
+          {item.createdByName ? <span>{item.createdByName}</span> : null}
         </div>
       </div>
-      <span className="self-start text-xs text-gray-500 sm:self-center">
+      <span className="self-start text-xs text-muted-foreground sm:self-center">
         {formatDate(item.createdAt)}
       </span>
     </Link>
@@ -45,11 +41,11 @@ export function StopWorkListItem({ item }: StopWorkListItemProps) {
 
 export function StopWorkEmpty() {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-lg border border-gray-800 bg-gray-900/50 px-6 py-10 text-center">
-      <p className="text-base text-gray-300">Nenhuma Paralisação Preventiva encontrada.</p>
+    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card px-6 py-10 text-center">
+      <p className="text-base text-foreground">Nenhuma Paralisação Preventiva encontrada.</p>
       <Can permission="occurrence.create">
         <Button asChild>
-          <Link href="/stop-work/new">Registrar Paralisação</Link>
+          <Link href="/stop-work/new">Nova Paralisação</Link>
         </Button>
       </Can>
     </div>
