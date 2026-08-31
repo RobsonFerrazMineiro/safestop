@@ -1,8 +1,20 @@
 import type { PreventiveStopDraftInput } from "@safestop/validation";
 import { deleteSecureItem, getSecureItem, setSecureItem } from "@/lib/secure-storage";
 
-const STORAGE_PREFIX = "safestop:preventiveStopDraft:";
+const STORAGE_PREFIX = "safestop.preventiveStopDraft.";
 const DRAFT_SCHEMA_VERSION = 1;
+const DEFAULT_PREVENTIVE_STOP_DRAFT_SEVERITY = "MEDIUM";
+
+const PREVENTIVE_STOP_DRAFT_TEXT_FIELDS = [
+  "areaId",
+  "locationDescription",
+  "taskDescription",
+  "conditionDescription",
+  "contractorOrganizationId",
+  "contractId",
+  "immediateActionDescription",
+  "unitId",
+] as const satisfies readonly (keyof PreventiveStopDraftInput)[];
 
 type StoredPreventiveStopDraft = {
   version: number;
@@ -11,21 +23,29 @@ type StoredPreventiveStopDraft = {
 };
 
 function getStorageKey(userId: string, organizationId: string): string {
-  return `${STORAGE_PREFIX}${userId}:${organizationId}`;
+  return `${STORAGE_PREFIX}${userId}.${organizationId}`;
+}
+
+function hasNonEmptyDraftString(value: unknown): boolean {
+  return typeof value === "string" && value.trim().length > 0;
 }
 
 function hasDraftContent(draft: PreventiveStopDraftInput): boolean {
-  return Object.values(draft).some((value) => {
-    if (value === undefined || value === null) {
-      return false;
+  for (const field of PREVENTIVE_STOP_DRAFT_TEXT_FIELDS) {
+    if (hasNonEmptyDraftString(draft[field])) {
+      return true;
     }
+  }
 
-    if (typeof value === "string") {
-      return value.trim().length > 0;
-    }
-
+  if (
+    draft.severity !== undefined &&
+    draft.severity !== null &&
+    draft.severity !== DEFAULT_PREVENTIVE_STOP_DRAFT_SEVERITY
+  ) {
     return true;
-  });
+  }
+
+  return false;
 }
 
 export async function getStoredPreventiveStopDraft(

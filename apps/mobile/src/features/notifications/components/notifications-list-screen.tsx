@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "expo-router";
+import { Bell } from "lucide-react-native";
 import {
   ActivityIndicator,
   FlatList,
@@ -12,7 +13,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import type { NotificationListItem } from "@safestop/types";
 import { isNotificationUnread } from "@safestop/types";
+import { colors, controlHeight, radius, spacing, statusChip, typography } from "@safestop/ui";
 
+import { ScreenBackLink } from "@/components/ui";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
@@ -35,6 +38,8 @@ import {
   type NotificationListFilter,
 } from "../utils/notification-filters";
 import { NOTIFICATION_COPY } from "../utils/notification-copy";
+
+const HEADER_ICON_SIZE = 22;
 
 function useIsOnline(): boolean {
   const [isOnline, setIsOnline] = useState(() => {
@@ -170,19 +175,19 @@ export function NotificationsListScreen({ initialFilter }: NotificationsListScre
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Pressable
+        <ScreenBackLink
           accessibilityLabel="Voltar ao início"
-          accessibilityRole="button"
           onPress={() => {
             router.replace(authRoutes.app);
           }}
-        >
-          <Text style={styles.backLink}>Voltar</Text>
-        </Pressable>
+        />
 
-        <Text accessibilityRole="header" style={styles.title}>
-          {NOTIFICATION_COPY.title}
-        </Text>
+        <View style={styles.titleRow}>
+          <Bell accessible={false} color={colors.primary} size={HEADER_ICON_SIZE} strokeWidth={2} />
+          <Text accessibilityRole="header" style={styles.title}>
+            {NOTIFICATION_COPY.title}
+          </Text>
+        </View>
         <Text style={styles.subtitle}>
           {NOTIFICATION_COPY.subtitle(unreadCount, pendingAwarenessCount)}
         </Text>
@@ -204,14 +209,16 @@ export function NotificationsListScreen({ initialFilter }: NotificationsListScre
           }}
         >
           {isMarkingAll ? (
-            <ActivityIndicator color="#F9FAFB" size="small" />
+            <ActivityIndicator color={colors.foreground} size="small" />
           ) : (
             <Text style={styles.markAllText}>{NOTIFICATION_COPY.markAllRead}</Text>
           )}
         </Pressable>
       </View>
 
-      <NotificationFilterChips activeFilter={activeFilter} onChange={setActiveFilter} />
+      <View style={styles.filtersSection}>
+        <NotificationFilterChips activeFilter={activeFilter} onChange={setActiveFilter} />
+      </View>
 
       {isError ? (
         <View style={styles.errorBox}>
@@ -229,7 +236,9 @@ export function NotificationsListScreen({ initialFilter }: NotificationsListScre
         </View>
       ) : (
         <FlatList
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={
+            filteredItems.length === 0 ? styles.listContentEmpty : styles.listContent
+          }
           data={filteredItems}
           keyExtractor={(item) => item.id}
           ListEmptyComponent={<NotificationEmpty />}
@@ -245,7 +254,7 @@ export function NotificationsListScreen({ initialFilter }: NotificationsListScre
                 }}
               >
                 {isFetchingNextPage ? (
-                  <ActivityIndicator color="#F97316" size="small" />
+                  <ActivityIndicator color={colors.primary} size="small" />
                 ) : (
                   <Text style={styles.loadMoreText}>{NOTIFICATION_COPY.loadMore}</Text>
                 )}
@@ -254,9 +263,9 @@ export function NotificationsListScreen({ initialFilter }: NotificationsListScre
           }
           refreshControl={
             <RefreshControl
-              colors={["#F97316"]}
+              colors={[colors.primary]}
               refreshing={isFetching && !isFetchingNextPage}
-              tintColor="#F97316"
+              tintColor={colors.primary}
               onRefresh={() => {
                 void refetch();
               }}
@@ -278,6 +287,7 @@ export function NotificationsListScreen({ initialFilter }: NotificationsListScre
               }}
             />
           )}
+          style={styles.list}
         />
       )}
     </SafeAreaView>
@@ -285,56 +295,67 @@ export function NotificationsListScreen({ initialFilter }: NotificationsListScre
 }
 
 const styles = StyleSheet.create({
-  backLink: {
-    color: "#F97316",
-    fontSize: 14,
-    fontWeight: "600",
-  },
   container: {
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
   },
   errorBox: {
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingTop: 24,
+    gap: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[6],
   },
   errorText: {
-    color: "#F87171",
-    fontSize: 14,
+    color: statusChip.destructive.foreground,
+    fontSize: typography.label.fontSize,
   },
   feedback: {
-    color: "#86EFAC",
-    fontSize: 13,
+    color: statusChip.success.foreground,
+    fontSize: typography.helper.fontSize,
+  },
+  filtersSection: {
+    flexGrow: 0,
+    flexShrink: 0,
+    paddingBottom: spacing[2],
   },
   header: {
-    gap: 8,
-    paddingBottom: 12,
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    flexGrow: 0,
+    flexShrink: 0,
+    gap: spacing[2],
+    paddingBottom: spacing[3],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[2],
+  },
+  list: {
+    flex: 1,
+    flexGrow: 1,
   },
   listContent: {
-    gap: 12,
-    paddingBottom: 24,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    gap: spacing[3],
+    paddingBottom: spacing[6],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[3],
+  },
+  listContentEmpty: {
+    flexGrow: 1,
+    paddingBottom: spacing[6],
+    paddingHorizontal: spacing[4],
   },
   loadMoreButton: {
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 44,
-    paddingVertical: 8,
+    minHeight: controlHeight.mobile,
+    paddingVertical: spacing[2],
   },
   loadMoreText: {
-    color: "#F97316",
-    fontSize: 14,
+    color: colors.primary,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
   markAllButton: {
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#374151",
-    borderRadius: 8,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radius.button,
     justifyContent: "center",
     minHeight: 40,
     paddingHorizontal: 14,
@@ -343,8 +364,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   markAllText: {
-    color: "#F9FAFB",
-    fontSize: 13,
+    color: colors.foreground,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
   },
   pressed: {
@@ -353,24 +374,30 @@ const styles = StyleSheet.create({
   retryButton: {
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#374151",
-    borderRadius: 8,
-    minHeight: 40,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radius.button,
     justifyContent: "center",
-    paddingHorizontal: 16,
+    minHeight: 40,
+    paddingHorizontal: spacing[4],
   },
   retryText: {
-    color: "#F9FAFB",
-    fontSize: 14,
+    color: colors.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
   subtitle: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.label.fontSize,
   },
   title: {
-    color: "#F97316",
-    fontSize: 24,
+    color: colors.primary,
+    flexShrink: 1,
+    fontSize: typography.cardTitle.fontSize,
     fontWeight: "700",
+  },
+  titleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[2],
   },
 });

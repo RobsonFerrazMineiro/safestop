@@ -1,7 +1,9 @@
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { SurfaceIcon } from "@/components/surface-icon";
 import { cn } from "@/lib/utils";
 
 export type PageHeaderProps = {
@@ -10,6 +12,7 @@ export type PageHeaderProps = {
   actions?: ReactNode;
   backHref?: string;
   backLabel?: string;
+  icon?: ComponentType<{ className?: string }>;
   className?: string;
 };
 
@@ -19,6 +22,7 @@ export function PageHeader({
   actions,
   backHref,
   backLabel = "Voltar",
+  icon: Icon,
   className,
 }: PageHeaderProps) {
   return (
@@ -28,11 +32,21 @@ export function PageHeader({
       <div className="flex min-w-0 flex-col gap-2">
         {backHref ? (
           <Button asChild className="h-auto w-fit justify-start px-0" size="sm" variant="link">
-            <Link href={backHref}>{backLabel}</Link>
+            <Link href={backHref}>
+              <ArrowLeft />
+              {backLabel}
+            </Link>
           </Button>
         ) : null}
-        <h1 className="text-3xl font-bold text-foreground">{title}</h1>
-        {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
+        <div className="flex items-start gap-3">
+          {Icon ? (
+            <SurfaceIcon className="mt-1.5 text-muted-foreground" icon={Icon} variant="page" />
+          ) : null}
+          <div className="flex min-w-0 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-foreground">{title}</h1>
+            {subtitle ? <p className="text-sm text-muted-foreground">{subtitle}</p> : null}
+          </div>
+        </div>
       </div>
       {actions ? <div className="shrink-0">{actions}</div> : null}
     </header>

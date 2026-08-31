@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors, controlHeight, radius, spacing, typography } from "@safestop/ui";
 
 type OccurrenceErrorProps = {
   message?: string;
@@ -32,30 +33,32 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     flex: 1,
+    gap: spacing[4],
     justifyContent: "center",
-    paddingHorizontal: 24,
+    paddingHorizontal: spacing[6],
   },
   message: {
-    color: "#F87171",
-    fontSize: 14,
+    color: colors.destructive,
+    fontSize: typography.helper.fontSize,
     textAlign: "center",
   },
   retryButton: {
     alignItems: "center",
-    backgroundColor: "#374151",
-    borderRadius: 8,
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.border,
+    borderRadius: radius.button,
+    borderWidth: 1,
     justifyContent: "center",
-    marginTop: 16,
-    minHeight: 44,
+    minHeight: controlHeight.mobile,
     minWidth: 160,
-    paddingHorizontal: 20,
+    paddingHorizontal: spacing[5],
   },
   retryButtonPressed: {
     opacity: 0.85,
   },
   retryButtonText: {
-    color: "#F9FAFB",
-    fontSize: 15,
+    color: colors.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
 });

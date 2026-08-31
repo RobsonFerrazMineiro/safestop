@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 
+import { Building2 } from "lucide-react";
+
 import { PageHeader } from "@/components/page-header";
 
 import { OrganizationCard } from "./organization-card";
@@ -34,6 +36,7 @@ export function OrganizationSelector() {
       <PageHeader
         subtitle="Escolha a organização ativa para continuar no painel."
         title="Selecionar organização"
+        icon={Building2}
       />
 
       <div className="flex flex-col gap-3">

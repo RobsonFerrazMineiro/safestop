@@ -1,6 +1,8 @@
+import { Camera, Circle, MessageCircle, Trash2, type LucideIcon } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import type { OccurrenceStatus, OccurrenceTimelineItem } from "@safestop/types";
 import { formatTimelineTitle } from "@safestop/types";
+import { colors } from "@safestop/ui";
 
 import { formatOccurrenceDate } from "@/features/occurrences/utils/occurrence-labels";
 
@@ -9,6 +11,8 @@ import {
   canEditComment,
   getEvidenceAttachmentId,
 } from "../utils/timeline-permissions";
+
+const TIMELINE_ICON_SIZE = 14;
 
 type TimelineItemProps = {
   item: OccurrenceTimelineItem;
@@ -22,28 +26,40 @@ type TimelineItemProps = {
 
 function getRailColor(kind: OccurrenceTimelineItem["kind"]): string {
   if (kind === "OCCURRENCE_CREATED" || kind === "STATUS_CHANGED") {
-    return "#F97316";
+    return colors.primary;
   }
 
   if (kind === "COMMENT_REMOVED" || kind === "EVIDENCE_REMOVED") {
-    return "#6B7280";
+    return colors.foregroundMuted;
   }
 
-  return "#4B5563";
+  return colors.border;
 }
 
-function getIcon(kind: OccurrenceTimelineItem["kind"]): string {
+function getKindIcon(kind: OccurrenceTimelineItem["kind"]): LucideIcon {
   switch (kind) {
     case "COMMENT_ADDED":
-      return "💬";
+      return MessageCircle;
     case "COMMENT_REMOVED":
-      return "🗑";
+      return Trash2;
     case "EVIDENCE_ADDED":
     case "EVIDENCE_REMOVED":
-      return "📷";
+      return Camera;
     default:
-      return "●";
+      return Circle;
   }
+}
+
+function getIconColor(kind: OccurrenceTimelineItem["kind"]): string {
+  if (kind === "COMMENT_REMOVED" || kind === "EVIDENCE_REMOVED") {
+    return colors.foregroundMuted;
+  }
+
+  if (kind === "OCCURRENCE_CREATED" || kind === "STATUS_CHANGED") {
+    return colors.primary;
+  }
+
+  return colors.foregroundMuted;
 }
 
 function getDisplayTitle(item: OccurrenceTimelineItem): string {
@@ -96,13 +112,21 @@ export function TimelineItem({
 
   const timestamp = formatOccurrenceDate(item.occurredAt);
   const meta = `${timestamp}${isEdited ? " (editado)" : ""}`;
+  const KindIcon = getKindIcon(item.kind);
+  const iconColor = getIconColor(item.kind);
 
   return (
     <View accessibilityRole="text" style={[styles.row, isRemoved && styles.removedRow]}>
       <View style={[styles.rail, { backgroundColor: getRailColor(item.kind) }]} />
       <View style={styles.content}>
         <View style={styles.headerRow}>
-          <Text style={styles.icon}>{getIcon(item.kind)}</Text>
+          <KindIcon
+            accessible={false}
+            color={iconColor}
+            size={TIMELINE_ICON_SIZE}
+            strokeWidth={2}
+            style={styles.icon}
+          />
           <Text
             style={[
               styles.title,
@@ -176,7 +200,7 @@ export function TimelineItem({
 
 const styles = StyleSheet.create({
   actionLink: {
-    color: "#F97316",
+    color: colors.primary,
     fontSize: 13,
     fontWeight: "600",
     minHeight: 44,
@@ -188,11 +212,11 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   actor: {
-    color: "#9CA3AF",
+    color: colors.foregroundMuted,
     fontSize: 13,
   },
   body: {
-    color: "#F9FAFB",
+    color: colors.foreground,
     fontSize: 15,
     lineHeight: 22,
   },
@@ -207,14 +231,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   icon: {
-    fontSize: 14,
-    marginTop: 1,
+    marginTop: 2,
   },
   mutedTitle: {
-    color: "#9CA3AF",
+    color: colors.foregroundMuted,
   },
   previewLink: {
-    color: "#F97316",
+    color: colors.primary,
     fontSize: 13,
     fontWeight: "600",
     marginTop: 2,
@@ -226,7 +249,7 @@ const styles = StyleSheet.create({
     width: 4,
   },
   removeLink: {
-    color: "#F87171",
+    color: colors.destructive,
     fontSize: 13,
     fontWeight: "600",
     minHeight: 44,
@@ -244,12 +267,12 @@ const styles = StyleSheet.create({
     textDecorationLine: "line-through",
   },
   time: {
-    color: "#9CA3AF",
+    color: colors.foregroundMuted,
     fontSize: 12,
     marginLeft: "auto",
   },
   title: {
-    color: "#F9FAFB",
+    color: colors.foreground,
     flex: 1,
     fontSize: 14,
     fontWeight: "600",

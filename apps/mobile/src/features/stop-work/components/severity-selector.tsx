@@ -1,6 +1,7 @@
 import type { OccurrenceSeverity } from "@safestop/types";
 import { OCCURRENCE_SEVERITIES } from "@safestop/types";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors, getOccurrenceSeverityChip, radius, spacing, typography } from "@safestop/ui";
 
 import { getOccurrenceSeverityLabel } from "@/features/occurrences/utils/occurrence-labels";
 
@@ -8,16 +9,6 @@ type SeveritySelectorProps = {
   value: OccurrenceSeverity;
   onChange: (severity: OccurrenceSeverity) => void;
   disabled?: boolean;
-};
-
-const SEVERITY_STYLES: Record<
-  OccurrenceSeverity,
-  { border: string; background: string; text: string }
-> = {
-  LOW: { border: "#4B5563", background: "#1F2937", text: "#D1D5DB" },
-  MEDIUM: { border: "#F59E0B", background: "#422006", text: "#FCD34D" },
-  HIGH: { border: "#F97316", background: "#431407", text: "#FDBA74" },
-  CRITICAL: { border: "#DC2626", background: "#450A0A", text: "#FCA5A5" },
 };
 
 export function SeveritySelector({ value, onChange, disabled = false }: SeveritySelectorProps) {
@@ -32,7 +23,7 @@ export function SeveritySelector({ value, onChange, disabled = false }: Severity
         <View key={rowIndex} style={styles.row}>
           {pair.map((severity) => {
             const isSelected = value === severity;
-            const tokens = SEVERITY_STYLES[severity];
+            const tokens = getOccurrenceSeverityChip(severity);
 
             return (
               <Pressable
@@ -44,10 +35,9 @@ export function SeveritySelector({ value, onChange, disabled = false }: Severity
                 style={({ pressed }) => [
                   styles.option,
                   {
-                    borderColor: isSelected ? tokens.border : "#374151",
-                    backgroundColor: isSelected ? tokens.background : "#1F2937",
+                    borderColor: isSelected ? tokens.border : colors.border,
+                    backgroundColor: isSelected ? tokens.background : colors.surfaceElevated,
                   },
-                  isSelected && styles.optionSelected,
                   pressed && !disabled && styles.optionPressed,
                 ]}
                 onPress={() => {
@@ -57,7 +47,7 @@ export function SeveritySelector({ value, onChange, disabled = false }: Severity
                 <Text
                   style={[
                     styles.optionText,
-                    { color: isSelected ? tokens.text : "#D1D5DB" },
+                    { color: isSelected ? tokens.foreground : colors.foregroundMuted },
                     isSelected && styles.optionTextSelected,
                   ]}
                 >
@@ -74,26 +64,23 @@ export function SeveritySelector({ value, onChange, disabled = false }: Severity
 
 const styles = StyleSheet.create({
   grid: {
-    gap: 8,
+    gap: spacing[2],
   },
   option: {
     alignItems: "center",
-    borderRadius: 8,
-    borderWidth: 2,
+    borderRadius: radius.button,
+    borderWidth: 1,
     flex: 1,
     justifyContent: "center",
-    minHeight: 48,
-    paddingHorizontal: 8,
-    paddingVertical: 12,
+    minHeight: 44,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[2],
   },
   optionPressed: {
     opacity: 0.85,
   },
-  optionSelected: {
-    borderWidth: 2,
-  },
   optionText: {
-    fontSize: 14,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
     textAlign: "center",
   },
@@ -102,6 +89,6 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
-    gap: 8,
+    gap: spacing[2],
   },
 });

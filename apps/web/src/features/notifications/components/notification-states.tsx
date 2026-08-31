@@ -1,5 +1,9 @@
 "use client";
 
+import { Bell } from "lucide-react";
+
+import { SurfaceIcon } from "@/components/surface-icon";
+
 export function NotificationLoadingSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="flex flex-col gap-3" role="status">
@@ -16,9 +20,7 @@ export function NotificationLoadingSkeleton({ rows = 5 }: { rows?: number }) {
 export function NotificationEmptyState() {
   return (
     <div className="flex flex-col items-center gap-3 py-10 text-center" role="status">
-      <span aria-hidden="true" className="text-3xl text-gray-500">
-        🔔
-      </span>
+      <SurfaceIcon className="text-muted-foreground" icon={Bell} variant="empty" />
       <p className="text-sm text-gray-400">Nenhuma notificação.</p>
     </div>
   );

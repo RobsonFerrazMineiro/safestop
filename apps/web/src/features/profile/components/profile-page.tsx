@@ -5,8 +5,9 @@ import { profileUpdateSchema, type ProfileUpdateInput } from "@safestop/validati
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
-import Link from "next/link";
+import { User } from "lucide-react";
 
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
@@ -184,13 +185,12 @@ export function ProfilePage() {
 
   return (
     <section className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-6 py-10">
-      <header className="flex flex-col gap-2">
-        <Link className="text-sm text-orange-400 hover:text-orange-300" href="/">
-          ← Voltar
-        </Link>
-        <h1 className="text-3xl font-bold text-gray-100">Meu perfil</h1>
-        <p className="text-sm text-gray-400">Atualize seus dados de contato.</p>
-      </header>
+      <PageHeader
+        backHref="/"
+        icon={User}
+        subtitle="Atualize seus dados de contato."
+        title="Meu perfil"
+      />
 
       <ProfileForm
         email={user?.email}

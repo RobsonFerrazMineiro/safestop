@@ -81,7 +81,7 @@ export function StopWorkOperationalFiltersDialog({
           type="button"
           variant="outline"
         >
-          <ListFilter className="size-4" />
+          <ListFilter aria-hidden="true" className="size-4" />
           Filtros
           {activeFilterCount > 0 ? ` · ${activeFilterCount}` : ""}
         </Button>

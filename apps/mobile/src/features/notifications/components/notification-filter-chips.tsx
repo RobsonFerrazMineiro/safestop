@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { colors, controlHeight, radius, spacing, statusChip, typography } from "@safestop/ui";
 
 import {
   NOTIFICATION_LIST_FILTERS,
@@ -15,6 +16,9 @@ const FILTER_LABELS: Record<NotificationListFilter, string> = {
   verAndAct: NOTIFICATION_COPY.filterVerAndAct,
 };
 
+const INACTIVE_CHIP = statusChip.muted;
+const ACTIVE_CHIP = statusChip.warning;
+
 type NotificationFilterChipsProps = {
   activeFilter: NotificationListFilter;
   onChange: (filter: NotificationListFilter) => void;
@@ -22,67 +26,82 @@ type NotificationFilterChipsProps = {
 
 export function NotificationFilterChips({ activeFilter, onChange }: NotificationFilterChipsProps) {
   return (
-    <ScrollView
-      horizontal
-      accessibilityRole="tablist"
-      contentContainerStyle={styles.content}
-      showsHorizontalScrollIndicator={false}
-    >
-      {NOTIFICATION_LIST_FILTERS.map((filter) => {
-        const isActive = filter === activeFilter;
+    <View style={styles.wrapper}>
+      <ScrollView
+        horizontal
+        nestedScrollEnabled
+        accessibilityRole="tablist"
+        contentContainerStyle={styles.content}
+        showsHorizontalScrollIndicator={false}
+        style={styles.scrollView}
+      >
+        {NOTIFICATION_LIST_FILTERS.map((filter) => {
+          const isActive = filter === activeFilter;
+          const chipTone = isActive ? ACTIVE_CHIP : INACTIVE_CHIP;
 
-        return (
-          <Pressable
-            key={filter}
-            accessibilityLabel={FILTER_LABELS[filter]}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isActive }}
-            style={({ pressed }) => [
-              styles.chip,
-              isActive && styles.chipActive,
-              pressed && styles.pressed,
-            ]}
-            onPress={() => {
-              onChange(filter);
-            }}
-          >
-            <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
-              {FILTER_LABELS[filter]}
-            </Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
+          return (
+            <Pressable
+              key={filter}
+              accessibilityLabel={FILTER_LABELS[filter]}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isActive }}
+              style={({ pressed }) => [
+                styles.chip,
+                {
+                  backgroundColor: chipTone.background,
+                  borderColor: chipTone.border,
+                },
+                pressed && styles.pressed,
+              ]}
+              onPress={() => {
+                onChange(filter);
+              }}
+            >
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.chipText,
+                  { color: isActive ? chipTone.foreground : colors.foregroundMuted },
+                ]}
+              >
+                {FILTER_LABELS[filter]}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   chip: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 999,
+    alignSelf: "flex-start",
+    borderRadius: radius.chip,
     borderWidth: 1,
-    minHeight: 36,
-    paddingHorizontal: 14,
     justifyContent: "center",
-  },
-  chipActive: {
-    backgroundColor: "#92400E",
-    borderColor: "#D97706",
+    minHeight: controlHeight.mobile,
+    paddingHorizontal: spacing[4],
   },
   chipText: {
-    color: "#D1D5DB",
-    fontSize: 13,
+    fontSize: typography.label.fontSize,
     fontWeight: "600",
   },
-  chipTextActive: {
-    color: "#FDE68A",
-  },
   content: {
-    gap: 8,
-    paddingHorizontal: 16,
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
   },
   pressed: {
     opacity: 0.85,
+  },
+  scrollView: {
+    flexGrow: 0,
+    flexShrink: 0,
+  },
+  wrapper: {
+    flexGrow: 0,
+    flexShrink: 0,
   },
 });

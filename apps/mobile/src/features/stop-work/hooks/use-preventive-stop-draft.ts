@@ -38,7 +38,13 @@ export function usePreventiveStopDraft() {
     hydratedScopeRef.current = null;
 
     const hydrateDraft = async () => {
-      const storedDraft = await getStoredPreventiveStopDraft(userId!, organizationId!);
+      let storedDraft: PreventiveStopDraftInput | null = null;
+
+      try {
+        storedDraft = await getStoredPreventiveStopDraft(userId!, organizationId!);
+      } catch {
+        // Persistência auxiliar: falha local não bloqueia o formulário.
+      }
 
       if (!isMounted) {
         return;
@@ -68,6 +74,8 @@ export function usePreventiveStopDraft() {
 
       try {
         await setStoredPreventiveStopDraft(userId, organizationId, nextDraft);
+      } catch {
+        // Persistência auxiliar: falha local não impede preenchimento.
       } finally {
         setIsSaving(false);
       }
@@ -111,7 +119,12 @@ export function usePreventiveStopDraft() {
       return;
     }
 
-    await clearStoredPreventiveStopDraft(userId, organizationId);
+    try {
+      await clearStoredPreventiveStopDraft(userId, organizationId);
+    } catch {
+      // Persistência auxiliar: limpeza local falhou; estado em memória segue limpo.
+    }
+
     draftRef.current = {};
     setDraft({});
     setIsHydrated(true);
@@ -130,6 +143,8 @@ export function usePreventiveStopDraft() {
 
       try {
         await setStoredPreventiveStopDraft(userId, organizationId, nextDraft);
+      } catch {
+        // Persistência auxiliar: falha local não impede preenchimento.
       } finally {
         setIsSaving(false);
       }

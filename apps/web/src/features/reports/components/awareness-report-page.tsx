@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { computeAwarenessReportSummary, type AwarenessReportSortField } from "@safestop/types";
 
+import { Bell } from "lucide-react";
+
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { useAuthorization } from "@/features/authorization";
@@ -117,6 +119,7 @@ export function AwarenessReportPage() {
           backHref="/reports"
           backLabel={REPORT_COPY.hubTitle}
           title={REPORT_COPY.awareness}
+          icon={Bell}
         />
         <ReportPageSkeleton />
       </main>
@@ -134,17 +137,20 @@ export function AwarenessReportPage() {
         backLabel={REPORT_COPY.hubTitle}
         subtitle={`${activeOrganization?.name ?? "Organização"} · ${items.length} registros nesta página`}
         title={REPORT_COPY.awareness}
+        icon={Bell}
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <ReportSummaryKpiCard
           isLoading={query.isLoading}
           label={`${REPORT_COPY.onThisPage}: total`}
+          description={REPORT_COPY.onThisPage}
           value={summary.totalRows}
         />
         <ReportSummaryKpiCard
           isLoading={query.isLoading}
           label="Pendentes de ciência"
+          description={REPORT_COPY.onThisPage}
           tone="warning"
           value={summary.pendingCount}
         />

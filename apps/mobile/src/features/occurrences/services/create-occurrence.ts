@@ -1,18 +1,31 @@
 import { isOccurrenceSeverity, isOccurrenceStatus } from "@safestop/types";
 import type { CreateOccurrenceInput } from "@safestop/validation";
 
+import { assertRpcSuccess } from "@/features/evidence/utils/rpc-response";
 import { getSupabaseClient } from "@/lib/auth/client";
 
-import type { CreateOccurrenceResult, CreateOccurrenceRpcResponse } from "./types";
+import type { CreateOccurrenceResult } from "./types";
 
 type CreateOccurrenceParams = {
   organizationId: string;
   input: CreateOccurrenceInput;
 };
 
-function mapCreateOccurrenceResult(
-  data: NonNullable<CreateOccurrenceRpcResponse["data"]>,
-): CreateOccurrenceResult {
+type RpcCreatedOccurrence = {
+  id: string;
+  organization_id: string;
+  area_id: string;
+  unit_id: string | null;
+  public_code: string;
+  title: string;
+  severity: string;
+  status: string;
+  created_by: string;
+  occurred_at: string;
+  created_at: string;
+};
+
+function mapCreateOccurrenceResult(data: RpcCreatedOccurrence): CreateOccurrenceResult {
   if (!isOccurrenceStatus(data.status) || !isOccurrenceSeverity(data.severity)) {
     throw new Error("Não foi possível registrar a ocorrência.");
   }
@@ -71,14 +84,13 @@ export async function createOccurrence(
   });
 
   if (error) {
-    throw new Error("Não foi possível registrar a ocorrência.");
+    throw new Error(error.message || "Não foi possível registrar a ocorrência.");
   }
 
-  const response = data as CreateOccurrenceRpcResponse;
+  const created = assertRpcSuccess<RpcCreatedOccurrence>(
+    data,
+    "Não foi possível registrar a ocorrência.",
+  );
 
-  if (!response.success || !response.data) {
-    throw new Error("Não foi possível registrar a ocorrência.");
-  }
-
-  return mapCreateOccurrenceResult(response.data);
+  return mapCreateOccurrenceResult(created);
 }

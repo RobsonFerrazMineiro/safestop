@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { OccurrenceStatus } from "@safestop/types";
 import { OCCURRENCE_COMMENT_MAX_LENGTH } from "@safestop/types";
+import { colors, spacing } from "@safestop/ui";
 
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 
@@ -32,7 +32,6 @@ export function CommentComposerBar({
   isSubmitting,
   onSubmit,
 }: CommentComposerBarProps) {
-  const insets = useSafeAreaInsets();
   const { can } = useAuthorization();
   const canRead = can("occurrence.read");
 
@@ -76,7 +75,7 @@ export function CommentComposerBar({
   }
 
   return (
-    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+    <View style={styles.container}>
       {helperText ? <Text style={styles.helper}>{helperText}</Text> : null}
       {submitError ? <Text style={styles.error}>{submitError}</Text> : null}
 
@@ -86,7 +85,7 @@ export function CommentComposerBar({
           editable={!isSubmitting && effectiveOnline && !isCommentingBlocked(occurrenceStatus)}
           multiline
           placeholder="Adicionar comentário..."
-          placeholderTextColor="#6B7280"
+          placeholderTextColor={colors.foregroundMuted}
           style={styles.input}
           value={content}
           onChangeText={(value) => {
@@ -110,7 +109,7 @@ export function CommentComposerBar({
           }}
         >
           {isSubmitting ? (
-            <ActivityIndicator color="#0F1115" size="small" />
+            <ActivityIndicator color={colors.background} size="small" />
           ) : (
             <Text style={styles.sendText}>Enviar</Text>
           )}
@@ -128,37 +127,33 @@ export function CommentComposerBar({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "#0F1115",
-    borderTopColor: "#1F2937",
-    borderTopWidth: 1,
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 12,
+    gap: spacing[2],
+    paddingTop: spacing[3],
   },
   counter: {
-    color: "#9CA3AF",
+    color: colors.foregroundMuted,
     fontSize: 12,
     textAlign: "right",
   },
   error: {
-    color: "#F87171",
+    color: colors.destructive,
     fontSize: 13,
   },
   helper: {
-    color: "#9CA3AF",
+    color: colors.foregroundMuted,
     fontSize: 13,
   },
   input: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.border,
     borderRadius: 12,
     borderWidth: 1,
-    color: "#F9FAFB",
+    color: colors.foreground,
     flex: 1,
     fontSize: 15,
     maxHeight: 120,
     minHeight: 44,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing[3],
     paddingVertical: 10,
   },
   pressed: {
@@ -171,18 +166,18 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     alignItems: "center",
-    backgroundColor: "#F97316",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     minHeight: 44,
     minWidth: 72,
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing[3],
   },
   sendButtonDisabled: {
     opacity: 0.5,
   },
   sendText: {
-    color: "#0F1115",
+    color: colors.background,
     fontSize: 14,
     fontWeight: "700",
   },

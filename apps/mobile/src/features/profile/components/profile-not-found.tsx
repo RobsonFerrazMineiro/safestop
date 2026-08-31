@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { radius, spacing, statusChip, typography } from "@safestop/ui";
 
 export function ProfileNotFound() {
   return (
@@ -12,15 +13,15 @@ export function ProfileNotFound() {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "rgba(120, 53, 15, 0.3)",
-    borderColor: "rgba(120, 53, 15, 0.6)",
-    borderRadius: 8,
+    backgroundColor: statusChip.warning.background,
+    borderColor: statusChip.warning.border,
+    borderRadius: radius.card,
     borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[3],
   },
   text: {
-    color: "#FDE68A",
-    fontSize: 14,
+    color: statusChip.warning.foreground,
+    fontSize: typography.helper.fontSize,
   },
 });

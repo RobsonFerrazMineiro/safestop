@@ -1,7 +1,7 @@
 import type { OccurrenceDraftInput } from "@safestop/validation";
 import { deleteSecureItem, getSecureItem, setSecureItem } from "@/lib/secure-storage";
 
-const STORAGE_PREFIX = "safestop:occurrenceDraft:";
+const STORAGE_PREFIX = "safestop.occurrenceDraft.";
 const DRAFT_SCHEMA_VERSION = 1;
 
 type StoredOccurrenceDraft = {
@@ -11,7 +11,7 @@ type StoredOccurrenceDraft = {
 };
 
 function getStorageKey(userId: string, organizationId: string): string {
-  return `${STORAGE_PREFIX}${userId}:${organizationId}`;
+  return `${STORAGE_PREFIX}${userId}.${organizationId}`;
 }
 
 function hasDraftContent(draft: OccurrenceDraftInput): boolean {

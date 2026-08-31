@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Check, ChevronDown, SlidersHorizontal, X } from "lucide-react-native";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -17,7 +18,7 @@ import {
   isOccurrenceSeverity,
   type OccurrenceStatus,
 } from "@safestop/types";
-import { colors, radius, radiusScale, spacing, typography } from "@safestop/ui";
+import { colors, controlHeight, radius, radiusScale, spacing, typography } from "@safestop/ui";
 
 import { Button } from "@/components/ui";
 import { useOccurrenceListFilterOptions } from "@/features/occurrences/hooks/use-occurrence-list-filter-options";
@@ -32,6 +33,12 @@ import {
   type OperationalListFunnelState,
 } from "../utils/operational-list-filters";
 
+const CHECKBOX_SIZE = 16;
+const CHECK_ICON_SIZE = 14;
+const CHEVRON_SIZE = 16;
+const CLOSE_ICON_SIZE = 18;
+const STATUS_ROW_MIN_HEIGHT = 36;
+
 type PreventiveStopOperationalFiltersModalProps = {
   funnel: OperationalListFunnelState;
   onApply: (funnel: OperationalListFunnelState) => void;
@@ -42,7 +49,7 @@ type SelectOption = {
   label: string;
 };
 
-function SelectField({
+function FilterSelect({
   label,
   options,
   selectedValue,
@@ -53,35 +60,108 @@ function SelectField({
   selectedValue: string | null;
   onSelect: (value: string | null) => void;
 }) {
+  const insets = useSafeAreaInsets();
+  const [open, setOpen] = useState(false);
+
+  const selectedLabel = useMemo(() => {
+    const match = options.find((option) =>
+      option.value === "all" ? selectedValue === null : option.value === selectedValue,
+    );
+    return match?.label ?? "Todas";
+  }, [options, selectedValue]);
+
   return (
     <View style={styles.fieldBlock}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <View style={styles.optionList}>
-        {options.map((option) => {
-          const isSelected =
-            option.value === "all" ? selectedValue === null : selectedValue === option.value;
+      <Text style={styles.selectLabel}>{label}</Text>
+      <Pressable
+        accessibilityLabel={`${label}: ${selectedLabel}`}
+        accessibilityRole="button"
+        style={({ pressed }) => [styles.selectTrigger, pressed && styles.rowPressed]}
+        onPress={() => {
+          setOpen(true);
+        }}
+      >
+        <Text numberOfLines={1} style={styles.selectTriggerText}>
+          {selectedLabel}
+        </Text>
+        <ChevronDown
+          accessible={false}
+          color={colors.foregroundMuted}
+          size={CHEVRON_SIZE}
+          strokeWidth={2}
+        />
+      </Pressable>
 
-          return (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
-              key={option.value}
-              style={({ pressed }) => [
-                styles.optionRow,
-                isSelected && styles.optionRowSelected,
-                pressed && styles.optionRowPressed,
-              ]}
-              onPress={() => {
-                onSelect(option.value === "all" ? null : option.value);
-              }}
-            >
-              <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
-                {option.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      <Modal animationType="fade" transparent visible={open} onRequestClose={() => setOpen(false)}>
+        <View style={styles.selectOverlay}>
+          <Pressable
+            accessibilityLabel={`Fechar ${label}`}
+            style={styles.selectBackdrop}
+            onPress={() => {
+              setOpen(false);
+            }}
+          />
+          <View
+            style={[styles.selectSheet, { paddingBottom: Math.max(insets.bottom, spacing[4]) }]}
+          >
+            <View style={styles.selectSheetHeader}>
+              <Text style={styles.selectSheetTitle}>{label}</Text>
+              <Pressable
+                accessibilityLabel={`Fechar ${label}`}
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={() => {
+                  setOpen(false);
+                }}
+              >
+                <X accessible={false} color={colors.foregroundMuted} size={CLOSE_ICON_SIZE} />
+              </Pressable>
+            </View>
+
+            <ScrollView keyboardShouldPersistTaps="handled">
+              {options.map((option) => {
+                const isSelected =
+                  option.value === "all" ? selectedValue === null : selectedValue === option.value;
+
+                return (
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: isSelected }}
+                    key={option.value}
+                    style={({ pressed }) => [
+                      styles.selectOptionRow,
+                      isSelected && styles.selectOptionRowSelected,
+                      pressed && styles.rowPressed,
+                    ]}
+                    onPress={() => {
+                      onSelect(option.value === "all" ? null : option.value);
+                      setOpen(false);
+                    }}
+                  >
+                    <Text
+                      numberOfLines={2}
+                      style={[
+                        styles.selectOptionText,
+                        isSelected && styles.selectOptionTextSelected,
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                    {isSelected ? (
+                      <Check
+                        accessible={false}
+                        color={colors.primary}
+                        size={16}
+                        strokeWidth={2.5}
+                      />
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -143,16 +223,34 @@ export function PreventiveStopOperationalFiltersModal({
 
   return (
     <>
-      <Button
+      <Pressable
         accessibilityLabel={
           activeFilterCount > 0 ? `Filtros, ${activeFilterCount} ativos` : "Filtros"
         }
-        style={activeFilterCount > 0 ? styles.filtersButtonActive : undefined}
-        variant="secondary"
+        accessibilityRole="button"
+        style={({ pressed }) => [
+          styles.filtersTrigger,
+          activeFilterCount > 0 && styles.filtersButtonActive,
+          pressed && styles.filtersTriggerPressed,
+        ]}
         onPress={openModal}
       >
-        {activeFilterCount > 0 ? `Filtros · ${activeFilterCount}` : "Filtros"}
-      </Button>
+        <SlidersHorizontal
+          accessible={false}
+          color={activeFilterCount > 0 ? colors.primary : colors.foregroundMuted}
+          size={16}
+          strokeWidth={2}
+        />
+        <Text
+          numberOfLines={1}
+          style={[
+            styles.filtersTriggerText,
+            activeFilterCount > 0 && styles.filtersTriggerTextActive,
+          ]}
+        >
+          {activeFilterCount > 0 ? `Filtros · ${activeFilterCount}` : "Filtros"}
+        </Text>
+      </Pressable>
 
       <Modal animationType="slide" transparent visible={visible} onRequestClose={closeModal}>
         <KeyboardAvoidingView
@@ -165,34 +263,47 @@ export function PreventiveStopOperationalFiltersModal({
             onPress={closeModal}
           />
 
-          <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing[4]) }]}>
-            <Text style={styles.title}>Filtros</Text>
-            <Text style={styles.description}>
-              Status, criticidade, área e empresa. Sem seleção de status: todas as Paralisações
-              Preventivas visíveis.
-            </Text>
-
-            {isLoading ? (
-              <View style={styles.loadingRow}>
-                <ActivityIndicator color={colors.primary} />
-                <Text style={styles.loadingText}>Carregando opções…</Text>
+          <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, spacing[3]) }]}>
+            <View style={styles.sheetHeader}>
+              <View style={styles.titleRow}>
+                <Text style={styles.title}>Filtros</Text>
+                <Pressable
+                  accessibilityLabel="Fechar filtros"
+                  accessibilityRole="button"
+                  hitSlop={8}
+                  onPress={closeModal}
+                >
+                  <X accessible={false} color={colors.foregroundMuted} size={CLOSE_ICON_SIZE} />
+                </Pressable>
               </View>
-            ) : null}
-
-            {isError ? (
-              <Text accessibilityRole="alert" style={styles.errorText}>
-                Não foi possível carregar as opções de filtro.
+              <Text style={styles.description}>
+                Status, criticidade, área e empresa. Sem seleção de status: todas as Paralisações
+                Preventivas visíveis.
               </Text>
-            ) : null}
+
+              {isLoading ? (
+                <View style={styles.loadingRow}>
+                  <ActivityIndicator color={colors.primary} />
+                  <Text style={styles.loadingText}>Carregando opções…</Text>
+                </View>
+              ) : null}
+
+              {isError ? (
+                <Text accessibilityRole="alert" style={styles.errorText}>
+                  Não foi possível carregar as opções de filtro.
+                </Text>
+              ) : null}
+            </View>
 
             <ScrollView
               contentContainerStyle={styles.scrollContent}
               keyboardShouldPersistTaps="handled"
+              style={styles.scroll}
             >
               <View style={styles.fieldBlock}>
                 <Text style={styles.fieldLabel}>Status</Text>
                 <Text style={styles.fieldHint}>Sem seleção: todos os status.</Text>
-                <View style={styles.statusGrid}>
+                <View style={styles.statusList}>
                   {OCCURRENCE_STATUSES.map((status) => {
                     const checked = draft.status.includes(status);
 
@@ -201,17 +312,20 @@ export function PreventiveStopOperationalFiltersModal({
                         accessibilityRole="checkbox"
                         accessibilityState={{ checked }}
                         key={status}
-                        style={({ pressed }) => [
-                          styles.statusRow,
-                          checked && styles.statusRowChecked,
-                          pressed && styles.optionRowPressed,
-                        ]}
+                        style={({ pressed }) => [styles.statusRow, pressed && styles.rowPressed]}
                         onPress={() => {
                           toggleStatus(status);
                         }}
                       >
                         <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-                          {checked ? <Text style={styles.checkboxMark}>✓</Text> : null}
+                          {checked ? (
+                            <Check
+                              accessible={false}
+                              color={colors.foreground}
+                              size={CHECK_ICON_SIZE}
+                              strokeWidth={3}
+                            />
+                          ) : null}
                         </View>
                         <Text style={styles.statusText}>{getOccurrenceStatusLabel(status)}</Text>
                       </Pressable>
@@ -220,7 +334,7 @@ export function PreventiveStopOperationalFiltersModal({
                 </View>
               </View>
 
-              <SelectField
+              <FilterSelect
                 label="Criticidade"
                 options={severityOptions}
                 selectedValue={draft.severity}
@@ -232,7 +346,7 @@ export function PreventiveStopOperationalFiltersModal({
                 }}
               />
 
-              <SelectField
+              <FilterSelect
                 label="Área"
                 options={areaOptions}
                 selectedValue={draft.areaId}
@@ -244,7 +358,7 @@ export function PreventiveStopOperationalFiltersModal({
                 }}
               />
 
-              <SelectField
+              <FilterSelect
                 label="Contratada"
                 options={contractorOptions}
                 selectedValue={draft.contractorOrganizationId}
@@ -259,6 +373,15 @@ export function PreventiveStopOperationalFiltersModal({
 
             <View style={styles.footer}>
               <Button
+                accessibilityLabel="Aplicar filtros"
+                onPress={() => {
+                  onApply(draft);
+                  closeModal();
+                }}
+              >
+                Aplicar
+              </Button>
+              <Button
                 accessibilityLabel="Limpar filtros"
                 variant="secondary"
                 onPress={() => {
@@ -268,15 +391,6 @@ export function PreventiveStopOperationalFiltersModal({
                 }}
               >
                 Limpar filtros
-              </Button>
-              <Button
-                accessibilityLabel="Aplicar filtros"
-                onPress={() => {
-                  onApply(draft);
-                  closeModal();
-                }}
-              >
-                Aplicar
               </Button>
             </View>
           </View>
@@ -292,21 +406,18 @@ const styles = StyleSheet.create({
   },
   checkbox: {
     alignItems: "center",
+    backgroundColor: colors.surfaceElevated,
     borderColor: colors.border,
-    borderRadius: radiusScale.sm,
+    borderRadius: radiusScale.xs,
     borderWidth: 1,
-    height: 20,
+    flexShrink: 0,
+    height: CHECKBOX_SIZE,
     justifyContent: "center",
-    width: 20,
+    width: CHECKBOX_SIZE,
   },
   checkboxChecked: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
-  },
-  checkboxMark: {
-    color: colors.background,
-    fontSize: 12,
-    fontWeight: "700",
   },
   description: {
     color: colors.foregroundMuted,
@@ -323,18 +434,46 @@ const styles = StyleSheet.create({
   fieldHint: {
     color: colors.foregroundMuted,
     fontSize: typography.caption.fontSize,
+    lineHeight: 14,
+    marginTop: -spacing[1],
   },
   fieldLabel: {
     color: colors.foreground,
-    fontSize: typography.label.fontSize,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
   },
   filtersButtonActive: {
     borderColor: colors.primary,
   },
+  filtersTrigger: {
+    alignItems: "center",
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.border,
+    borderRadius: radius.button,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing[1],
+    justifyContent: "center",
+    minHeight: controlHeight.mobile,
+    minWidth: 96,
+    paddingHorizontal: spacing[3],
+  },
+  filtersTriggerPressed: {
+    opacity: 0.85,
+  },
+  filtersTriggerText: {
+    color: colors.foreground,
+    fontSize: typography.helper.fontSize,
+    fontWeight: "600",
+  },
+  filtersTriggerTextActive: {
+    color: colors.primary,
+  },
   footer: {
+    flexGrow: 0,
+    flexShrink: 0,
     gap: spacing[2],
-    marginTop: spacing[3],
+    paddingTop: spacing[3],
   },
   loadingRow: {
     alignItems: "center",
@@ -345,73 +484,127 @@ const styles = StyleSheet.create({
     color: colors.foregroundMuted,
     fontSize: typography.helper.fontSize,
   },
-  optionList: {
-    gap: spacing[1],
-  },
-  optionRow: {
-    borderColor: colors.border,
-    borderRadius: radius.input,
-    borderWidth: 1,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-  },
-  optionRowPressed: {
-    opacity: 0.85,
-  },
-  optionRowSelected: {
-    backgroundColor: colors.surfaceMuted,
-    borderColor: colors.primary,
-  },
-  optionText: {
-    color: colors.foreground,
-    fontSize: typography.label.fontSize,
-  },
-  optionTextSelected: {
-    color: colors.primary,
-    fontWeight: "600",
-  },
   overlay: {
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     flex: 1,
     justifyContent: "flex-end",
   },
+  rowPressed: {
+    opacity: 0.85,
+  },
+  scroll: {
+    flexGrow: 0,
+    flexShrink: 1,
+  },
   scrollContent: {
     gap: spacing[4],
-    paddingVertical: spacing[3],
+    paddingBottom: spacing[3],
+    paddingTop: spacing[3],
   },
-  sheet: {
-    backgroundColor: colors.background,
+  selectBackdrop: {
+    flex: 1,
+  },
+  selectLabel: {
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
+  },
+  selectOptionRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[2],
+    minHeight: controlHeight.mobile,
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[2],
+  },
+  selectOptionRowSelected: {
+    backgroundColor: colors.surfaceMuted,
+  },
+  selectOptionText: {
+    color: colors.foreground,
+    flex: 1,
+    fontSize: typography.label.fontSize,
+  },
+  selectOptionTextSelected: {
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  selectOverlay: {
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+  selectSheet: {
+    backgroundColor: colors.surface,
     borderTopLeftRadius: radius.dialog,
     borderTopRightRadius: radius.dialog,
-    maxHeight: "88%",
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[4],
+    maxHeight: "70%",
+    paddingTop: spacing[3],
   },
-  statusGrid: {
-    gap: spacing[2],
-  },
-  statusRow: {
+  selectSheetHeader: {
     alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: spacing[2],
+    paddingHorizontal: spacing[4],
+  },
+  selectSheetTitle: {
+    color: colors.foreground,
+    fontSize: typography.cardTitle.fontSize,
+    fontWeight: typography.cardTitle.fontWeight,
+  },
+  selectTrigger: {
+    alignItems: "center",
+    backgroundColor: colors.surfaceElevated,
     borderColor: colors.border,
     borderRadius: radius.input,
     borderWidth: 1,
     flexDirection: "row",
     gap: spacing[2],
+    justifyContent: "space-between",
+    minHeight: controlHeight.mobile,
     paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
   },
-  statusRowChecked: {
-    backgroundColor: colors.surfaceMuted,
-    borderColor: colors.primary,
-  },
-  statusText: {
+  selectTriggerText: {
     color: colors.foreground,
     flex: 1,
     fontSize: typography.label.fontSize,
   },
+  sheet: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radius.dialog,
+    borderTopRightRadius: radius.dialog,
+    maxHeight: "92%",
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[4],
+  },
+  sheetHeader: {
+    flexGrow: 0,
+    flexShrink: 0,
+    gap: spacing[2],
+  },
+  statusList: {
+    gap: spacing[2],
+  },
+  statusRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[2],
+    minHeight: STATUS_ROW_MIN_HEIGHT,
+  },
+  statusText: {
+    color: colors.foreground,
+    flex: 1,
+    fontSize: typography.helper.fontSize,
+  },
   title: {
     color: colors.foreground,
+    flex: 1,
     fontSize: typography.cardTitle.fontSize,
     fontWeight: typography.cardTitle.fontWeight,
+  },
+  titleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[2],
   },
 });

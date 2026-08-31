@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { OctagonAlert, Plus } from "lucide-react";
 import type { OccurrenceSummary } from "@safestop/types";
 
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
+import { SurfaceIcon } from "@/components/surface-icon";
 import { Can } from "@/features/authorization";
 
 type StopWorkListItemProps = {
@@ -42,10 +44,14 @@ export function StopWorkListItem({ item }: StopWorkListItemProps) {
 export function StopWorkEmpty() {
   return (
     <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card px-6 py-10 text-center">
+      <SurfaceIcon className="text-muted-foreground" icon={OctagonAlert} variant="empty" />
       <p className="text-base text-foreground">Nenhuma Paralisação Preventiva encontrada.</p>
       <Can permission="occurrence.create">
         <Button asChild>
-          <Link href="/stop-work/new">Nova Paralisação</Link>
+          <Link href="/stop-work/new">
+            <Plus />
+            Nova Paralisação
+          </Link>
         </Button>
       </Can>
     </div>

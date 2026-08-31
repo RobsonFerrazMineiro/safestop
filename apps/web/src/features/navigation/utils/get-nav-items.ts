@@ -19,6 +19,11 @@ export type NavItem = {
   isActive: (pathname: string) => boolean;
 };
 
+/** Lista e detalhe de ocorrência — não inclui `/stop-work/new`. */
+export function isStopWorkListNavActive(pathname: string): boolean {
+  return pathname.startsWith("/stop-work") && pathname !== "/stop-work/new";
+}
+
 type NavItemsParams = {
   canApproveMdho: boolean;
   canManageContacts: boolean;
@@ -52,7 +57,7 @@ export function getPrimaryNavItems({
       label: "Paralisações Preventivas",
       href: "/stop-work",
       icon: StopWorkIcon,
-      isActive: (pathname) => pathname.startsWith("/stop-work"),
+      isActive: isStopWorkListNavActive,
     },
   ];
 

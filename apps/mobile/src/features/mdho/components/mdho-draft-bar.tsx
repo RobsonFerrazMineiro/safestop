@@ -51,7 +51,6 @@ export function MdhoDraftBar({
             disabled={isBusy}
             loading={isSubmitting}
             style={styles.submitButton}
-            variant="secondary"
             onPress={onSubmit}
           >
             Enviar MDHO
@@ -87,8 +86,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   submitButton: {
-    backgroundColor: colors.info,
-    borderColor: colors.info,
     flex: 1,
   },
 });

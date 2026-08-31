@@ -9,11 +9,18 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SurfaceIcon } from "@/components/surface-icon";
 import { cn } from "@/lib/utils";
 import { useAuthorization } from "@/features/authorization";
 
+import { iconForMetric } from "./utils/dashboard-kpi-icons";
 import { formatDashboardMetricValue } from "./utils/format-metric-value";
-import { hasMetricPermission, hrefForMetric, toneForMetric } from "./utils/kpi-config";
+import {
+  detailForMetric,
+  hasMetricPermission,
+  hrefForMetric,
+  toneForMetric,
+} from "./utils/kpi-config";
 
 type DashboardKpiCardProps = {
   metricKey: DashboardMetricKey;
@@ -34,15 +41,30 @@ function hasPermission(
 function toneClasses(tone: ReturnType<typeof toneForMetric>): string {
   switch (tone) {
     case "destructive":
-      return "border-status-destructive-border bg-status-destructive-bg/40";
+      return "border-status-destructive-border border-l-status-destructive-border bg-status-destructive-bg/40";
     case "warning":
-      return "border-status-warning-border bg-status-warning-bg/40";
+      return "border-status-warning-border border-l-status-warning-border bg-status-warning-bg/40";
     case "info":
-      return "border-status-info-border bg-status-info-bg/40";
+      return "border-status-info-border border-l-status-info-border bg-status-info-bg/40";
     case "success":
-      return "border-status-success-border bg-status-success-bg/40";
+      return "border-status-success-border border-l-status-success-border bg-status-success-bg/40";
     default:
-      return "border-border bg-card";
+      return "border-border border-l-border bg-card";
+  }
+}
+
+function iconToneClass(tone: ReturnType<typeof toneForMetric>): string {
+  switch (tone) {
+    case "destructive":
+      return "text-status-destructive-fg";
+    case "warning":
+      return "text-status-warning-fg";
+    case "info":
+      return "text-status-info-fg";
+    case "success":
+      return "text-status-success-fg";
+    default:
+      return "text-muted-foreground";
   }
 }
 
@@ -55,34 +77,50 @@ function DashboardKpiCardInner({
 }: DashboardKpiCardProps) {
   const label = DASHBOARD_METRIC_CATALOG[metricKey].label;
   const href = hrefForMetric(metricKey);
-  const tone = toneClasses(toneForMetric(metricKey));
+  const tone = toneForMetric(metricKey);
+  const cardTone = toneClasses(tone);
   const formattedValue = formatDashboardMetricValue(metricKey, value);
+  const MetricIcon = iconForMetric(metricKey);
+  const detail = detailForMetric(metricKey);
 
   const body = (
     <>
-      <span className="text-3xl font-bold tabular-nums text-foreground">
+      <div className="flex items-start justify-between gap-3">
+        <span className="min-w-0 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground line-clamp-2">
+          {label}
+        </span>
+        <SurfaceIcon
+          className={cn("shrink-0", iconToneClass(tone))}
+          icon={MetricIcon}
+          variant="kpi"
+        />
+      </div>
+      <span className="text-left text-3xl font-bold tabular-nums text-foreground">
         {isLoading ? "…" : isError ? "—" : formattedValue}
       </span>
-      <span className="line-clamp-2 text-sm text-muted-foreground">{label}</span>
+      <span className="mt-auto border-t border-border/80 pt-2 text-left text-xs text-muted-foreground">
+        {detail}
+      </span>
     </>
   );
 
   const className = cn(
-    "flex min-h-[7rem] flex-col justify-between gap-2 rounded-lg border p-4 text-left shadow-sm",
-    tone,
+    "flex min-h-[8.5rem] w-full flex-col items-stretch justify-between gap-3 rounded-lg border border-l-4 p-4 text-left shadow-sm",
+    cardTone,
   );
 
   if (href && !isError && !isLoading) {
     return (
-      <Button
-        asChild
-        className={cn(className, "h-auto w-full whitespace-normal hover:bg-accent/40")}
-        variant="ghost"
+      <Link
+        aria-label={`${label}: ${formattedValue}`}
+        className={cn(
+          className,
+          "transition hover:bg-accent/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+        )}
+        href={href}
       >
-        <Link aria-label={`${label}: ${formattedValue}`} href={href}>
-          {body}
-        </Link>
-      </Button>
+        {body}
+      </Link>
     );
   }
 
@@ -91,7 +129,7 @@ function DashboardKpiCardInner({
       {body}
       {isError ? (
         <Button
-          className="mt-1 h-auto justify-start px-0 text-primary"
+          className="h-auto justify-start px-0 text-primary"
           size="sm"
           type="button"
           variant="link"
@@ -117,5 +155,5 @@ export function DashboardKpiCard(props: DashboardKpiCardProps) {
 }
 
 export function DashboardKpiCardSkeleton() {
-  return <Skeleton aria-hidden="true" className="min-h-[7rem] rounded-lg" />;
+  return <Skeleton aria-hidden="true" className="min-h-[8.5rem] rounded-lg" />;
 }

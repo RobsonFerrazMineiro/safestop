@@ -1,3 +1,4 @@
+import { Camera } from "lucide-react-native";
 import {
   ActivityIndicator,
   Image,
@@ -12,6 +13,8 @@ import { colors, overlay, radius, typography } from "@safestop/ui";
 import { EVIDENCE_TILE_SIZE } from "../constants";
 import { getQueueStatusLabel } from "../utils/evidence-labels";
 import type { EvidenceUploadQueueItem } from "../types";
+
+const ADD_ICON_SIZE = 20;
 
 type EvidenceAddTileProps = {
   onPress: () => void;
@@ -33,7 +36,12 @@ export function EvidenceAddTile({ onPress, disabled }: EvidenceAddTileProps) {
       ]}
       onPress={onPress}
     >
-      <Text style={styles.addIcon}>📷</Text>
+      <Camera
+        accessible={false}
+        color={colors.foregroundMuted}
+        size={ADD_ICON_SIZE}
+        strokeWidth={2}
+      />
       <Text style={styles.addLabel}>Adicionar</Text>
     </Pressable>
   );
@@ -134,9 +142,6 @@ export function EvidenceSyncedTile({
 }
 
 const styles = StyleSheet.create({
-  addIcon: {
-    fontSize: 20,
-  },
   addLabel: {
     color: colors.foregroundMuted,
     fontSize: typography.caption.fontSize,

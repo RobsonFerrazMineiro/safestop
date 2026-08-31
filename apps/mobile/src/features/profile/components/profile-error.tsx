@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors, controlHeight, radius, spacing, statusChip, typography } from "@safestop/ui";
 
 type ProfileErrorProps = {
   message?: string;
@@ -32,33 +33,35 @@ export function ProfileError({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "rgba(127, 29, 29, 0.4)",
-    borderColor: "rgba(127, 29, 29, 0.6)",
-    borderRadius: 8,
+    backgroundColor: statusChip.destructive.background,
+    borderColor: statusChip.destructive.border,
+    borderRadius: radius.card,
     borderWidth: 1,
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    gap: spacing[3],
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[3],
   },
   retryButton: {
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#374151",
-    borderRadius: 8,
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.border,
+    borderRadius: radius.button,
+    borderWidth: 1,
     justifyContent: "center",
-    minHeight: 40,
-    paddingHorizontal: 16,
+    minHeight: controlHeight.mobile,
+    paddingHorizontal: spacing[4],
   },
   retryButtonPressed: {
     opacity: 0.85,
   },
   retryButtonText: {
-    color: "#F9FAFB",
-    fontSize: 14,
+    color: colors.foreground,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
   },
   text: {
-    color: "#FECACA",
-    fontSize: 14,
+    color: statusChip.destructive.foreground,
+    fontSize: typography.helper.fontSize,
   },
 });

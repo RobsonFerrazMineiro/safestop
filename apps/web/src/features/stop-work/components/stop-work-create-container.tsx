@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
+import { PlusCircle } from "lucide-react";
+
 import { FormField } from "@/components/form-field";
 import { PageHeader } from "@/components/page-header";
 import {
@@ -419,6 +421,7 @@ function StopWorkCreateForm({
         backLabel="Voltar para paralisações"
         subtitle="Preencha os dados mínimos para registrar a paralisação na organização ativa."
         title="Nova Paralisação Preventiva"
+        icon={PlusCircle}
       />
 
       {showDraftBanner ? (

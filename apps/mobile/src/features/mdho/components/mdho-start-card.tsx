@@ -1,5 +1,5 @@
 import { StyleSheet, Text } from "react-native";
-import { colors, statusChip, typography } from "@safestop/ui";
+import { spacing, statusChip, typography } from "@safestop/ui";
 
 import { Button, Card } from "@/components/ui";
 
@@ -27,8 +27,6 @@ export function MdhoStartCard({ isOnline, isStarting, onStart }: MdhoStartCardPr
         }
         disabled={!isOnline}
         loading={isStarting}
-        style={styles.startButton}
-        variant="secondary"
         onPress={() => {
           void onStart();
         }}
@@ -43,19 +41,15 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: statusChip.info.background,
     borderColor: statusChip.info.border,
+    gap: spacing[3],
   },
   intro: {
     color: statusChip.info.foreground,
-    fontSize: typography.label.fontSize,
-    lineHeight: 20,
+    fontSize: typography.helper.fontSize,
+    lineHeight: 18,
   },
   offline: {
     color: statusChip.info.foreground,
-    fontSize: typography.helper.fontSize,
-  },
-  startButton: {
-    alignSelf: "stretch",
-    backgroundColor: colors.info,
-    borderColor: colors.info,
+    fontSize: typography.caption.fontSize,
   },
 });

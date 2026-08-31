@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { colors, controlHeight, radius, spacing, typography } from "@safestop/ui";
 
 import { useOccurrenceParticipants } from "../hooks/use-occurrence-participants";
 import { getParticipantTypeLabel } from "../services/get-occurrence-participants";
@@ -22,7 +23,7 @@ export function OccurrenceParticipantsSection({
         <Text accessibilityRole="header" style={styles.sectionTitle}>
           Quem está envolvido
         </Text>
-        <ActivityIndicator color="#2563EB" size="small" />
+        <ActivityIndicator color={colors.primary} size="small" />
       </View>
     );
   }
@@ -38,14 +39,17 @@ export function OccurrenceParticipantsSection({
 
   return (
     <View style={styles.container}>
-      <Text accessibilityRole="header" style={styles.sectionTitle}>
-        Quem está envolvido
-      </Text>
+      <View style={styles.headerRow}>
+        <Text accessibilityRole="header" style={styles.sectionTitle}>
+          Quem está envolvido
+        </Text>
+        <Text style={styles.counter}>{participants.length}</Text>
+      </View>
 
       <View style={styles.list}>
         {visibleParticipants.map((participant) => (
           <View key={participant.id} style={styles.row}>
-            <Text style={styles.bullet}>●</Text>
+            <View style={styles.dot} />
             <Text style={styles.label}>
               {getParticipantTypeLabel(participant.participantType)}
               {" — "}
@@ -62,6 +66,7 @@ export function OccurrenceParticipantsSection({
           }
           accessibilityRole="button"
           accessibilityState={{ expanded: isExpanded }}
+          style={({ pressed }) => [styles.toggleHit, pressed && styles.pressed]}
           onPress={() => {
             setIsExpanded((current) => !current);
           }}
@@ -76,48 +81,63 @@ export function OccurrenceParticipantsSection({
 }
 
 const styles = StyleSheet.create({
-  bullet: {
-    color: "#2563EB",
-    fontSize: 10,
-    marginTop: 4,
-  },
   container: {
-    gap: 8,
+    gap: spacing[2],
+  },
+  counter: {
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
+    fontWeight: "600",
+  },
+  dot: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.badge,
+    height: 6,
+    marginTop: 6,
+    width: 6,
+  },
+  headerRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   label: {
-    color: "#D1D5DB",
+    color: colors.foregroundMuted,
     flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: typography.helper.fontSize,
+    lineHeight: 18,
   },
   list: {
-    backgroundColor: "#1F2937",
-    borderColor: "#374151",
-    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.card,
     borderWidth: 1,
-    gap: 10,
-    padding: 14,
+    gap: spacing[2],
+    padding: spacing[3],
   },
   name: {
-    color: "#F9FAFB",
+    color: colors.foreground,
     fontWeight: "600",
+  },
+  pressed: {
+    opacity: 0.85,
   },
   row: {
     flexDirection: "row",
-    gap: 8,
+    gap: spacing[2],
   },
   sectionTitle: {
-    borderTopColor: "#1F2937",
-    borderTopWidth: 1,
-    color: "#D1D5DB",
-    fontSize: 13,
+    color: colors.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "700",
-    paddingTop: 12,
-    textTransform: "uppercase",
   },
   toggle: {
-    color: "#FB923C",
-    fontSize: 14,
+    color: colors.primary,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
+  },
+  toggleHit: {
+    justifyContent: "center",
+    minHeight: controlHeight.mobile,
   },
 });

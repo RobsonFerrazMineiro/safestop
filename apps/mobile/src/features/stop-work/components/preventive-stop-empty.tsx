@@ -1,4 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { OctagonAlert } from "lucide-react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { colors, spacing, typography } from "@safestop/ui";
+
+import { Button } from "@/components/ui";
 
 type PreventiveStopEmptyProps = {
   title?: string;
@@ -14,56 +18,41 @@ export function PreventiveStopEmpty({
   onAction,
 }: PreventiveStopEmptyProps) {
   return (
-    <View style={styles.container}>
+    <View accessibilityRole="text" style={styles.container}>
+      <OctagonAlert
+        accessible={false}
+        color={colors.foregroundMuted}
+        size={28}
+        strokeWidth={1.75}
+      />
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
 
       {actionLabel && onAction ? (
-        <Pressable
-          accessibilityLabel={actionLabel}
-          accessibilityRole="button"
-          style={({ pressed }) => [styles.actionButton, pressed && styles.buttonPressed]}
-          onPress={onAction}
-        >
-          <Text style={styles.actionButtonText}>{actionLabel}</Text>
-        </Pressable>
+        <Button accessibilityLabel={actionLabel} variant="secondary" onPress={onAction}>
+          {actionLabel}
+        </Button>
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  actionButton: {
-    alignItems: "center",
-    backgroundColor: "#F97316",
-    borderRadius: 8,
-    justifyContent: "center",
-    marginTop: 8,
-    minHeight: 48,
-    paddingHorizontal: 16,
-  },
-  actionButtonText: {
-    color: "#0F1115",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  buttonPressed: {
-    opacity: 0.85,
-  },
   container: {
     alignItems: "center",
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 32,
+    gap: spacing[2],
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[8],
   },
   description: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
+    lineHeight: 18,
     textAlign: "center",
   },
   title: {
-    color: "#F9FAFB",
-    fontSize: 16,
+    color: colors.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "700",
     textAlign: "center",
   },

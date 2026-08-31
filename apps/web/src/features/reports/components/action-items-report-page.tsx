@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { computeActionItemReportSummary, type ActionItemReportSortField } from "@safestop/types";
 
+import { AlarmClock, Clock, ListChecks } from "lucide-react";
+
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { useAuthorization } from "@/features/authorization";
@@ -121,6 +123,7 @@ export function ActionItemsReportPage() {
           backHref="/reports"
           backLabel={REPORT_COPY.hubTitle}
           title={REPORT_COPY.actionItems}
+          icon={ListChecks}
         />
         <ReportPageSkeleton />
       </main>
@@ -138,24 +141,30 @@ export function ActionItemsReportPage() {
         backLabel={REPORT_COPY.hubTitle}
         subtitle={`${activeOrganization?.name ?? "Organização"} · ${items.length} registros nesta página`}
         title={REPORT_COPY.actionItems}
+        icon={ListChecks}
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <ReportSummaryKpiCard
           isLoading={query.isLoading}
           label={`${REPORT_COPY.onThisPage}: total`}
+          description={REPORT_COPY.onThisPage}
           value={summary.totalRows}
         />
         <ReportSummaryKpiCard
           isLoading={query.isLoading}
           label="Vencidas"
+          description={REPORT_COPY.onThisPage}
           tone="destructive"
+          icon={AlarmClock}
           value={summary.overdueCount}
         />
         <ReportSummaryKpiCard
           isLoading={query.isLoading}
           label="Próximas do vencimento"
+          description={REPORT_COPY.onThisPage}
           tone="warning"
+          icon={Clock}
           value={summary.dueSoonCount}
         />
       </section>

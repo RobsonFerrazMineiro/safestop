@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
+import { ClipboardCheck } from "lucide-react";
+
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 
@@ -96,7 +98,8 @@ function HseApprovalQueueHeader() {
   return (
     <PageHeader
       backHref="/"
-      backLabel="← Voltar"
+      backLabel="Voltar"
+      icon={ClipboardCheck}
       subtitle="Aguardando sua aprovação"
       title="Aprovação HSE"
     />

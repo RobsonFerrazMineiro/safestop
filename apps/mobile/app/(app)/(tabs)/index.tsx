@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { useRouter } from "expo-router";
+import { Bell, ClipboardCheck, List, Plus, User, type LucideIcon } from "lucide-react-native";
 import {
   ActivityIndicator,
   Pressable,
@@ -8,14 +9,17 @@ import {
   StyleSheet,
   Text,
   View,
+  type StyleProp,
+  type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, controlHeight, radius, spacing, statusChip, typography } from "@safestop/ui";
 
-import { Button, Card } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { Can } from "@/features/authorization/components/can";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { MobileHomePendingSection, useHomePendingData } from "@/features/dashboard";
+import { DASHBOARD_COPY } from "@/features/dashboard/utils/dashboard-copy";
 import { showHseApprovalQueue } from "@/features/hse-approval";
 import {
   getNotificationAccessibilityLabel,
@@ -31,6 +35,57 @@ import {
   stopWorkNewRoute,
   stopWorkRoute,
 } from "@/lib/auth/routes";
+
+const SHORTCUT_ICON_SIZE = 18;
+
+type HomeShortcutTileProps = {
+  accessibilityLabel: string;
+  label: string;
+  Icon: LucideIcon;
+  onPress: () => void;
+  style?: StyleProp<ViewStyle>;
+  variant?: "default" | "secondary" | "ghost";
+  trailing?: ReactNode;
+};
+
+function HomeShortcutTile({
+  accessibilityLabel,
+  label,
+  Icon,
+  onPress,
+  style,
+  variant = "default",
+  trailing,
+}: HomeShortcutTileProps) {
+  const isSecondary = variant === "secondary";
+  const isGhost = variant === "ghost";
+
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        styles.shortcutTile,
+        isSecondary && styles.shortcutTileSecondary,
+        isGhost && styles.shortcutTileGhost,
+        pressed && styles.shortcutPressed,
+        style,
+      ]}
+      onPress={onPress}
+    >
+      <Icon
+        accessible={false}
+        color={isGhost ? colors.foregroundMuted : colors.primary}
+        size={SHORTCUT_ICON_SIZE}
+        strokeWidth={2}
+      />
+      <Text numberOfLines={1} style={[styles.shortcutLabel, isGhost && styles.shortcutLabelGhost]}>
+        {label}
+      </Text>
+      {trailing}
+    </Pressable>
+  );
+}
 
 export default function AuthenticatedHomeScreen() {
   const router = useRouter();
@@ -85,30 +140,33 @@ export default function AuthenticatedHomeScreen() {
           />
         }
       >
-        <Text style={styles.title}>SafeStop</Text>
-        {user?.email ? <Text style={styles.email}>{user.email}</Text> : null}
+        <View style={styles.header}>
+          <Text style={styles.title}>SafeStop</Text>
+          {user?.email ? <Text style={styles.email}>{user.email}</Text> : null}
+        </View>
 
         {activeOrganization ? (
           <Card style={styles.organizationCard} variant="muted">
             <Text style={styles.organizationLabel}>Organização ativa</Text>
-            <Text style={styles.organizationName}>{activeOrganization.name}</Text>
+            <Text numberOfLines={2} style={styles.organizationName}>
+              {activeOrganization.name}
+            </Text>
             {activeOrganization.code ? (
               <Text style={styles.organizationCode}>{activeOrganization.code}</Text>
             ) : null}
+            {hasMultipleOrganizations ? (
+              <Pressable
+                accessibilityLabel="Trocar organização"
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.switchOrgLink, pressed && styles.shortcutPressed]}
+                onPress={() => {
+                  router.push(authRoutes.organizations);
+                }}
+              >
+                <Text style={styles.switchOrgText}>Trocar organização</Text>
+              </Pressable>
+            ) : null}
           </Card>
-        ) : null}
-
-        {hasMultipleOrganizations ? (
-          <Button
-            accessibilityLabel="Trocar organização"
-            style={styles.fullWidthShortcut}
-            variant="secondary"
-            onPress={() => {
-              router.push(authRoutes.organizations);
-            }}
-          >
-            Trocar organização
-          </Button>
         ) : null}
 
         {isRefreshing ? (
@@ -126,76 +184,72 @@ export default function AuthenticatedHomeScreen() {
         />
 
         <Text accessibilityRole="header" style={styles.shortcutsTitle}>
-          Atalhos
+          {DASHBOARD_COPY.shortcutsTitle}
         </Text>
 
-        <View style={styles.shortcuts}>
+        <View style={styles.shortcutsGrid}>
           <Can permission="occurrence.read">
-            <Button
+            <HomeShortcutTile
               accessibilityLabel="Ver paralisações"
-              style={styles.fullWidthShortcut}
+              Icon={List}
+              label="Paralisações"
+              style={styles.shortcutGridItem}
               onPress={() => {
                 router.push(stopWorkRoute);
               }}
-            >
-              Paralisações
-            </Button>
+            />
           </Can>
 
+          {canViewNotifications ? (
+            <HomeShortcutTile
+              accessibilityLabel={notificationBadgeLabel}
+              Icon={Bell}
+              label="Notificações"
+              style={styles.shortcutGridItem}
+              trailing={<NotificationTabBadge counts={{ unreadCount, pendingAwarenessCount }} />}
+              onPress={() => {
+                router.push(notificationsRoute);
+              }}
+            />
+          ) : null}
+
           <Can permission="occurrence.create">
-            <Button
+            <HomeShortcutTile
               accessibilityLabel="Nova paralisação preventiva"
-              style={styles.fullWidthShortcut}
+              Icon={Plus}
+              label="Nova Paralisação"
+              style={styles.shortcutGridItem}
               variant="secondary"
               onPress={() => {
                 router.push(stopWorkNewRoute);
               }}
-            >
-              Nova Paralisação
-            </Button>
+            />
           </Can>
 
-          {canViewNotifications ? (
-            <Pressable
-              accessibilityLabel={notificationBadgeLabel}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.notificationShortcut,
-                pressed && styles.shortcutPressed,
-              ]}
-              onPress={() => {
-                router.push(notificationsRoute);
-              }}
-            >
-              <Text style={styles.notificationShortcutText}>Notificações</Text>
-              <NotificationTabBadge counts={{ unreadCount, pendingAwarenessCount }} />
-            </Pressable>
-          ) : null}
-
-          {canViewHseQueue ? (
-            <Button
-              accessibilityLabel="Aprovação HSE"
-              style={[styles.fullWidthShortcut, styles.hseShortcut]}
-              variant="secondary"
-              onPress={() => {
-                router.push(hseApprovalQueueRoute);
-              }}
-            >
-              Aprovação HSE
-            </Button>
-          ) : null}
-
-          <Button
+          <HomeShortcutTile
             accessibilityLabel="Meu perfil"
-            style={styles.fullWidthShortcut}
+            Icon={User}
+            label="Meu perfil"
+            style={styles.shortcutGridItem}
             variant="ghost"
             onPress={() => {
               router.push(authRoutes.profile);
             }}
-          >
-            Meu perfil
-          </Button>
+          />
         </View>
+
+        {canViewHseQueue ? (
+          <HomeShortcutTile
+            accessibilityLabel="Aprovação HSE"
+            Icon={ClipboardCheck}
+            label="Aprovação HSE"
+            style={styles.hseShortcut}
+            variant="secondary"
+            onPress={() => {
+              router.push(hseApprovalQueueRoute);
+            }}
+          />
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -208,93 +262,121 @@ const styles = StyleSheet.create({
   },
   email: {
     color: colors.foregroundMuted,
-    fontSize: typography.label.fontSize,
-    textAlign: "center",
+    fontSize: typography.helper.fontSize,
   },
-  fullWidthShortcut: {
+  header: {
     alignSelf: "stretch",
-    width: "100%",
+    gap: spacing[1] / 2,
   },
   hseShortcut: {
+    alignSelf: "stretch",
     backgroundColor: statusChip.warning.background,
     borderColor: statusChip.warning.border,
-  },
-  notificationShortcut: {
-    alignItems: "center",
-    alignSelf: "stretch",
-    backgroundColor: colors.surfaceElevated,
-    borderColor: colors.border,
-    borderRadius: radius.button,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: spacing[2],
-    justifyContent: "center",
-    minHeight: controlHeight.mobile,
-    paddingHorizontal: spacing[4],
-  },
-  notificationShortcutText: {
-    color: colors.foreground,
-    fontSize: typography.body.fontSize,
-    fontWeight: "700",
+    maxWidth: "100%",
+    minWidth: "100%",
   },
   organizationCard: {
-    alignItems: "center",
-    marginTop: spacing[2],
+    alignSelf: "stretch",
+    gap: spacing[1],
+    padding: spacing[3],
     width: "100%",
   },
   organizationCode: {
     color: colors.foregroundMuted,
-    fontSize: typography.helper.fontSize,
-    textAlign: "center",
+    fontSize: typography.caption.fontSize,
   },
   organizationLabel: {
     color: colors.foregroundMuted,
     fontSize: typography.caption.fontSize,
     fontWeight: "600",
+    letterSpacing: 0.4,
     textTransform: "uppercase",
   },
   organizationName: {
     color: colors.foreground,
-    fontSize: typography.body.fontSize,
+    fontSize: typography.label.fontSize,
     fontWeight: "700",
-    textAlign: "center",
   },
   refreshing: {
     alignItems: "center",
     flexDirection: "row",
     gap: spacing[2],
-    marginTop: spacing[2],
   },
   refreshingText: {
     color: colors.foregroundMuted,
     fontSize: typography.helper.fontSize,
   },
   scrollContent: {
-    alignItems: "center",
+    alignSelf: "stretch",
     gap: spacing[3],
     paddingBottom: spacing[8],
-    paddingHorizontal: spacing[6],
-    paddingTop: spacing[4],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[3],
   },
-  shortcuts: {
-    alignSelf: "stretch",
-    gap: spacing[2],
-    width: "100%",
+  shortcutGridItem: {
+    flexBasis: "48%",
+    flexGrow: 1,
+    maxWidth: "48%",
+    minWidth: "48%",
   },
-  shortcutsTitle: {
-    alignSelf: "stretch",
+  shortcutLabel: {
+    color: colors.foreground,
+    flex: 1,
+    fontSize: typography.helper.fontSize,
+    fontWeight: "600",
+  },
+  shortcutLabelGhost: {
     color: colors.foregroundMuted,
-    fontSize: typography.caption.fontSize,
-    fontWeight: "700",
-    marginTop: spacing[2],
-    textTransform: "uppercase",
+    fontWeight: "500",
   },
   shortcutPressed: {
     opacity: 0.85,
   },
+  shortcutsGrid: {
+    columnGap: spacing[2],
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: spacing[2],
+  },
+  shortcutsTitle: {
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
+    fontWeight: "700",
+    marginTop: spacing[1],
+    textTransform: "uppercase",
+  },
+  shortcutTile: {
+    alignItems: "center",
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.border,
+    borderRadius: radius.button,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing[2],
+    minHeight: controlHeight.mobile,
+    paddingHorizontal: spacing[3],
+  },
+  shortcutTileGhost: {
+    backgroundColor: colors.surfaceMuted,
+  },
+  shortcutTileSecondary: {
+    backgroundColor: colors.surfaceMuted,
+    borderColor: colors.border,
+  },
+  switchOrgLink: {
+    alignSelf: "flex-start",
+    marginTop: spacing[1],
+    minHeight: controlHeight.mobile,
+    justifyContent: "center",
+  },
+  switchOrgText: {
+    color: colors.primary,
+    fontSize: typography.helper.fontSize,
+    fontWeight: "600",
+  },
   title: {
     color: colors.primary,
-    fontSize: typography.pageTitle.fontSize,
-    fontWeight: typography.pageTitle.fontWeight,
+    fontSize: typography.cardTitle.fontSize,
+    fontWeight: typography.cardTitle.fontWeight,
   },
 });

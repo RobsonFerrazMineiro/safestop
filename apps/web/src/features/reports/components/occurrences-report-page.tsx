@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { computeOccurrenceReportSummary, type OccurrenceReportSortField } from "@safestop/types";
 
+import { OctagonAlert, ShieldAlert } from "lucide-react";
+
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -126,6 +128,7 @@ export function OccurrencesReportPage() {
           backHref="/reports"
           backLabel={REPORT_COPY.hubTitle}
           title={REPORT_COPY.occurrences}
+          icon={OctagonAlert}
         />
         <ReportPageSkeleton />
       </main>
@@ -143,18 +146,22 @@ export function OccurrencesReportPage() {
         backLabel={REPORT_COPY.hubTitle}
         subtitle={`${activeOrganization?.name ?? "Organização"} · ${items.length} registros nesta página`}
         title={REPORT_COPY.occurrences}
+        icon={OctagonAlert}
       />
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <ReportSummaryKpiCard
           isLoading={query.isLoading}
           label={`${REPORT_COPY.onThisPage}: total`}
+          description={REPORT_COPY.onThisPage}
           value={summary.totalRows}
         />
         <ReportSummaryKpiCard
           isLoading={query.isLoading}
           label={`${REPORT_COPY.onThisPage}: interdições ativas`}
+          description={REPORT_COPY.onThisPage}
           tone="destructive"
+          icon={ShieldAlert}
           value={summary.activeInterdictionsCount}
         />
       </section>

@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { ClipboardCheck } from "lucide-react";
 import type { MdhoPendingApprovalItem } from "@safestop/types";
 
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
+import { SurfaceIcon } from "@/components/surface-icon";
 
 import { mdhoReviewHref } from "../utils/mdho-review-href";
 
@@ -48,6 +50,7 @@ export function HseApprovalQueueItem({ item }: HseApprovalQueueItemProps) {
 export function HseApprovalQueueEmpty() {
   return (
     <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card px-6 py-10 text-center">
+      <SurfaceIcon className="text-muted-foreground" icon={ClipboardCheck} variant="empty" />
       <p className="text-base text-foreground">Nenhuma avaliação aguardando sua aprovação.</p>
       <p className="max-w-md text-sm text-muted-foreground">
         Quando um Supervisor enviar um MDHO, ele aparecerá aqui.

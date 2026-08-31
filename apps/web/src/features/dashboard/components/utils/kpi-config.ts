@@ -1,5 +1,5 @@
 import type { PermissionCode } from "@safestop/types";
-import type { DashboardMetricKey } from "@safestop/types";
+import { DASHBOARD_METRIC_CATALOG, type DashboardMetricKey } from "@safestop/types";
 
 import { dashboardDeepLinks } from "./dashboard-deep-links";
 
@@ -102,6 +102,10 @@ export function toneForMetric(key: DashboardMetricKey): KpiCardConfig["tone"] {
     default:
       return "default";
   }
+}
+
+export function detailForMetric(key: DashboardMetricKey): string {
+  return DASHBOARD_METRIC_CATALOG[key].stock ? "Independente do período" : "No período selecionado";
 }
 
 export function canAccessDashboard(

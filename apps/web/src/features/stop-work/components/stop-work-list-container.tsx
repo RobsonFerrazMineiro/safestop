@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Search } from "lucide-react";
+import { OctagonAlert, Plus, Search } from "lucide-react";
 import { OperationalOccurrenceListRpcError } from "@safestop/types";
 
 import { PageHeader } from "@/components/page-header";
@@ -144,12 +144,16 @@ export function StopWorkListContainer() {
         actions={
           <Can permission="occurrence.create">
             <Button asChild>
-              <Link href="/stop-work/new">Nova Paralisação</Link>
+              <Link href="/stop-work/new">
+                <Plus />
+                Nova Paralisação
+              </Link>
             </Button>
           </Can>
         }
         backHref="/"
-        backLabel="← Voltar"
+        backLabel="Voltar"
+        icon={OctagonAlert}
         subtitle={
           isAttentionView
             ? "Ações abertas filtradas conforme o dashboard."

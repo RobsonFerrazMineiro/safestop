@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useState, type ReactElement } from "react";
+import { forwardRef, useCallback, useState, type ReactElement, type ReactNode } from "react";
 import { Alert, FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import type { OccurrenceStatus, OccurrenceTimelineItem } from "@safestop/types";
 
@@ -24,6 +24,7 @@ type OccurrenceTimelineListProps = {
   occurrenceId: string;
   occurrenceStatus: OccurrenceStatus;
   headerComponent: ReactElement;
+  footerComponent?: ReactNode;
   contentPaddingBottom?: number;
   isOnline: boolean;
   onPreviewEvidence?: (attachmentId: string, item: OccurrenceTimelineItem) => void;
@@ -45,6 +46,7 @@ export const OccurrenceTimelineList = forwardRef<
     occurrenceId,
     occurrenceStatus,
     headerComponent,
+    footerComponent,
     contentPaddingBottom = 120,
     isOnline,
     onPreviewEvidence,
@@ -142,14 +144,17 @@ export const OccurrenceTimelineList = forwardRef<
   );
 
   const listFooter = (
-    <TimelineLoadMore
-      errorMessage={loadMoreError}
-      hasNextPage={hasNextPage}
-      isLoading={isFetchingNextPage}
-      onLoadMore={() => {
-        void handleLoadMore();
-      }}
-    />
+    <View>
+      <TimelineLoadMore
+        errorMessage={loadMoreError}
+        hasNextPage={hasNextPage}
+        isLoading={isFetchingNextPage}
+        onLoadMore={() => {
+          void handleLoadMore();
+        }}
+      />
+      {footerComponent}
+    </View>
   );
 
   return (

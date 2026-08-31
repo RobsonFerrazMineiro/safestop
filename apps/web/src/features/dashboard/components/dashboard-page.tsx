@@ -12,6 +12,8 @@ import {
   DASHBOARD_OCCURRENCE_STATUS_FAMILY_LABELS,
 } from "@safestop/types";
 
+import { LayoutDashboard, PieChart, Plus, TrendingUp, Building2, MapPin } from "lucide-react";
+
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Can, useAuthorization } from "@/features/authorization";
@@ -23,7 +25,11 @@ import { useDashboardKpis } from "../hooks/use-dashboard-kpis";
 import { useDashboardRecentOccurrences } from "../hooks/use-dashboard-recent-occurrences";
 import { useDashboardScopeOccurrences } from "../hooks/use-dashboard-scope-occurrences";
 import { DashboardActionAttentionList } from "./dashboard-action-attention-list";
-import { DashboardDistributionChart, DashboardMainChart } from "./dashboard-charts";
+import {
+  DashboardDistributionChart,
+  DashboardMainChart,
+  DashboardStatusDonutChart,
+} from "./dashboard-charts";
 import {
   DashboardKpiLevel1Grid,
   DashboardKpiLevel2Grid,
@@ -239,7 +245,10 @@ export function DashboardPage() {
               </Can>
               <Can permission="occurrence.create">
                 <Button asChild className="hidden md:inline-flex">
-                  <Link href="/stop-work/new">Nova Paralisação</Link>
+                  <Link href="/stop-work/new">
+                    <Plus />
+                    Nova Paralisação
+                  </Link>
                 </Button>
               </Can>
             </div>
@@ -249,6 +258,7 @@ export function DashboardPage() {
           activeOrganization ? ` — ${activeOrganization.name}` : ""
         }`}
         title="Dashboard"
+        icon={LayoutDashboard}
       />
 
       {isKpisError ? (
@@ -299,42 +309,12 @@ export function DashboardPage() {
       ) : (
         <>
           <Can permission="occurrence.read">
-            {isVolumeLoading ? null : isVolumeError ? (
+            {isVolumeError ? (
               <DashboardSectionError
                 onRetry={() => {
                   void refetchVolume();
                 }}
               />
-            ) : (
-              <DashboardMainChart
-                buckets={volumeBuckets}
-                emptyMessage="Nenhuma paralisação neste período"
-                title="Novas paralisações no período"
-              />
-            )}
-          </Can>
-
-          <Can permission="occurrence.read">
-            {distributionEnabled && !isDistributionLoading && !isDistributionError ? (
-              <div className="hidden flex-col gap-4 md:flex">
-                <DashboardDistributionChart
-                  buckets={statusFamilyBuckets}
-                  emptyMessage="Sem dados de distribuição"
-                  title="Paralisações por situação"
-                />
-                <DashboardDistributionChart
-                  buckets={areaBuckets}
-                  emptyMessage="Nenhuma paralisação neste período"
-                  title="Paralisações por área"
-                />
-                {contractorBuckets.length > 0 ? (
-                  <DashboardDistributionChart
-                    buckets={contractorBuckets}
-                    emptyMessage="Sem dados por contratada"
-                    title="Paralisações por contratada"
-                  />
-                ) : null}
-              </div>
             ) : null}
 
             {isDistributionError ? (
@@ -344,6 +324,49 @@ export function DashboardPage() {
                 }}
               />
             ) : null}
+
+            <div className="flex flex-col gap-4">
+              {distributionEnabled && !isDistributionLoading && !isDistributionError ? (
+                <div className="hidden gap-4 md:grid md:grid-cols-2">
+                  <DashboardDistributionChart
+                    buckets={contractorBuckets}
+                    emptyMessage="Sem dados por contratada"
+                    title="Paralisações por contratada"
+                    titleIcon={Building2}
+                  />
+                  <DashboardDistributionChart
+                    buckets={areaBuckets}
+                    emptyMessage="Nenhuma paralisação neste período"
+                    title="Paralisações por área"
+                    titleIcon={MapPin}
+                  />
+                </div>
+              ) : null}
+
+              <div className="hidden gap-4 md:grid md:grid-cols-3">
+                {!isVolumeLoading && !isVolumeError ? (
+                  <div className="min-w-0 md:col-span-2">
+                    <DashboardMainChart
+                      buckets={volumeBuckets}
+                      emptyMessage="Nenhuma paralisação neste período"
+                      title="Novas paralisações no período"
+                      titleIcon={TrendingUp}
+                    />
+                  </div>
+                ) : null}
+
+                {distributionEnabled && !isDistributionLoading && !isDistributionError ? (
+                  <div className="min-w-0 md:col-start-3">
+                    <DashboardStatusDonutChart
+                      buckets={statusFamilyBuckets}
+                      emptyMessage="Sem dados de distribuição"
+                      title="Paralisações por situação"
+                      titleIcon={PieChart}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </div>
           </Can>
 
           <DashboardRecentOccurrences

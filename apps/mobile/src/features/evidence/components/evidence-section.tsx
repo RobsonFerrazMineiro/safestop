@@ -109,8 +109,8 @@ export function EvidenceSection({ occurrenceId, showOfflineBanner = true }: Evid
         <View style={styles.offlineBanner}>
           <Text style={styles.offlineTitle}>Você está offline.</Text>
           <Text style={styles.offlineBody}>
-            As evidências já sincronizadas podem não atualizar. Novos envios ficarão aguardando
-            conexão.
+            Conecte-se para enviar novas evidências. As evidências já sincronizadas podem não
+            atualizar até a conexão ser restabelecida.
           </Text>
         </View>
       ) : null}
@@ -263,11 +263,8 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingTop: spacing[3],
   },
   messageBox: {
     gap: spacing[2],
@@ -288,9 +285,8 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   sectionTitle: {
-    color: colors.foregroundMuted,
-    fontSize: typography.caption.fontSize,
+    color: colors.foreground,
+    fontSize: typography.label.fontSize,
     fontWeight: "700",
-    textTransform: "uppercase",
   },
 });

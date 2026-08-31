@@ -1,6 +1,6 @@
 import { deleteSecureItem, getSecureItem, setSecureItem } from "@/lib/secure-storage";
 
-const STORAGE_PREFIX = "safestop:activeOrganization:";
+const STORAGE_PREFIX = "safestop.activeOrganization.";
 
 function getStorageKey(userId: string): string {
   return `${STORAGE_PREFIX}${userId}`;

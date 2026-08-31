@@ -4,9 +4,12 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { Bell } from "lucide-react";
+
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { useRequirePermission } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 import {
@@ -150,12 +153,11 @@ export function NotificationCenterContainer() {
 
   return (
     <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-gray-100">Notificações</h1>
-        <p className="text-sm text-gray-400">
-          {unreadCount} não lidas · {pendingAwarenessCount} aguardando ciência
-        </p>
-      </header>
+      <PageHeader
+        icon={Bell}
+        subtitle={`${unreadCount} não lidas · ${pendingAwarenessCount} aguardando ciência`}
+        title="Notificações"
+      />
 
       <div className="flex flex-wrap items-center gap-3">
         <Button

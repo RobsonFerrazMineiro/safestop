@@ -1,5 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createPreventiveStopSchema, type CreatePreventiveStopInput } from "@safestop/validation";
+import {
+  createPreventiveStopSchema,
+  type CreatePreventiveStopInput,
+  type CreatePreventiveStopPayload,
+} from "@safestop/validation";
 
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { createOccurrence } from "@/features/occurrences/services/create-occurrence";
@@ -16,7 +20,7 @@ export function useCreatePreventiveStop() {
   const canCreate = can("occurrence.create");
 
   const mutation = useMutation({
-    mutationFn: (input: CreatePreventiveStopInput) => {
+    mutationFn: (input: CreatePreventiveStopInput | CreatePreventiveStopPayload) => {
       if (!organizationId) {
         throw new Error("Organização ativa não definida.");
       }

@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "expo-router";
-import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { OctagonAlert, Search } from "lucide-react-native";
+import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { OperationalOccurrenceListRpcError } from "@safestop/types";
-import { colors, spacing, typography } from "@safestop/ui";
+import { colors, controlHeight, spacing, typography } from "@safestop/ui";
 
-import { Button, TextField } from "@/components/ui";
-import { Can } from "@/features/authorization/components/can";
+import { Button, ScreenBackLink, TextField } from "@/components/ui";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
-import { IMS_REFERENCE_COPY } from "@/features/ims-reference/utils/ims-reference-copy";
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
 import { authRoutes, stopWorkNewRoute } from "@/lib/auth/routes";
@@ -33,9 +32,42 @@ import {
   type OperationalListFunnelState,
 } from "../utils/operational-list-filters";
 
+const SEARCH_ICON_SIZE = 16;
+const HEADER_ICON_SIZE = 22;
+
 type PreventiveStopListScreenProps = {
   dashboardAttention?: string;
 };
+
+type SearchInputProps = {
+  accessibilityLabel: string;
+  placeholder: string;
+  value: string;
+  onChangeText: (value: string) => void;
+};
+
+function SearchInput({ accessibilityLabel, placeholder, value, onChangeText }: SearchInputProps) {
+  return (
+    <View style={styles.searchInputWrap}>
+      <Search
+        accessible={false}
+        color={colors.foregroundMuted}
+        size={SEARCH_ICON_SIZE}
+        strokeWidth={2}
+        style={styles.searchInputIcon}
+      />
+      <TextField
+        accessibilityLabel={accessibilityLabel}
+        autoCapitalize="none"
+        autoCorrect={false}
+        inputStyle={styles.searchInputField}
+        placeholder={placeholder}
+        value={value}
+        onChangeText={onChangeText}
+      />
+    </View>
+  );
+}
 
 export function PreventiveStopListScreen({
   dashboardAttention: dashboardAttentionParam,
@@ -47,8 +79,6 @@ export function PreventiveStopListScreen({
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [funnel, setFunnel] = useState<OperationalListFunnelState>(EMPTY_OPERATIONAL_FUNNEL);
-  const [imsSearchInput, setImsSearchInput] = useState("");
-  const [appliedImsSearch, setAppliedImsSearch] = useState("");
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -65,13 +95,10 @@ export function PreventiveStopListScreen({
     [debouncedSearch, funnel],
   );
   const operationalFilters = useMemo(
-    () =>
-      toOperationalOccurrenceListFilters(operationalUi, {
-        imsReferenceCode: appliedImsSearch || undefined,
-      }),
-    [appliedImsSearch, operationalUi],
+    () => toOperationalOccurrenceListFilters(operationalUi),
+    [operationalUi],
   );
-  const hasDiscovery = hasActiveOperationalDiscovery(operationalUi, appliedImsSearch);
+  const hasDiscovery = hasActiveOperationalDiscovery(operationalUi);
 
   const {
     preventiveStops,
@@ -95,10 +122,12 @@ export function PreventiveStopListScreen({
   const pageTitle =
     isAttentionView && dashboardAttention
       ? stopWorkAttentionTitle(dashboardAttention)
-      : "Paralisação Preventiva";
+      : "Paralisações";
 
   const pageSubtitle =
-    isAttentionView && dashboardAttention ? stopWorkAttentionSubtitle(dashboardAttention) : null;
+    isAttentionView && dashboardAttention
+      ? stopWorkAttentionSubtitle(dashboardAttention)
+      : "Paralisações Preventivas da organização ativa.";
 
   const errorMessage =
     error instanceof OperationalOccurrenceListRpcError
@@ -116,19 +145,13 @@ export function PreventiveStopListScreen({
       return "Nenhuma Paralisação Preventiva encontrada para esta busca/filtros.";
     }
 
-    if (appliedImsSearch) {
-      return IMS_REFERENCE_COPY.searchEmpty;
-    }
-
     return undefined;
-  }, [appliedImsSearch, dashboardAttention, hasDiscovery, isAttentionView]);
+  }, [dashboardAttention, hasDiscovery, isAttentionView]);
 
   function clearSearchAndFunnel() {
     setSearchInput("");
     setDebouncedSearch("");
     setFunnel(EMPTY_OPERATIONAL_FUNNEL);
-    setImsSearchInput("");
-    setAppliedImsSearch("");
   }
 
   if (!canRead) {
@@ -143,15 +166,12 @@ export function PreventiveStopListScreen({
           <Text style={styles.forbiddenText}>
             Você não possui permissão para visualizar ações do plano de ação.
           </Text>
-          <Pressable
+          <ScreenBackLink
             accessibilityLabel="Voltar ao início"
-            accessibilityRole="button"
             onPress={() => {
               router.replace(authRoutes.app);
             }}
-          >
-            <Text style={styles.backLink}>Voltar</Text>
-          </Pressable>
+          />
         </View>
       </SafeAreaView>
     );
@@ -178,82 +198,48 @@ export function PreventiveStopListScreen({
     );
   }
 
+  const listHeader = (
+    <View style={styles.header}>
+      <ScreenBackLink
+        accessibilityLabel="Voltar ao início"
+        onPress={() => {
+          router.replace(authRoutes.app);
+        }}
+      />
+
+      <View style={styles.titleRow}>
+        {!isAttentionView ? (
+          <OctagonAlert
+            accessible={false}
+            color={colors.primary}
+            size={HEADER_ICON_SIZE}
+            strokeWidth={2}
+          />
+        ) : null}
+        <Text accessibilityRole="header" style={styles.title}>
+          {pageTitle}
+        </Text>
+      </View>
+
+      <Text style={styles.subtitle}>{pageSubtitle}</Text>
+
+      {!isAttentionView ? (
+        <View style={styles.searchRow}>
+          <SearchInput
+            accessibilityLabel="Buscar Paralisações Preventivas"
+            placeholder={OPERATIONAL_LIST_SEARCH_PLACEHOLDER}
+            value={searchInput}
+            onChangeText={setSearchInput}
+          />
+          <PreventiveStopOperationalFiltersModal funnel={funnel} onApply={setFunnel} />
+        </View>
+      ) : null}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityLabel="Voltar ao início"
-          accessibilityRole="button"
-          onPress={() => {
-            router.replace(authRoutes.app);
-          }}
-        >
-          <Text style={styles.backLink}>Voltar</Text>
-        </Pressable>
-
-        <Text style={styles.title}>{pageTitle}</Text>
-
-        {pageSubtitle ? <Text style={styles.subtitle}>{pageSubtitle}</Text> : null}
-
-        {!isAttentionView ? (
-          <>
-            <View style={styles.searchRow}>
-              <View style={styles.generalSearch}>
-                <TextField
-                  accessibilityLabel="Buscar Paralisações Preventivas"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  label="Busca geral"
-                  placeholder={OPERATIONAL_LIST_SEARCH_PLACEHOLDER}
-                  value={searchInput}
-                  onChangeText={setSearchInput}
-                />
-              </View>
-              <PreventiveStopOperationalFiltersModal funnel={funnel} onApply={setFunnel} />
-            </View>
-
-            <View style={styles.searchBlock}>
-              <TextField
-                accessibilityLabel={IMS_REFERENCE_COPY.searchLabel}
-                autoCapitalize="characters"
-                autoCorrect={false}
-                inputStyle={styles.searchInput}
-                label={IMS_REFERENCE_COPY.searchLabel}
-                placeholder={IMS_REFERENCE_COPY.searchPlaceholder}
-                value={imsSearchInput}
-                onChangeText={setImsSearchInput}
-                onSubmitEditing={() => {
-                  setAppliedImsSearch(imsSearchInput.trim());
-                }}
-              />
-              <View style={styles.searchActions}>
-                <Button
-                  accessibilityLabel="Buscar por código IMS"
-                  style={styles.searchButton}
-                  variant="secondary"
-                  onPress={() => {
-                    setAppliedImsSearch(imsSearchInput.trim());
-                  }}
-                >
-                  Buscar
-                </Button>
-                {appliedImsSearch ? (
-                  <Button
-                    accessibilityLabel="Limpar filtro IMS"
-                    variant="ghost"
-                    onPress={() => {
-                      setImsSearchInput("");
-                      setAppliedImsSearch("");
-                    }}
-                  >
-                    Limpar filtro IMS
-                  </Button>
-                ) : null}
-              </View>
-            </View>
-          </>
-        ) : null}
-      </View>
+      {listHeader}
 
       {isAttentionView ? (
         <ActionAttentionListView
@@ -263,14 +249,18 @@ export function PreventiveStopListScreen({
           onRefresh={refetch}
         />
       ) : isLoading && preventiveStops.length === 0 ? (
-        <OccurrenceLoading />
+        <View style={styles.listBody}>
+          <OccurrenceLoading />
+        </View>
       ) : isError ? (
-        <OccurrenceError
-          message={errorMessage}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
+        <View style={styles.listBody}>
+          <OccurrenceError
+            message={errorMessage}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </View>
       ) : (
         <FlatList
           contentContainerStyle={styles.listContent}
@@ -290,15 +280,11 @@ export function PreventiveStopListScreen({
               </View>
             ) : (
               <PreventiveStopEmpty
-                actionLabel={appliedImsSearch ? undefined : "Registrar Paralisação"}
+                actionLabel="Registrar Paralisação"
                 description={emptyMessage}
-                onAction={
-                  appliedImsSearch
-                    ? undefined
-                    : () => {
-                        router.push(stopWorkNewRoute);
-                      }
-                }
+                onAction={() => {
+                  router.push(stopWorkNewRoute);
+                }}
               />
             )
           }
@@ -329,33 +315,16 @@ export function PreventiveStopListScreen({
             />
           }
           renderItem={({ item }) => <PreventiveStopCard preventiveStop={item} />}
+          style={styles.list}
         />
       )}
-
-      {!isAttentionView ? (
-        <Can permission="occurrence.create">
-          <View style={styles.footer}>
-            <Button
-              accessibilityLabel="Nova Paralisação"
-              onPress={() => {
-                router.push(stopWorkNewRoute);
-              }}
-            >
-              Nova Paralisação
-            </Button>
-          </View>
-        </Can>
-      ) : null}
     </SafeAreaView>
   );
 }
 
+const SEARCH_ICON_INSET = spacing[8];
+
 const styles = StyleSheet.create({
-  backLink: {
-    color: colors.primary,
-    fontSize: typography.label.fontSize,
-    fontWeight: "600",
-  },
   container: {
     backgroundColor: colors.background,
     flex: 1,
@@ -364,17 +333,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing[3],
     paddingHorizontal: spacing[4],
-    paddingVertical: spacing[8],
+    paddingVertical: spacing[6],
   },
   discoveryEmptyText: {
     color: colors.foreground,
-    fontSize: typography.body.fontSize,
+    fontSize: typography.label.fontSize,
     textAlign: "center",
-  },
-  footer: {
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
-    padding: spacing[4],
   },
   forbidden: {
     alignItems: "center",
@@ -394,51 +358,62 @@ const styles = StyleSheet.create({
     fontSize: typography.cardTitle.fontSize,
     fontWeight: typography.cardTitle.fontWeight,
   },
-  generalSearch: {
-    flex: 1,
-  },
   header: {
+    flexGrow: 0,
+    flexShrink: 0,
     gap: spacing[2],
-    paddingBottom: spacing[3],
+    paddingBottom: spacing[2],
     paddingHorizontal: spacing[4],
     paddingTop: spacing[2],
   },
+  list: {
+    flex: 1,
+  },
+  listBody: {
+    flex: 1,
+  },
   listContent: {
-    gap: spacing[3],
-    paddingBottom: spacing[4],
+    flexGrow: 1,
+    gap: spacing[2],
+    paddingBottom: spacing[8],
     paddingHorizontal: spacing[4],
   },
   loadMore: {
-    marginTop: spacing[2],
-  },
-  searchActions: {
-    gap: spacing[2],
-  },
-  searchBlock: {
-    gap: spacing[2],
     marginTop: spacing[1],
   },
-  searchButton: {
-    alignSelf: "flex-start",
+  searchInputField: {
+    paddingLeft: SEARCH_ICON_INSET,
   },
-  searchInput: {
-    fontFamily: "monospace",
-    fontSize: typography.label.fontSize,
+  searchInputIcon: {
+    left: spacing[3],
+    position: "absolute",
+    top: (controlHeight.mobile - SEARCH_ICON_SIZE) / 2,
+    zIndex: 1,
+  },
+  searchInputWrap: {
+    flex: 1,
+    minWidth: 0,
+    position: "relative",
   },
   searchRow: {
     alignItems: "flex-end",
     flexDirection: "row",
     gap: spacing[2],
-    marginTop: spacing[1],
   },
   subtitle: {
     color: colors.foregroundMuted,
     fontSize: typography.helper.fontSize,
-    lineHeight: 18,
+    lineHeight: 16,
   },
   title: {
     color: colors.foreground,
+    flex: 1,
     fontSize: typography.cardTitle.fontSize,
     fontWeight: typography.cardTitle.fontWeight,
+  },
+  titleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[2],
   },
 });

@@ -1,6 +1,9 @@
 "use client";
 
+import { Users } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { SurfaceIcon } from "@/components/surface-icon";
 
 export function OrganizationContactsLoadingSkeleton() {
   return (
@@ -15,6 +18,7 @@ export function OrganizationContactsLoadingSkeleton() {
 export function OrganizationContactsEmptyState() {
   return (
     <div className="flex flex-col items-center gap-3 py-10 text-center" role="status">
+      <SurfaceIcon className="text-muted-foreground" icon={Users} variant="empty" />
       <p className="text-sm text-muted-foreground">Nenhum responsável cadastrado.</p>
     </div>
   );

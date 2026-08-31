@@ -1,9 +1,10 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
+import { colors, spacing, typography } from "@safestop/ui";
 
 export function ProfileLoading() {
   return (
     <View accessibilityRole="progressbar" style={styles.container}>
-      <ActivityIndicator color="#F97316" size="large" />
+      <ActivityIndicator color={colors.primary} size="large" />
       <Text style={styles.text}>Carregando perfil...</Text>
     </View>
   );
@@ -12,12 +13,12 @@ export function ProfileLoading() {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    gap: 12,
+    gap: spacing[3],
     justifyContent: "center",
-    paddingVertical: 32,
+    paddingVertical: spacing[8],
   },
   text: {
-    color: "#D1D5DB",
-    fontSize: 16,
+    color: colors.foregroundMuted,
+    fontSize: typography.label.fontSize,
   },
 });

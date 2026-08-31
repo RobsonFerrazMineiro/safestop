@@ -1,6 +1,5 @@
 import { useRouter } from "expo-router";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { DASHBOARD_METRIC_CATALOG } from "@safestop/types";
+import { StyleSheet, Text, View } from "react-native";
 import { colors, radius, spacing, statusChip, typography } from "@safestop/ui";
 
 import { Button } from "@/components/ui";
@@ -12,6 +11,14 @@ import {
   notificationsAwarenessRoute,
   stopWorkAttentionRoute,
 } from "../utils/dashboard-deep-links";
+
+type PendingCardConfig = {
+  key: "myOverdueActions" | "myPendingAwareness" | "myPendingActions" | "activeOccurrences";
+  value: number | null | undefined;
+  tone: "danger" | "warning" | "neutral" | "info";
+  isLoading: boolean;
+  onPress: () => void;
+};
 
 type MobileHomePendingSectionProps = {
   myPendingActions: number | undefined;
@@ -27,6 +34,13 @@ type MobileHomePendingSectionProps = {
   canReadNotifications: boolean;
   onRetry: () => void;
 };
+
+const LOADING_PLACEHOLDER_KEYS = [
+  "myOverdueActions",
+  "myPendingAwareness",
+  "myPendingActions",
+  "activeOccurrences",
+] as const;
 
 export function MobileHomePendingSection({
   myPendingActions,
@@ -51,13 +65,13 @@ export function MobileHomePendingSection({
   const showOfflineNotice = !isOnline && hasCachedData;
   const showInitialLoading = isLoading && !hasCachedData;
   const showError = isError && !hasCachedData;
+  const showActiveOccurrences = activeOccurrences !== null && activeOccurrences !== undefined;
 
-  const personalCards = [
+  const pendingCards: PendingCardConfig[] = [
     {
       key: "myOverdueActions",
-      label: DASHBOARD_METRIC_CATALOG.myOverdueActions.label,
       value: myOverdueActions,
-      tone: "danger" as const,
+      tone: "danger",
       isLoading: showInitialLoading,
       onPress: () => {
         router.push(stopWorkAttentionRoute("overdue"));
@@ -66,8 +80,7 @@ export function MobileHomePendingSection({
     ...(canReadNotifications
       ? [
           {
-            key: "myPendingAwareness",
-            label: DASHBOARD_METRIC_CATALOG.myPendingAwareness.label,
+            key: "myPendingAwareness" as const,
             value: myPendingAwareness,
             tone: "warning" as const,
             isLoading: showInitialLoading || isAwarenessLoading,
@@ -79,17 +92,36 @@ export function MobileHomePendingSection({
       : []),
     {
       key: "myPendingActions",
-      label: DASHBOARD_METRIC_CATALOG.myPendingActions.label,
       value: myPendingActions,
-      tone: "neutral" as const,
+      tone: "neutral",
       isLoading: showInitialLoading,
       onPress: () => {
         router.push(dashboardDeepLinks.stopWorkAll);
       },
     },
+    ...(showActiveOccurrences
+      ? [
+          {
+            key: "activeOccurrences" as const,
+            value: activeOccurrences,
+            tone: "info" as const,
+            isLoading: isLoading,
+            onPress: () => {
+              router.push(dashboardDeepLinks.stopWorkAll);
+            },
+          },
+        ]
+      : []),
   ];
 
-  const showActiveOccurrences = activeOccurrences !== null && activeOccurrences !== undefined;
+  const showEmptyPersonal =
+    !showOfflineNotice &&
+    !showInitialLoading &&
+    !showError &&
+    myPendingActions === 0 &&
+    myOverdueActions === 0 &&
+    (myPendingAwareness === undefined || myPendingAwareness === 0) &&
+    !showActiveOccurrences;
 
   return (
     <View style={styles.container}>
@@ -109,60 +141,53 @@ export function MobileHomePendingSection({
       ) : null}
 
       {showInitialLoading ? (
-        <View style={styles.loadingBox}>
-          <ActivityIndicator color={colors.primary} size="small" />
+        <View style={styles.grid}>
+          {LOADING_PLACEHOLDER_KEYS.map((key) => (
+            <View key={key} style={styles.gridItem}>
+              <PendingKpiCard isLoading metricKey={key} value={undefined} />
+            </View>
+          ))}
         </View>
       ) : null}
 
       {!showInitialLoading && !showError ? (
-        <View style={styles.cards}>
-          {personalCards.map((card) => (
-            <PendingKpiCard
-              key={card.key}
-              accessibilityHint="Abrir detalhes"
-              isLoading={card.isLoading}
-              label={card.label}
-              tone={card.tone}
-              value={card.value}
-              onPress={card.onPress}
-            />
-          ))}
+        <>
+          <View style={styles.grid}>
+            {pendingCards.map((card) => (
+              <View key={card.key} style={styles.gridItem}>
+                <PendingKpiCard
+                  accessibilityHint="Abrir detalhes"
+                  isLoading={card.isLoading}
+                  metricKey={card.key}
+                  tone={card.tone}
+                  value={card.value ?? undefined}
+                  onPress={card.onPress}
+                />
+              </View>
+            ))}
+          </View>
 
-          {showActiveOccurrences ? (
-            <PendingKpiCard
-              accessibilityHint="Abrir paralisações"
-              isLoading={isLoading}
-              label={DASHBOARD_METRIC_CATALOG.activeOccurrences.label}
-              tone="info"
-              value={activeOccurrences}
-              onPress={() => {
-                router.push(dashboardDeepLinks.stopWorkAll);
-              }}
-            />
-          ) : null}
-
-          {!showOfflineNotice &&
-          myPendingActions === 0 &&
-          myOverdueActions === 0 &&
-          (myPendingAwareness === undefined || myPendingAwareness === 0) &&
-          !showActiveOccurrences ? (
+          {showEmptyPersonal ? (
             <Text accessibilityRole="text" style={styles.emptyPersonal}>
               {DASHBOARD_COPY.emptyPersonal}
             </Text>
           ) : null}
-        </View>
+        </>
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  cards: {
-    gap: spacing[2],
-  },
   container: {
-    gap: spacing[3],
+    gap: spacing[2],
     width: "100%",
+  },
+  emptyPersonal: {
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
+    lineHeight: 18,
+    textAlign: "center",
   },
   errorBox: {
     backgroundColor: statusChip.destructive.background,
@@ -177,15 +202,17 @@ const styles = StyleSheet.create({
     fontSize: typography.label.fontSize,
     lineHeight: 20,
   },
-  emptyPersonal: {
-    color: colors.foregroundMuted,
-    fontSize: typography.helper.fontSize,
-    lineHeight: 18,
-    textAlign: "center",
+  grid: {
+    columnGap: spacing[2],
+    flexDirection: "row",
+    flexWrap: "wrap",
+    rowGap: spacing[2],
   },
-  loadingBox: {
-    alignItems: "center",
-    paddingVertical: spacing[4],
+  gridItem: {
+    flexBasis: "48%",
+    flexGrow: 1,
+    maxWidth: "48%",
+    minWidth: "48%",
   },
   sectionTitle: {
     color: colors.foregroundMuted,

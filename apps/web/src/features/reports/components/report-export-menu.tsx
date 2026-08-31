@@ -1,5 +1,7 @@
 "use client";
 
+import { Download } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -35,7 +37,14 @@ export function ReportExportMenu({
             type="button"
             variant="outline"
           >
-            {isExporting ? REPORT_COPY.exportLoading : REPORT_COPY.export}
+            {isExporting ? (
+              REPORT_COPY.exportLoading
+            ) : (
+              <>
+                <Download />
+                {REPORT_COPY.export}
+              </>
+            )}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

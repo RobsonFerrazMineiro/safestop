@@ -11,6 +11,8 @@ import {
   ORGANIZATION_CONTACT_TYPE_MANAGING_COMPANY_SUPERVISOR,
 } from "@safestop/types";
 
+import { Plus, Users } from "lucide-react";
+
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
@@ -90,11 +92,13 @@ export function OrganizationContactsContainer() {
       <PageHeader
         actions={
           <Button type="button" onClick={handleCreate}>
+            <Plus />
             Novo responsável
           </Button>
         }
         subtitle="Todos os contatos ativos deste tipo no escopo recebem a notificação."
         title="Responsáveis da comunicação"
+        icon={Users}
       />
 
       <div className="flex flex-wrap items-end gap-3">

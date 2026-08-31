@@ -1,9 +1,10 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { colors } from "@safestop/ui";
 
 export function OccurrenceLoading() {
   return (
     <View style={styles.container}>
-      <ActivityIndicator color="#F97316" size="large" />
+      <ActivityIndicator color={colors.primary} size="large" />
     </View>
   );
 }
@@ -11,7 +12,7 @@ export function OccurrenceLoading() {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    backgroundColor: "#0F1115",
+    backgroundColor: colors.background,
     flex: 1,
     justifyContent: "center",
   },

@@ -1,5 +1,7 @@
+import { Info } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
 import type { OccurrenceStatus } from "@safestop/types";
+import { radius, spacing, statusChip, typography } from "@safestop/ui";
 
 import { CONSOLIDATION_COPY } from "../utils/consolidation-copy";
 
@@ -12,7 +14,7 @@ export function FlowDeadEndBanner({ status, hideTratativa = false }: FlowDeadEnd
   if (status === "VER_E_AGIR") {
     return (
       <View accessibilityRole="text" style={styles.banner}>
-        <Text style={styles.icon}>ℹ</Text>
+        <Info accessible={false} color={statusChip.info.foreground} size={16} strokeWidth={2} />
         <Text style={styles.text}>{CONSOLIDATION_COPY.verEAgirDeadEnd}</Text>
       </View>
     );
@@ -25,7 +27,7 @@ export function FlowDeadEndBanner({ status, hideTratativa = false }: FlowDeadEnd
 
     return (
       <View accessibilityRole="text" style={styles.banner}>
-        <Text style={styles.icon}>ℹ</Text>
+        <Info accessible={false} color={statusChip.info.foreground} size={16} strokeWidth={2} />
         <Text style={styles.text}>{CONSOLIDATION_COPY.tratativaDeadEnd}</Text>
       </View>
     );
@@ -37,25 +39,20 @@ export function FlowDeadEndBanner({ status, hideTratativa = false }: FlowDeadEnd
 const styles = StyleSheet.create({
   banner: {
     alignItems: "center",
-    backgroundColor: "#1E3A5F",
-    borderColor: "#2563EB",
-    borderRadius: 12,
+    backgroundColor: statusChip.info.background,
+    borderColor: statusChip.info.border,
+    borderRadius: radius.card,
     borderWidth: 1,
     flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  icon: {
-    color: "#93C5FD",
-    fontSize: 16,
-    fontWeight: "700",
+    gap: spacing[2],
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
   },
   text: {
-    color: "#DBEAFE",
+    color: statusChip.info.foreground,
     flex: 1,
-    fontSize: 14,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });

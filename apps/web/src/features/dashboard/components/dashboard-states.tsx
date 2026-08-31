@@ -1,5 +1,9 @@
 "use client";
 
+import { LayoutDashboard, OctagonAlert } from "lucide-react";
+
+import { SurfaceIcon } from "@/components/surface-icon";
+
 export function DashboardSectionSkeleton({ rows = 3 }: { rows?: number }) {
   return (
     <div className="flex flex-col gap-3" role="status">
@@ -43,9 +47,10 @@ export function DashboardSectionError({ message, onRetry }: DashboardSectionErro
 export function DashboardEmptyNoOccurrences() {
   return (
     <div
-      className="rounded-lg border border-dashed border-gray-700 px-6 py-10 text-center"
+      className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-gray-700 px-6 py-10 text-center"
       role="status"
     >
+      <SurfaceIcon className="text-muted-foreground" icon={OctagonAlert} variant="empty" />
       <p className="text-base text-gray-300">Nenhuma ocorrência registrada</p>
     </div>
   );
@@ -54,9 +59,10 @@ export function DashboardEmptyNoOccurrences() {
 export function DashboardEmptyNoProfileKpis() {
   return (
     <div
-      className="rounded-lg border border-gray-800 bg-gray-900/30 px-6 py-10 text-center"
+      className="flex flex-col items-center gap-3 rounded-lg border border-gray-800 bg-gray-900/30 px-6 py-10 text-center"
       role="status"
     >
+      <SurfaceIcon className="text-muted-foreground" icon={LayoutDashboard} variant="empty" />
       <p className="text-base text-gray-300">Não há indicadores disponíveis para o seu perfil</p>
     </div>
   );

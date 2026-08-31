@@ -1,13 +1,13 @@
 import type { CreatePreventiveStopInput } from "@safestop/validation";
 import { createPreventiveStopSchema } from "@safestop/validation";
-import { useRouter } from "expo-router";
+import { usePathname, useRouter } from "expo-router";
+import { MapPin, PlusCircle } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   BackHandler,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,7 +16,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, radius, spacing, statusChip, typography } from "@safestop/ui";
 
-import { Button, TextField } from "@/components/ui";
+import { Button, ScreenBackLink, TextField } from "@/components/ui";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
@@ -30,7 +30,7 @@ import { useOccurrenceContractors } from "@/features/occurrences/hooks/use-occur
 import { formatContractOptionLabel } from "@/features/occurrences/services/get-contracts";
 import { stopWorkDetailRoute, stopWorkRoute } from "@/lib/auth/routes";
 
-import { OptionSelectList } from "./option-select-list";
+import { FormSelectField } from "./form-select-field";
 import { PreventiveStopCallout } from "./preventive-stop-callout";
 import { PreventiveStopSuccessView } from "./preventive-stop-success-view";
 import { SeveritySelector } from "./severity-selector";
@@ -38,6 +38,9 @@ import { useCreatePreventiveStop } from "../hooks/use-create-preventive-stop";
 import { usePreventiveStopDraft } from "../hooks/use-preventive-stop-draft";
 import { usePreventiveStopGeo } from "../hooks/use-preventive-stop-geo";
 import { hasPreventiveStopDraftContent } from "../stores/preventive-stop-draft-store";
+
+const HEADER_ICON_SIZE = 22;
+const GEO_ICON_SIZE = 14;
 
 const DEFAULT_VALUES: CreatePreventiveStopInput = {
   areaId: "",
@@ -88,6 +91,8 @@ function useIsOffline(): boolean {
 
 export function PreventiveStopCreateScreen() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isCreateScreenFocused = pathname.endsWith("/stop-work/new");
   const insets = useSafeAreaInsets();
   const { isReady: isAuthReady } = useAuthorization();
   const { isReady: isOrgReady } = useActiveOrganization();
@@ -205,10 +210,25 @@ export function PreventiveStopCreateScreen() {
   );
 
   useEffect(() => {
+    if (!isCreateScreenFocused) {
+      registerDraftLeaveGuard(null);
+      return;
+    }
+
     registerDraftLeaveGuard({
       shouldConfirmLeave: () => hasPreventiveStopDraftContent(getValues()),
       persistBeforeLeave: persistDraftBeforeLeave,
     });
+
+    return () => {
+      registerDraftLeaveGuard(null);
+    };
+  }, [getValues, isCreateScreenFocused, persistDraftBeforeLeave, registerDraftLeaveGuard]);
+
+  useEffect(() => {
+    if (!isCreateScreenFocused) {
+      return;
+    }
 
     const onBackPress = () => {
       if (!hasPreventiveStopDraftContent(getValues())) {
@@ -222,16 +242,9 @@ export function PreventiveStopCreateScreen() {
     const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
 
     return () => {
-      registerDraftLeaveGuard(null);
       subscription.remove();
     };
-  }, [
-    confirmLeaveIfNeeded,
-    getValues,
-    leaveToStopWorkList,
-    persistDraftBeforeLeave,
-    registerDraftLeaveGuard,
-  ]);
+  }, [confirmLeaveIfNeeded, getValues, isCreateScreenFocused, leaveToStopWorkList]);
 
   if (!isAuthReady || !isOrgReady) {
     return (
@@ -322,8 +335,12 @@ export function PreventiveStopCreateScreen() {
         id: result.id,
         publicCode: result.publicCode,
       });
-    } catch {
-      setFormError("Não foi possível registrar. Seus dados foram preservados.");
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : "Não foi possível registrar. Seus dados foram preservados.";
+      setFormError(message);
     }
   }
 
@@ -341,176 +358,136 @@ export function PreventiveStopCreateScreen() {
         style={styles.keyboardView}
       >
         <ScrollView
-          contentContainerStyle={[styles.content, { paddingBottom: 120 + insets.bottom }]}
+          contentContainerStyle={[
+            styles.content,
+            { paddingBottom: spacing[16] + Math.max(insets.bottom, spacing[4]) },
+          ]}
           keyboardShouldPersistTaps="handled"
         >
-          <Pressable
-            accessibilityLabel="Voltar para listagem"
-            accessibilityRole="button"
-            onPress={() => {
-              confirmLeaveIfNeeded(leaveToStopWorkList);
-            }}
-          >
-            <Text style={styles.backLink}>Voltar</Text>
-          </Pressable>
+          <View style={styles.header}>
+            <ScreenBackLink
+              accessibilityLabel="Voltar para listagem"
+              onPress={() => {
+                confirmLeaveIfNeeded(leaveToStopWorkList);
+              }}
+            />
 
-          <Text style={styles.title}>Nova Paralisação Preventiva</Text>
-          <Text style={styles.subtitle}>Identifique a condição insegura</Text>
-
-          <PreventiveStopCallout />
+            <View style={styles.titleRow}>
+              <PlusCircle
+                accessible={false}
+                color={colors.primary}
+                size={HEADER_ICON_SIZE}
+                strokeWidth={2}
+              />
+              <Text style={styles.title}>Nova Paralisação Preventiva</Text>
+            </View>
+            <Text style={styles.subtitle}>Identifique a condição insegura</Text>
+          </View>
 
           {hasLocalDraft ? (
             <View accessibilityRole="text" style={styles.draftBanner}>
               <Text style={styles.draftBannerText}>Rascunho salvo neste dispositivo</Text>
             </View>
           ) : null}
+
+          <PreventiveStopCallout />
+
           {isSaving ? <Text style={styles.savingHint}>Salvando rascunho…</Text> : null}
           {isOffline ? <Text style={styles.offlineBanner}>Você está offline.</Text> : null}
 
           <View style={styles.form}>
-            <Text style={styles.label}>Área *</Text>
-            <Controller
-              control={control}
-              name="areaId"
-              render={({ field: { onChange, value } }) => (
-                <OptionSelectList
-                  disabled={isCreating}
-                  emptyMessage={
-                    hasAreas ? undefined : "Nenhuma área cadastrada para esta organização."
-                  }
-                  items={areas.map((area) => ({
-                    id: area.id,
-                    label: area.name,
-                    hint: area.code ?? undefined,
-                  }))}
-                  selectedId={value}
-                  onSelect={(id) => {
-                    onChange(id);
-                    updateDraft({ areaId: id });
-                  }}
-                />
-              )}
-            />
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Onde e quem</Text>
 
-            <Controller
-              control={control}
-              name="locationDescription"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  accessibilityLabel="Local"
-                  disabled={isCreating}
-                  label="Local *"
-                  placeholder="Ex: Galpão 3"
-                  value={value}
-                  onBlur={() => {
-                    onBlur();
-                    persistCurrentDraft();
-                  }}
-                  onChangeText={onChange}
-                />
-              )}
-            />
+              <Controller
+                control={control}
+                name="areaId"
+                render={({ field: { onChange, value } }) => (
+                  <FormSelectField
+                    disabled={isCreating}
+                    emptyMessage={
+                      hasAreas ? undefined : "Nenhuma área cadastrada para esta organização."
+                    }
+                    items={areas.map((area) => ({
+                      id: area.id,
+                      label: area.name,
+                      hint: area.code ?? undefined,
+                    }))}
+                    label="Área *"
+                    placeholder="Selecione a área"
+                    selectedId={value}
+                    onSelect={(id) => {
+                      onChange(id);
+                      updateDraft({ areaId: id });
+                    }}
+                  />
+                )}
+              />
 
-            <Controller
-              control={control}
-              name="taskDescription"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  accessibilityLabel="Atividade"
-                  disabled={isCreating}
-                  label="Atividade *"
-                  placeholder="Atividade sendo realizada"
-                  value={value}
-                  onBlur={() => {
-                    onBlur();
-                    persistCurrentDraft();
-                  }}
-                  onChangeText={onChange}
-                />
-              )}
-            />
+              <Controller
+                control={control}
+                name="locationDescription"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    accessibilityLabel="Local"
+                    disabled={isCreating}
+                    label="Local *"
+                    placeholder="Ex: Galpão 3"
+                    value={value}
+                    onBlur={() => {
+                      onBlur();
+                      persistCurrentDraft();
+                    }}
+                    onChangeText={onChange}
+                  />
+                )}
+              />
 
-            <Controller
-              control={control}
-              name="conditionDescription"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  accessibilityLabel="Condição insegura"
-                  disabled={isCreating}
-                  inputStyle={styles.multilineLarge}
-                  label="Condição insegura *"
-                  multiline
-                  placeholder="Descreva a condição identificada"
-                  value={value}
-                  onBlur={() => {
-                    onBlur();
-                    persistCurrentDraft();
-                  }}
-                  onChangeText={onChange}
-                />
-              )}
-            />
+              <Controller
+                control={control}
+                name="contractorOrganizationId"
+                render={({ field: { onChange, value } }) => (
+                  <FormSelectField
+                    disabled={isCreating}
+                    emptyMessage={
+                      hasContractors
+                        ? undefined
+                        : "Nenhuma contratada com contrato ativo nesta organização."
+                    }
+                    items={contractors.map((contractor) => ({
+                      id: contractor.id,
+                      label: contractor.name,
+                    }))}
+                    label="Contratada *"
+                    placeholder="Selecione a empresa"
+                    selectedId={value}
+                    onSelect={(id) => {
+                      onChange(id);
+                      setValue("contractId", "");
+                      updateDraft({ contractorOrganizationId: id, contractId: undefined });
+                    }}
+                  />
+                )}
+              />
 
-            <Text style={styles.label}>Criticidade *</Text>
-            <Controller
-              control={control}
-              name="severity"
-              render={({ field: { onChange, value } }) => (
-                <SeveritySelector
-                  disabled={isCreating}
-                  value={value}
-                  onChange={(severity) => {
-                    onChange(severity);
-                    updateDraft({ severity });
-                  }}
-                />
-              )}
-            />
+              {selectedContractorId && isContractsLoading ? (
+                <Text style={styles.hint}>Carregando contratos…</Text>
+              ) : null}
 
-            <Text style={styles.label}>Contratada *</Text>
-            <Controller
-              control={control}
-              name="contractorOrganizationId"
-              render={({ field: { onChange, value } }) => (
-                <OptionSelectList
-                  disabled={isCreating}
-                  emptyMessage={
-                    hasContractors
-                      ? undefined
-                      : "Nenhuma contratada com contrato ativo. Contate o administrador."
-                  }
-                  items={contractors.map((contractor) => ({
-                    id: contractor.id,
-                    label: contractor.name,
-                  }))}
-                  selectedId={value}
-                  onSelect={(id) => {
-                    onChange(id);
-                    setValue("contractId", "");
-                    updateDraft({ contractorOrganizationId: id, contractId: undefined });
-                  }}
-                />
-              )}
-            />
-
-            {selectedContractorId && isContractsLoading ? (
-              <Text style={styles.hint}>Carregando contratos…</Text>
-            ) : null}
-
-            {showContractField ? (
-              <>
-                <Text style={styles.label}>Contrato (opcional)</Text>
+              {showContractField ? (
                 <Controller
                   control={control}
                   name="contractId"
                   render={({ field: { onChange, value } }) => (
-                    <OptionSelectList
+                    <FormSelectField
                       disabled={isCreating}
                       items={contracts.map((contract) => ({
                         id: contract.id,
                         label: formatContractOptionLabel(contract),
                       }))}
+                      label="Contrato (opcional)"
                       noneOptionLabel="Nenhum contrato específico"
+                      placeholder="Selecione o contrato"
                       selectedId={value ?? ""}
                       onSelect={(id) => {
                         onChange(id);
@@ -519,79 +496,148 @@ export function PreventiveStopCreateScreen() {
                     />
                   )}
                 />
-              </>
-            ) : null}
+              ) : null}
 
-            {isContractsError ? (
-              <Text style={styles.error}>Não foi possível carregar os contratos.</Text>
-            ) : null}
+              {isContractsError ? (
+                <Text style={styles.error}>Não foi possível carregar os contratos.</Text>
+              ) : null}
+            </View>
 
-            <Controller
-              control={control}
-              name="immediateActionDescription"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextField
-                  accessibilityLabel="Medida imediata"
-                  disabled={isCreating}
-                  inputStyle={styles.multilineSmall}
-                  label="Medida imediata (opcional)"
-                  multiline
-                  placeholder="Medida tomada no local, se houver"
-                  value={value ?? ""}
-                  onBlur={() => {
-                    onBlur();
-                    persistCurrentDraft();
-                  }}
-                  onChangeText={onChange}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>O que está acontecendo</Text>
+
+              <Controller
+                control={control}
+                name="taskDescription"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    accessibilityLabel="Atividade"
+                    disabled={isCreating}
+                    label="Atividade *"
+                    placeholder="Atividade sendo realizada"
+                    value={value}
+                    onBlur={() => {
+                      onBlur();
+                      persistCurrentDraft();
+                    }}
+                    onChangeText={onChange}
+                  />
+                )}
+              />
+
+              <Controller
+                control={control}
+                name="conditionDescription"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    accessibilityLabel="Condição insegura"
+                    disabled={isCreating}
+                    inputStyle={styles.multilineLarge}
+                    label="Condição insegura *"
+                    multiline
+                    placeholder="Descreva a condição identificada"
+                    value={value}
+                    onBlur={() => {
+                      onBlur();
+                      persistCurrentDraft();
+                    }}
+                    onChangeText={onChange}
+                  />
+                )}
+              />
+
+              <View style={styles.fieldBlock}>
+                <Text style={styles.fieldLabel}>Criticidade *</Text>
+                <Controller
+                  control={control}
+                  name="severity"
+                  render={({ field: { onChange, value } }) => (
+                    <SeveritySelector
+                      disabled={isCreating}
+                      value={value}
+                      onChange={(severity) => {
+                        onChange(severity);
+                        updateDraft({ severity });
+                      }}
+                    />
+                  )}
                 />
-              )}
-            />
+              </View>
+            </View>
 
-            <Text style={styles.geoHint}>📍 {geoLabel}</Text>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Complemento</Text>
+
+              <Controller
+                control={control}
+                name="immediateActionDescription"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextField
+                    accessibilityLabel="Medida imediata"
+                    disabled={isCreating}
+                    inputStyle={styles.multilineSmall}
+                    label="Medida imediata (opcional)"
+                    multiline
+                    placeholder="Medida tomada no local, se houver"
+                    value={value ?? ""}
+                    onBlur={() => {
+                      onBlur();
+                      persistCurrentDraft();
+                    }}
+                    onChangeText={onChange}
+                  />
+                )}
+              />
+
+              <View style={styles.geoRow}>
+                <MapPin
+                  accessible={false}
+                  color={colors.foregroundMuted}
+                  size={GEO_ICON_SIZE}
+                  strokeWidth={2}
+                />
+                <Text style={styles.geoHint}>{geoLabel}</Text>
+              </View>
+            </View>
 
             {setupBlockedMessage ? <Text style={styles.error}>{setupBlockedMessage}</Text> : null}
-
             {formError ? <Text style={styles.error}>{formError}</Text> : null}
+
+            <Button
+              accessibilityLabel="Paralisar atividade"
+              disabled={!canSubmit}
+              loading={isCreating}
+              onPress={() => {
+                void handleSubmit(onSubmit)();
+              }}
+            >
+              {isCreating ? "Registrando..." : "Paralisar atividade"}
+            </Button>
           </View>
         </ScrollView>
-
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing[4]) }]}>
-          <Button
-            accessibilityLabel="Paralisar atividade"
-            disabled={!canSubmit}
-            loading={isCreating}
-            onPress={() => {
-              void handleSubmit(onSubmit)();
-            }}
-          >
-            {isCreating ? "Registrando..." : "Paralisar atividade"}
-          </Button>
-        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  backLink: {
-    color: colors.primary,
-    fontSize: typography.label.fontSize,
-    fontWeight: "600",
-  },
   container: {
     backgroundColor: colors.background,
     flex: 1,
   },
   content: {
     gap: spacing[3],
-    padding: spacing[4],
+    paddingHorizontal: spacing[4],
+    paddingTop: spacing[2],
   },
   draftBanner: {
     alignSelf: "stretch",
     backgroundColor: colors.surfaceElevated,
-    borderRadius: radius.button,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    borderWidth: 1,
     paddingHorizontal: spacing[3],
-    paddingVertical: spacing[3],
+    paddingVertical: spacing[2],
   },
   draftBannerText: {
     color: colors.foreground,
@@ -600,26 +646,32 @@ const styles = StyleSheet.create({
   },
   error: {
     color: colors.destructive,
-    fontSize: typography.label.fontSize,
+    fontSize: typography.helper.fontSize,
     textAlign: "center",
   },
-  footer: {
-    backgroundColor: colors.background,
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
-    bottom: 0,
-    left: 0,
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[3],
-    position: "absolute",
-    right: 0,
+  fieldBlock: {
+    gap: spacing[1],
+  },
+  fieldLabel: {
+    color: colors.foreground,
+    fontSize: typography.helper.fontSize,
+    fontWeight: "600",
   },
   form: {
     gap: spacing[3],
   },
+  header: {
+    gap: spacing[2],
+  },
   geoHint: {
     color: colors.foregroundMuted,
-    fontSize: typography.helper.fontSize,
+    flex: 1,
+    fontSize: typography.caption.fontSize,
+  },
+  geoRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[1],
   },
   hint: {
     color: colors.foregroundMuted,
@@ -628,42 +680,58 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  label: {
-    color: colors.foreground,
-    fontSize: typography.label.fontSize,
-    fontWeight: "600",
-  },
   multilineLarge: {
-    minHeight: 96,
+    minHeight: 88,
     textAlignVertical: "top",
   },
   multilineSmall: {
-    minHeight: 72,
+    minHeight: 64,
     textAlignVertical: "top",
   },
   offlineBanner: {
     backgroundColor: statusChip.destructive.background,
     borderColor: statusChip.destructive.border,
-    borderRadius: radius.button,
+    borderRadius: radius.card,
     borderWidth: 1,
     color: statusChip.destructive.foreground,
-    fontSize: typography.label.fontSize,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
     paddingHorizontal: spacing[3],
-    paddingVertical: spacing[3],
+    paddingVertical: spacing[2],
     textAlign: "center",
   },
   savingHint: {
     color: colors.foregroundMuted,
-    fontSize: typography.helper.fontSize,
+    fontSize: typography.caption.fontSize,
+  },
+  section: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    gap: spacing[3],
+    padding: spacing[3],
+  },
+  sectionTitle: {
+    color: colors.foreground,
+    fontSize: typography.label.fontSize,
+    fontWeight: "700",
   },
   subtitle: {
     color: colors.foregroundMuted,
-    fontSize: typography.label.fontSize,
+    fontSize: typography.helper.fontSize,
+    lineHeight: 16,
+    marginTop: -spacing[1],
   },
   title: {
     color: colors.foreground,
+    flex: 1,
     fontSize: typography.cardTitle.fontSize,
     fontWeight: typography.cardTitle.fontWeight,
+  },
+  titleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[2],
   },
 });

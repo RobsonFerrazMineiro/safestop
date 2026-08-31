@@ -10,12 +10,12 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import { MapPin, OctagonAlert } from "lucide-react-native";
 import type { OccurrenceTimelineItem, OccurrenceDetails } from "@safestop/types";
 import { shouldShowActionPlanSection } from "@safestop/types";
+import { colors, controlHeight, radius, spacing, typography } from "@safestop/ui";
 
-import { colors, radius, spacing, typography } from "@safestop/ui";
-
-import { StatusBadge } from "@/components/ui";
+import { ScreenBackLink, StatusBadge } from "@/components/ui";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { EvidencePreviewModal, EvidenceSection, type EvidenceListItem } from "@/features/evidence";
 import { HseActionsFooter, type HseActionsFooterState } from "@/features/hse-approval";
@@ -42,11 +42,14 @@ import {
   usePendingAwarenessForOccurrence,
 } from "@/features/notifications";
 import { OccurrenceParticipantsSection } from "@/features/occurrence-participants";
-import { authRoutes, stopWorkRoute } from "@/lib/auth/routes";
+import { stopWorkRoute } from "@/lib/auth/routes";
 
 import { FlowDeadEndBanner } from "./flow-dead-end-banner";
 import { PreventiveStopEmpty } from "./preventive-stop-empty";
 import { usePreventiveStop } from "../hooks/use-preventive-stop";
+
+const HEADER_ICON_SIZE = 22;
+const META_ICON_SIZE = 12;
 
 type PreventiveStopDetailScreenProps = {
   occurrenceId: string;
@@ -81,6 +84,7 @@ function RegistrationDetailsSection({
         accessibilityLabel="Ver detalhes de registro"
         accessibilityRole="button"
         accessibilityState={{ expanded: isExpanded }}
+        style={({ pressed }) => [styles.registrationToggleHit, pressed && styles.pressed]}
         onPress={() => {
           setIsExpanded((current) => !current);
         }}
@@ -117,8 +121,8 @@ function LeadershipDecisionSection({
   onRefresh,
 }: LeadershipDecisionSectionProps) {
   return (
-    <View style={styles.leadershipSection}>
-      <Text accessibilityRole="header" style={styles.sectionTitle}>
+    <View style={styles.sectionCard}>
+      <Text accessibilityRole="header" style={styles.sectionCardTitle}>
         Decisão da Liderança
       </Text>
       <View style={styles.leadershipCards}>
@@ -175,7 +179,6 @@ function useIsOnline(): boolean {
 
 const HSE_FOOTER_HEIGHT = 72;
 const IMS_REGISTER_FOOTER_HEIGHT = 72;
-const COMPOSER_HEIGHT = 72;
 
 export function PreventiveStopDetailScreen({
   occurrenceId,
@@ -201,7 +204,7 @@ export function PreventiveStopDetailScreen({
 
   const focusMdhoReview = focusSection === "mdho-review";
   const bottomPadding =
-    140 +
+    spacing[16] +
     (hseFooter?.visible ? HSE_FOOTER_HEIGHT : 0) +
     (imsRegisterFooter?.visible ? IMS_REGISTER_FOOTER_HEIGHT : 0);
 
@@ -240,15 +243,24 @@ export function PreventiveStopDetailScreen({
 
     return (
       <View style={styles.headerContent}>
-        <Pressable
+        <ScreenBackLink
           accessibilityLabel="Voltar para listagem"
-          accessibilityRole="button"
           onPress={() => {
             router.replace(stopWorkRoute);
           }}
-        >
-          <Text style={styles.backLink}>Voltar</Text>
-        </Pressable>
+        />
+
+        <View style={styles.titleRow}>
+          <OctagonAlert
+            accessible={false}
+            color={colors.primary}
+            size={HEADER_ICON_SIZE}
+            strokeWidth={2}
+          />
+          <Text accessibilityRole="header" style={styles.pageTitle}>
+            Paralisação Preventiva
+          </Text>
+        </View>
 
         <Text style={styles.code}>{preventiveStop.publicCode}</Text>
         <Text style={styles.title}>{preventiveStop.title}</Text>
@@ -272,26 +284,42 @@ export function PreventiveStopDetailScreen({
 
         <FlowDeadEndBanner hideTratativa={showActionPlanSection} status={preventiveStop.status} />
 
-        <Text style={styles.sectionTitle}>Localização</Text>
-        <DetailField label="Área" value={preventiveStop.areaName ?? "—"} />
-        <DetailField label="Local" value={preventiveStop.locationDescription} />
-        {preventiveStop.contractorOrganizationName ? (
-          <DetailField label="Contratada" value={preventiveStop.contractorOrganizationName} />
-        ) : null}
-        {coordinates ? <DetailField label="Coordenadas" value={coordinates} /> : null}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionCardTitle}>Onde e quem</Text>
+          <DetailField label="Área" value={preventiveStop.areaName ?? "—"} />
+          <DetailField label="Local" value={preventiveStop.locationDescription} />
+          {preventiveStop.contractorOrganizationName ? (
+            <DetailField label="Contratada" value={preventiveStop.contractorOrganizationName} />
+          ) : null}
+          {coordinates ? (
+            <View style={styles.geoRow}>
+              <MapPin
+                accessible={false}
+                color={colors.foregroundMuted}
+                size={META_ICON_SIZE}
+                strokeWidth={2}
+              />
+              <Text style={styles.geoText}>{coordinates}</Text>
+            </View>
+          ) : null}
+          <RegistrationDetailsSection
+            createdByName={preventiveStop.createdByName}
+            occurredAt={preventiveStop.occurredAt}
+            stoppedAt={preventiveStop.stoppedAt}
+          />
+        </View>
 
-        <Text style={styles.sectionTitle}>Descrição</Text>
-        <DetailField label="Atividade" value={preventiveStop.taskDescription} />
-        <DetailField label="Condição" value={preventiveStop.conditionDescription} />
-        {preventiveStop.immediateActionDescription ? (
-          <DetailField label="Medida imediata" value={preventiveStop.immediateActionDescription} />
-        ) : null}
-
-        <RegistrationDetailsSection
-          createdByName={preventiveStop.createdByName}
-          occurredAt={preventiveStop.occurredAt}
-          stoppedAt={preventiveStop.stoppedAt}
-        />
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionCardTitle}>O que aconteceu</Text>
+          <DetailField label="Atividade" value={preventiveStop.taskDescription} />
+          <DetailField label="Condição insegura" value={preventiveStop.conditionDescription} />
+          {preventiveStop.immediateActionDescription ? (
+            <DetailField
+              label="Medida imediata"
+              value={preventiveStop.immediateActionDescription}
+            />
+          ) : null}
+        </View>
 
         <OccurrenceParticipantsSection occurrenceId={occurrenceId} />
 
@@ -408,6 +436,18 @@ export function PreventiveStopDetailScreen({
         <OccurrenceTimelineList
           ref={listRef}
           contentPaddingBottom={bottomPadding}
+          footerComponent={
+            <CommentComposerBar
+              key={occurrenceId}
+              isOnline={isOnline}
+              isSubmitting={isCreating}
+              occurrenceId={occurrenceId}
+              occurrenceStatus={preventiveStop.status}
+              onSubmit={async (content) => {
+                await createComment(content);
+              }}
+            />
+          }
           headerComponent={headerComponent}
           isOnline={isOnline}
           occurrenceId={occurrenceId}
@@ -416,13 +456,13 @@ export function PreventiveStopDetailScreen({
         />
 
         {hseFooter?.visible ? (
-          <View style={[styles.stickyFooterHost, { bottom: COMPOSER_HEIGHT }]}>
+          <View style={[styles.stickyFooterHost, styles.stickyFooterAtBottom]}>
             <HseActionsFooter {...hseFooter} />
           </View>
         ) : null}
 
         {imsRegisterFooter?.visible ? (
-          <View style={[styles.stickyFooterHost, { bottom: COMPOSER_HEIGHT }]}>
+          <View style={[styles.stickyFooterHost, styles.stickyFooterAtBottom]}>
             <ImsRegisterFooter
               isOnline={imsRegisterFooter.isOnline}
               isRegistering={imsRegisterFooter.isRegistering}
@@ -430,17 +470,6 @@ export function PreventiveStopDetailScreen({
             />
           </View>
         ) : null}
-
-        <CommentComposerBar
-          key={occurrenceId}
-          isOnline={isOnline}
-          isSubmitting={isCreating}
-          occurrenceId={occurrenceId}
-          occurrenceStatus={preventiveStop.status}
-          onSubmit={async (content) => {
-            await createComment(content);
-          }}
-        />
       </KeyboardAvoidingView>
 
       <EvidencePreviewModal
@@ -451,46 +480,21 @@ export function PreventiveStopDetailScreen({
           setPreviewEvidence(null);
         }}
       />
-
-      <Pressable
-        accessibilityLabel="Voltar ao início"
-        accessibilityRole="button"
-        style={({ pressed }) => [
-          styles.homeButtonFloating,
-          hseFooter?.visible || imsRegisterFooter?.visible
-            ? styles.homeButtonWithStickyFooter
-            : null,
-          pressed && styles.buttonPressed,
-        ]}
-        onPress={() => {
-          router.replace(authRoutes.app);
-        }}
-      >
-        <Text style={styles.homeButtonText}>Voltar ao início</Text>
-      </Pressable>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  backLink: {
-    color: colors.primary,
-    fontSize: typography.label.fontSize,
-    fontWeight: "600",
-  },
   badgeRow: {
     alignItems: "center",
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing[2],
   },
-  buttonPressed: {
-    opacity: 0.85,
-  },
   code: {
     color: colors.primary,
     fontFamily: "monospace",
-    fontSize: typography.helper.fontSize,
+    fontSize: typography.caption.fontSize,
     fontWeight: "700",
   },
   container: {
@@ -498,60 +502,79 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   field: {
-    gap: spacing[1],
+    gap: spacing[1] / 2,
   },
   fieldLabel: {
     color: colors.foregroundMuted,
     fontSize: typography.caption.fontSize,
     fontWeight: "600",
-    textTransform: "uppercase",
   },
   fieldValue: {
     color: colors.foreground,
-    fontSize: typography.body.fontSize,
+    fontSize: typography.helper.fontSize,
+    lineHeight: 18,
   },
   flex: {
     flex: 1,
   },
+  geoRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[1],
+  },
+  geoText: {
+    color: colors.foregroundMuted,
+    flex: 1,
+    fontFamily: "monospace",
+    fontSize: typography.caption.fontSize,
+  },
   headerContent: {
     gap: spacing[3],
-  },
-  homeButtonFloating: {
-    alignItems: "center",
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: radius.button,
-    bottom: 96,
-    justifyContent: "center",
-    minHeight: 40,
-    paddingHorizontal: spacing[3],
-    position: "absolute",
-    right: spacing[4],
-    zIndex: 2,
-  },
-  homeButtonText: {
-    color: colors.foreground,
-    fontSize: typography.helper.fontSize,
-    fontWeight: "600",
-  },
-  homeButtonWithStickyFooter: {
-    bottom: 168,
+    paddingTop: spacing[2],
   },
   leadershipCards: {
     gap: spacing[3],
   },
-  leadershipSection: {
-    gap: spacing[3],
+  pageTitle: {
+    color: colors.foreground,
+    flex: 1,
+    fontSize: typography.cardTitle.fontSize,
+    fontWeight: typography.cardTitle.fontWeight,
+  },
+  pressed: {
+    opacity: 0.85,
   },
   registrationContent: {
-    gap: spacing[3],
+    gap: spacing[2],
   },
   registrationSection: {
     gap: spacing[2],
+    marginTop: spacing[1],
   },
   registrationToggle: {
     color: colors.primary,
-    fontSize: typography.label.fontSize,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
+  },
+  registrationToggleHit: {
+    justifyContent: "center",
+    minHeight: controlHeight.mobile,
+  },
+  sectionCard: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    gap: spacing[2],
+    padding: spacing[3],
+  },
+  sectionCardTitle: {
+    color: colors.foreground,
+    fontSize: typography.label.fontSize,
+    fontWeight: "700",
+  },
+  stickyFooterAtBottom: {
+    bottom: 0,
   },
   stickyFooterHost: {
     left: 0,
@@ -559,19 +582,15 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 3,
   },
-  sectionTitle: {
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
-    color: colors.foregroundMuted,
-    fontSize: typography.caption.fontSize,
-    fontWeight: "700",
-    marginTop: spacing[2],
-    paddingTop: spacing[3],
-    textTransform: "uppercase",
-  },
   title: {
     color: colors.foreground,
-    fontSize: typography.cardTitle.fontSize,
-    fontWeight: typography.cardTitle.fontWeight,
+    fontSize: typography.label.fontSize,
+    fontWeight: "600",
+    lineHeight: 20,
+  },
+  titleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing[2],
   },
 });

@@ -64,7 +64,11 @@ function OrganizationProviderAuthenticated({
           return;
         }
 
-        await setStoredActiveOrganizationId(userId, organization.id);
+        try {
+          await setStoredActiveOrganizationId(userId, organization.id);
+        } catch {
+          // Persistência auxiliar: falha local não bloqueia seleção em memória.
+        }
 
         if (!isMounted) {
           return;
@@ -75,7 +79,14 @@ function OrganizationProviderAuthenticated({
         return;
       }
 
-      const storedOrganizationId = await getStoredActiveOrganizationId(userId);
+      let storedOrganizationId: string | null = null;
+
+      try {
+        storedOrganizationId = await getStoredActiveOrganizationId(userId);
+      } catch {
+        storedOrganizationId = null;
+      }
+
       const isStoredOrganizationValid =
         storedOrganizationId !== null &&
         organizations.some((organization) => organization.id === storedOrganizationId);
@@ -88,7 +99,11 @@ function OrganizationProviderAuthenticated({
         setActiveOrganizationId(storedOrganizationId);
       } else {
         if (storedOrganizationId) {
-          await clearActiveOrganizationStorage(userId);
+          try {
+            await clearActiveOrganizationStorage(userId);
+          } catch {
+            // Persistência auxiliar: limpeza local falhou; segue sem org ativa persistida.
+          }
         }
 
         setActiveOrganizationId(null);
@@ -115,7 +130,12 @@ function OrganizationProviderAuthenticated({
 
     if (!isActiveOrganizationStillValid) {
       void (async () => {
-        await clearActiveOrganizationStorage(userId);
+        try {
+          await clearActiveOrganizationStorage(userId);
+        } catch {
+          // Persistência auxiliar: limpeza local falhou; org inválida removida da memória.
+        }
+
         setActiveOrganizationId(null);
       })();
     }
@@ -136,7 +156,12 @@ function OrganizationProviderAuthenticated({
         return;
       }
 
-      await setStoredActiveOrganizationId(userId, organizationId);
+      try {
+        await setStoredActiveOrganizationId(userId, organizationId);
+      } catch {
+        // Persistência auxiliar: falha local não impede troca em memória.
+      }
+
       setActiveOrganizationId(organizationId);
       clearTenantCache(queryClient);
       clearAuthorizationCache(queryClient);

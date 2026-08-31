@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 
+import { ListChecks } from "lucide-react";
+
+import { SurfaceIcon } from "@/components/surface-icon";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -46,6 +49,7 @@ export function ActionPlanEmpty({
 
   return (
     <div className="flex flex-col items-start gap-4 rounded-lg border border-dashed border-border bg-card/30 px-4 py-6">
+      <SurfaceIcon className="text-muted-foreground" icon={ListChecks} variant="empty" />
       <div className="flex flex-col gap-1">
         <p className="text-base font-medium text-foreground">Nenhum Plano de Ação</p>
         <p className="text-sm text-muted-foreground">

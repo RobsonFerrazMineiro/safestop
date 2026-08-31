@@ -51,7 +51,13 @@ export function useOccurrenceDraft() {
     hydratedScopeRef.current = null;
 
     const hydrateDraft = async () => {
-      const storedDraft = await getStoredOccurrenceDraft(userId!, organizationId!);
+      let storedDraft: OccurrenceDraftInput | null = null;
+
+      try {
+        storedDraft = await getStoredOccurrenceDraft(userId!, organizationId!);
+      } catch {
+        // Persistência auxiliar: falha local não bloqueia o formulário.
+      }
 
       if (!isMounted) {
         return;
@@ -81,6 +87,8 @@ export function useOccurrenceDraft() {
 
       try {
         await setStoredOccurrenceDraft(userId, organizationId, nextDraft);
+      } catch {
+        // Persistência auxiliar: falha local não impede preenchimento.
       } finally {
         setIsSaving(false);
       }
@@ -124,7 +132,12 @@ export function useOccurrenceDraft() {
       return;
     }
 
-    await clearStoredOccurrenceDraft(userId, organizationId);
+    try {
+      await clearStoredOccurrenceDraft(userId, organizationId);
+    } catch {
+      // Persistência auxiliar: limpeza local falhou; estado em memória segue limpo.
+    }
+
     draftRef.current = {};
     setDraft({});
     setIsHydrated(false);

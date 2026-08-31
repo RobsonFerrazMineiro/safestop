@@ -1,6 +1,9 @@
 "use client";
 
+import { Inbox, Search } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
+import { SurfaceIcon } from "@/components/surface-icon";
 
 import { REPORT_COPY } from "../utils/report-copy";
 
@@ -58,6 +61,11 @@ export function ReportEmptyState({ variant, onClearFilters }: ReportEmptyStatePr
       data-testid={variant === "no-results" ? "report-no-results" : "report-empty"}
       role="status"
     >
+      <SurfaceIcon
+        className="mx-auto mb-3 text-muted-foreground"
+        icon={variant === "no-results" ? Search : Inbox}
+        variant="empty"
+      />
       <p className="text-base text-foreground">
         {variant === "empty" ? REPORT_COPY.empty : REPORT_COPY.noResults}
       </p>

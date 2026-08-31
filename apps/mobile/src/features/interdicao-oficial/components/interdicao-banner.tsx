@@ -1,9 +1,16 @@
+import { TriangleAlert } from "lucide-react-native";
 import { StyleSheet, Text, View } from "react-native";
+import { radius, spacing, statusChip, typography } from "@safestop/ui";
 
 export function InterdicaoBanner() {
   return (
     <View accessibilityRole="text" style={styles.banner}>
-      <Text style={styles.icon}>⚠</Text>
+      <TriangleAlert
+        accessible={false}
+        color={statusChip.destructive.foreground}
+        size={16}
+        strokeWidth={2}
+      />
       <Text style={styles.text}>Atividade formalmente interditada</Text>
     </View>
   );
@@ -12,25 +19,20 @@ export function InterdicaoBanner() {
 const styles = StyleSheet.create({
   banner: {
     alignItems: "center",
-    backgroundColor: "#7F1D1D",
-    borderColor: "#DC2626",
-    borderRadius: 12,
+    backgroundColor: statusChip.destructive.background,
+    borderColor: statusChip.destructive.border,
+    borderRadius: radius.card,
     borderWidth: 1,
     flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  icon: {
-    color: "#FCA5A5",
-    fontSize: 16,
-    fontWeight: "700",
+    gap: spacing[2],
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
   },
   text: {
-    color: "#FEE2E2",
+    color: statusChip.destructive.foreground,
     flex: 1,
-    fontSize: 14,
+    fontSize: typography.helper.fontSize,
     fontWeight: "600",
-    lineHeight: 20,
+    lineHeight: 18,
   },
 });
