@@ -7,12 +7,18 @@ import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-
 
 import { EvidenceAddSheet } from "./evidence-add-sheet";
 import { EvidencePreviewModal } from "./evidence-preview-modal";
-import { EvidenceAddTile, EvidenceQueueTile, EvidenceSyncedTile } from "./evidence-tile";
+import {
+  EvidenceAddTile,
+  EvidenceQueueTile,
+  EvidenceSyncedPdfTile,
+  EvidenceSyncedTile,
+} from "./evidence-tile";
 import { useDeleteEvidence } from "../hooks/use-delete-evidence";
 import { useEvidenceSignedUrl } from "../hooks/use-evidence-signed-url";
 import { useOccurrenceEvidence } from "../hooks/use-occurrence-evidence";
 import { useUploadEvidence } from "../hooks/use-upload-evidence";
 import type { EvidenceListItem } from "../types";
+import { isEvidencePdfMimeType } from "../utils/is-evidence-mime";
 
 type EvidenceSectionProps = {
   occurrenceId: string;
@@ -20,6 +26,41 @@ type EvidenceSectionProps = {
 };
 
 function SyncedEvidenceTile({
+  occurrenceId,
+  item,
+  index,
+  onPress,
+}: {
+  occurrenceId: string;
+  item: EvidenceListItem;
+  index: number;
+  onPress: (item: EvidenceListItem) => void;
+}) {
+  const isPdf = isEvidencePdfMimeType(item.mimeType);
+
+  if (isPdf) {
+    return (
+      <EvidenceSyncedPdfTile
+        fileName={item.originalFileName}
+        index={index}
+        onPress={() => {
+          onPress(item);
+        }}
+      />
+    );
+  }
+
+  return (
+    <SyncedImageEvidenceTile
+      index={index}
+      item={item}
+      occurrenceId={occurrenceId}
+      onPress={onPress}
+    />
+  );
+}
+
+function SyncedImageEvidenceTile({
   occurrenceId,
   item,
   index,
@@ -54,8 +95,16 @@ export function EvidenceSection({ occurrenceId, showOfflineBanner = true }: Evid
   const [previewItem, setPreviewItem] = useState<EvidenceListItem | null>(null);
 
   const { evidence, isLoading, isError, refetch, canRead } = useOccurrenceEvidence(occurrenceId);
-  const { queue, pickFromCamera, pickFromLibrary, retryUpload, isUploading, canCreate, isOffline } =
-    useUploadEvidence({ occurrenceId });
+  const {
+    queue,
+    pickFromCamera,
+    pickFromLibrary,
+    pickFromPdf,
+    retryUpload,
+    isUploading,
+    canCreate,
+    isOffline,
+  } = useUploadEvidence({ occurrenceId });
   const { deleteEvidence, isDeleting } = useDeleteEvidence(occurrenceId);
 
   if (!canRead) {
@@ -81,7 +130,7 @@ export function EvidenceSection({ occurrenceId, showOfflineBanner = true }: Evid
   function confirmDelete(item: EvidenceListItem) {
     Alert.alert(
       "Remover evidência?",
-      "A imagem deixará de aparecer nesta ocorrência.\nEsta ação será registrada na auditoria.",
+      "A evidência deixará de aparecer nesta ocorrência.\nEsta ação será registrada na auditoria.",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -137,7 +186,7 @@ export function EvidenceSection({ occurrenceId, showOfflineBanner = true }: Evid
             <View style={styles.emptyBox}>
               <Text style={styles.emptyTitle}>Nenhuma evidência anexada.</Text>
               <Text style={styles.emptyBody}>
-                Adicione fotos da condição insegura para fortalecer o registro.
+                Adicione fotos ou PDF da condição insegura para fortalecer o registro.
               </Text>
             </View>
           ) : null}
@@ -199,6 +248,9 @@ export function EvidenceSection({ occurrenceId, showOfflineBanner = true }: Evid
         }}
         onPickLibrary={() => {
           void runPicker(pickFromLibrary);
+        }}
+        onPickPdf={() => {
+          void runPicker(pickFromPdf);
         }}
       />
 

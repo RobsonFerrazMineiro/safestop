@@ -5,6 +5,7 @@ import { actionPlanKeys } from "@safestop/query-keys";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
 import { getActionItemAttachments } from "../services/get-action-item-attachments";
+import { countCompletedActionItemAttachments } from "../utils/action-plan-evidence-rules";
 
 export function useActionItemAttachments(itemId: string | null) {
   const { activeOrganization } = useActiveOrganization();
@@ -17,8 +18,7 @@ export function useActionItemAttachments(itemId: string | null) {
     staleTime: ACTION_PLAN_STALE_TIME_MS,
   });
 
-  const completedCount =
-    query.data?.filter((attachment) => attachment.uploadStatus === "COMPLETED").length ?? 0;
+  const completedCount = countCompletedActionItemAttachments(query.data ?? []);
 
   return {
     attachments: query.data ?? [],

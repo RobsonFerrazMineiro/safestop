@@ -45,7 +45,8 @@ function normalizeJoin<T>(value: T | T[] | null): T | null {
   return value;
 }
 
-function mapActionItemRow(row: ActionItemRow): ActionItemEnriched | null {
+/** Exportado para testes unitários do mapper. */
+export function mapActionItemRow(row: ActionItemRow): ActionItemEnriched | null {
   if (!isActionItemStatus(row.status) || !isActionItemPriority(row.priority)) {
     return null;
   }
@@ -80,7 +81,11 @@ function mapActionItemRow(row: ActionItemRow): ActionItemEnriched | null {
   };
 }
 
-const ITEMS_SELECT = `
+/**
+ * Select alinhado ao Mobile: FK real `action_items_responsible_member_org_fk`
+ * (não `action_items_responsible_member_id_fkey`, inexistente → PGRST200).
+ */
+export const ACTION_PLAN_ITEMS_SELECT = `
   id,
   action_plan_id,
   organization_id,
@@ -99,8 +104,8 @@ const ITEMS_SELECT = `
   validation_note,
   created_at,
   updated_at,
-  responsible_member:organization_members!action_items_responsible_member_id_fkey (
-    profiles ( full_name )
+  responsible_member:organization_members!action_items_responsible_member_org_fk (
+    profiles:profile_id ( full_name )
   ),
   responsible_organization:organizations!action_items_responsible_organization_id_fkey ( name ),
   completed_by_profile:profiles!action_items_completed_by_fkey ( full_name )
@@ -114,7 +119,7 @@ export async function getActionPlanItems(
 
   const { data, error } = await supabase
     .from("action_items")
-    .select(ITEMS_SELECT)
+    .select(ACTION_PLAN_ITEMS_SELECT)
     .eq("organization_id", organizationId)
     .eq("action_plan_id", planId)
     .order("created_at", { ascending: true });
@@ -127,3 +132,5 @@ export async function getActionPlanItems(
     .map((row) => mapActionItemRow(row as unknown as ActionItemRow))
     .filter((item): item is ActionItemEnriched => item !== null);
 }
+
+export type { ActionItemRow };

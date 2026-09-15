@@ -10,6 +10,7 @@ const DRAFT_STRING_KEYS = [
   "conditionDescription",
   "immediateActionDescription",
   "areaId",
+  "contractId",
   "contractorOrganizationId",
 ] as const;
 

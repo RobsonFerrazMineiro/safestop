@@ -13,7 +13,7 @@ import { useRouter } from "expo-router";
 import { MapPin, OctagonAlert } from "lucide-react-native";
 import type { OccurrenceTimelineItem, OccurrenceDetails } from "@safestop/types";
 import { shouldShowActionPlanSection } from "@safestop/types";
-import { colors, controlHeight, radius, spacing, typography } from "@safestop/ui";
+import { colors, controlHeight, radius, radiusScale, spacing, typography } from "@safestop/ui";
 
 import { ScreenBackLink, StatusBadge } from "@/components/ui";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
@@ -42,6 +42,7 @@ import {
   usePendingAwarenessForOccurrence,
 } from "@/features/notifications";
 import { OccurrenceParticipantsSection } from "@/features/occurrence-participants";
+import { useWorkspaceOccurrenceDeepLink } from "@/features/workspace";
 import { stopWorkRoute } from "@/lib/auth/routes";
 
 import { FlowDeadEndBanner } from "./flow-dead-end-banner";
@@ -190,6 +191,14 @@ export function PreventiveStopDetailScreen({
   const { preventiveStop, isLoading, isError, isNotFound, canRead, refetch, isFetching } =
     usePreventiveStop(occurrenceId);
 
+  const { isForbiddenWorkspace, isLegacyWithoutWorkspace, isAligningWorkspace } =
+    useWorkspaceOccurrenceDeepLink({
+      occurrenceId,
+      occurrenceWorkspaceId: preventiveStop?.workspaceId,
+      isOccurrenceReady: Boolean(preventiveStop) && !isLoading && !isError && !isNotFound,
+      isOccurrenceMissing: isNotFound,
+    });
+
   const { createComment, isCreating } = useCreateComment(occurrenceId);
   const [previewEvidence, setPreviewEvidence] = useState<EvidenceListItem | null>(null);
   const [hseFooter, setHseFooter] = useState<HseActionsFooterState | null>(null);
@@ -268,6 +277,11 @@ export function PreventiveStopDetailScreen({
         <View style={styles.badgeRow}>
           <StatusBadge status={preventiveStop.status} />
           <StatusBadge severity={preventiveStop.severity} />
+          {isLegacyWithoutWorkspace ? (
+            <View style={styles.legacyBadge}>
+              <Text style={styles.legacyBadgeText}>Legado sem Workspace</Text>
+            </View>
+          ) : null}
         </View>
 
         {shouldShowInterdicaoBanner(preventiveStop.status) ? <InterdicaoBanner /> : null}
@@ -287,10 +301,12 @@ export function PreventiveStopDetailScreen({
         <View style={styles.sectionCard}>
           <Text style={styles.sectionCardTitle}>Onde e quem</Text>
           <DetailField label="Área" value={preventiveStop.areaName ?? "—"} />
+          <DetailField label="Originadora" value={preventiveStop.originOrganizationName ?? "—"} />
+          <DetailField
+            label="Contratada"
+            value={preventiveStop.contractorOrganizationName ?? "Equipe própria"}
+          />
           <DetailField label="Local" value={preventiveStop.locationDescription} />
-          {preventiveStop.contractorOrganizationName ? (
-            <DetailField label="Contratada" value={preventiveStop.contractorOrganizationName} />
-          ) : null}
           {coordinates ? (
             <View style={styles.geoRow}>
               <MapPin
@@ -360,6 +376,7 @@ export function PreventiveStopDetailScreen({
     );
   }, [
     isFetching,
+    isLegacyWithoutWorkspace,
     isOnline,
     occurrenceId,
     pendingAwarenessNotification,
@@ -394,7 +411,7 @@ export function PreventiveStopDetailScreen({
     return null;
   }
 
-  if (isLoading) {
+  if (isLoading || isAligningWorkspace) {
     return (
       <SafeAreaView style={styles.container}>
         <OccurrenceLoading />
@@ -415,7 +432,7 @@ export function PreventiveStopDetailScreen({
     );
   }
 
-  if (isNotFound || !preventiveStop) {
+  if (isNotFound || !preventiveStop || isForbiddenWorkspace) {
     return (
       <SafeAreaView style={styles.container}>
         <PreventiveStopEmpty
@@ -490,6 +507,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: spacing[2],
+  },
+  legacyBadge: {
+    backgroundColor: colors.surfaceElevated,
+    borderColor: colors.border,
+    borderRadius: radiusScale.sm,
+    borderWidth: 1,
+    paddingHorizontal: spacing[2],
+    paddingVertical: spacing[1],
+  },
+  legacyBadgeText: {
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
+    fontWeight: "600",
   },
   code: {
     color: colors.primary,

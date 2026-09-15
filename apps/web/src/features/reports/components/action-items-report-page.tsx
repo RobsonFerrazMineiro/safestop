@@ -6,7 +6,9 @@ import { computeActionItemReportSummary, type ActionItemReportSortField } from "
 
 import { AlarmClock, Clock, ListChecks } from "lucide-react";
 
+import { FilterShell } from "@/components/filter-shell";
 import { PageHeader } from "@/components/page-header";
+import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
@@ -42,8 +44,6 @@ import {
   ReportPageSkeleton,
 } from "./report-states";
 import { ReportSummaryKpiCard } from "./report-summary-kpi-card";
-
-const REPORTS_SHELL_CLASS = "flex w-full flex-1 flex-col gap-6 px-6 py-10";
 
 function countActionItemActiveFilters(state: ActionItemReportViewState): number {
   let count = 0;
@@ -118,15 +118,16 @@ export function ActionItemsReportPage() {
 
   if (isAuthLoading || !isReady) {
     return (
-      <main className={REPORTS_SHELL_CLASS}>
+      <PageShell width="wide">
         <PageHeader
           backHref="/reports"
           backLabel={REPORT_COPY.hubTitle}
-          title={REPORT_COPY.actionItems}
+          eyebrow="RELATÓRIO DE PLANO DE AÇÃO"
           icon={ListChecks}
+          title={REPORT_COPY.actionItems}
         />
         <ReportPageSkeleton />
-      </main>
+      </PageShell>
     );
   }
 
@@ -135,49 +136,55 @@ export function ActionItemsReportPage() {
   }
 
   return (
-    <main className={REPORTS_SHELL_CLASS} data-testid="report-action-items-page">
+    <PageShell data-testid="report-action-items-page" width="wide">
       <PageHeader
         backHref="/reports"
         backLabel={REPORT_COPY.hubTitle}
+        eyebrow="RELATÓRIO DE PLANO DE AÇÃO"
+        icon={ListChecks}
         subtitle={`${activeOrganization?.name ?? "Organização"} · ${items.length} registros nesta página`}
         title={REPORT_COPY.actionItems}
-        icon={ListChecks}
       />
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <ReportSummaryKpiCard
+          description={REPORT_COPY.onThisPage}
           isLoading={query.isLoading}
           label={`${REPORT_COPY.onThisPage}: total`}
-          description={REPORT_COPY.onThisPage}
           value={summary.totalRows}
         />
         <ReportSummaryKpiCard
+          description={REPORT_COPY.onThisPage}
+          icon={AlarmClock}
           isLoading={query.isLoading}
           label="Vencidas"
-          description={REPORT_COPY.onThisPage}
           tone="destructive"
-          icon={AlarmClock}
           value={summary.overdueCount}
         />
         <ReportSummaryKpiCard
+          description={REPORT_COPY.onThisPage}
+          icon={Clock}
           isLoading={query.isLoading}
           label="Próximas do vencimento"
-          description={REPORT_COPY.onThisPage}
           tone="warning"
-          icon={Clock}
           value={summary.dueSoonCount}
         />
       </section>
 
-      <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <ReportPeriodFilter activePreset={viewState.periodPreset} onChange={handlePeriodChange} />
-          <div className="flex flex-wrap items-center gap-2">
-            <ActionItemReportFiltersDialog
-              activeFilterCount={activeFilterCount}
-              filters={viewState}
-              onApply={replaceViewState}
-            />
+      <FilterShell
+        actions={
+          <>
+            {activeFilters ? (
+              <Button
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={handleClearFilters}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                {REPORT_COPY.clearFilters}
+              </Button>
+            ) : null}
             <ReportExportMenu
               isExporting={isExporting}
               onExportCsv={() => {
@@ -191,10 +198,30 @@ export function ActionItemsReportPage() {
                 );
               }}
             />
+          </>
+        }
+        meta={
+          activeFilterCount > 0 ? (
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+              {activeFilterCount} {activeFilterCount === 1 ? "filtro ativo" : "filtros ativos"}
+            </span>
+          ) : null
+        }
+        title="Filtros e busca"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <ReportPeriodFilter
+              activePreset={viewState.periodPreset}
+              onChange={handlePeriodChange}
+            />
+            <ActionItemReportFiltersDialog
+              activeFilterCount={activeFilterCount}
+              filters={viewState}
+              onApply={replaceViewState}
+            />
           </div>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               checked={viewState.showOptionalColumns}
@@ -209,44 +236,33 @@ export function ActionItemsReportPage() {
             />
             {REPORT_COPY.showOptionalColumns}
           </label>
+
           {activeFilters ? (
-            <Button
-              className="h-auto px-0"
-              size="sm"
-              type="button"
-              variant="link"
-              onClick={handleClearFilters}
-            >
-              {REPORT_COPY.clearFilters}
-            </Button>
+            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              {DASHBOARD_PERIOD_PRESETS.map((preset) =>
+                viewState.periodPreset === preset.id ? (
+                  <span key={preset.id} className="rounded-full border border-border px-2 py-1">
+                    Período: {preset.label}
+                  </span>
+                ) : null,
+              )}
+              {viewState.status.map((status) => (
+                <span key={status} className="rounded-full border border-border px-2 py-1">
+                  Status: {formatActionItemStatus(status)}
+                </span>
+              ))}
+              {viewState.overdueOnly ? (
+                <span className="rounded-full border border-border px-2 py-1">Vencidas</span>
+              ) : null}
+              {viewState.dueSoonOnly ? (
+                <span className="rounded-full border border-border px-2 py-1">
+                  Próximas do vencimento
+                </span>
+              ) : null}
+            </div>
           ) : null}
         </div>
-
-        {activeFilters ? (
-          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-            {DASHBOARD_PERIOD_PRESETS.map((preset) =>
-              viewState.periodPreset === preset.id ? (
-                <span key={preset.id} className="rounded-full border border-border px-2 py-1">
-                  Período: {preset.label}
-                </span>
-              ) : null,
-            )}
-            {viewState.status.map((status) => (
-              <span key={status} className="rounded-full border border-border px-2 py-1">
-                Status: {formatActionItemStatus(status)}
-              </span>
-            ))}
-            {viewState.overdueOnly ? (
-              <span className="rounded-full border border-border px-2 py-1">Vencidas</span>
-            ) : null}
-            {viewState.dueSoonOnly ? (
-              <span className="rounded-full border border-border px-2 py-1">
-                Próximas do vencimento
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-      </section>
+      </FilterShell>
 
       {exportError ? (
         <div className="mb-4">
@@ -288,6 +304,6 @@ export function ActionItemsReportPage() {
           </>
         )
       ) : null}
-    </main>
+    </PageShell>
   );
 }

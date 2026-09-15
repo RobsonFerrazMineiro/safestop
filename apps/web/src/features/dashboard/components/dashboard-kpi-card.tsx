@@ -85,8 +85,8 @@ function DashboardKpiCardInner({
 
   const body = (
     <>
-      <div className="flex items-start justify-between gap-3">
-        <span className="min-w-0 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground line-clamp-2">
+      <div className="flex items-start justify-between gap-2.5">
+        <span className="min-w-0 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground/90 line-clamp-2">
           {label}
         </span>
         <SurfaceIcon
@@ -95,17 +95,17 @@ function DashboardKpiCardInner({
           variant="kpi"
         />
       </div>
-      <span className="text-left text-3xl font-bold tabular-nums text-foreground">
+      <span className="text-left text-2xl font-bold tracking-tight tabular-nums text-foreground sm:text-3xl">
         {isLoading ? "…" : isError ? "—" : formattedValue}
       </span>
-      <span className="mt-auto border-t border-border/80 pt-2 text-left text-xs text-muted-foreground">
+      <span className="mt-auto border-t border-border/70 pt-2 text-left text-[11px] text-muted-foreground/80 line-clamp-1 sm:text-xs">
         {detail}
       </span>
     </>
   );
 
   const className = cn(
-    "flex min-h-[8.5rem] w-full flex-col items-stretch justify-between gap-3 rounded-lg border border-l-4 p-4 text-left shadow-sm",
+    "flex min-h-[8.25rem] w-full flex-col items-stretch justify-between gap-2.5 rounded-lg border border-l-4 p-3.5 text-left shadow-sm sm:min-h-[8.5rem] sm:gap-3 sm:p-4",
     cardTone,
   );
 
@@ -155,5 +155,5 @@ export function DashboardKpiCard(props: DashboardKpiCardProps) {
 }
 
 export function DashboardKpiCardSkeleton() {
-  return <Skeleton aria-hidden="true" className="min-h-[8.5rem] rounded-lg" />;
+  return <Skeleton aria-hidden="true" className="min-h-[8.25rem] rounded-lg sm:min-h-[8.5rem]" />;
 }

@@ -8,6 +8,10 @@ type AreaRow = {
   code: string | null;
 };
 
+/**
+ * Áreas Organization-scoped (Dashboard / Reports / filtros de lista).
+ * Create operacional usa `getWorkspaceAreas` (Gate 13X.3).
+ */
 export async function getOrganizationAreas(
   organizationId: string,
 ): Promise<OrganizationAreaOption[]> {

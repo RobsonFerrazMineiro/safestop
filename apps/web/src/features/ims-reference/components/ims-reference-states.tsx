@@ -15,7 +15,7 @@ export function ImsConflictCard({ isRefreshing, onRefresh }: ImsConflictCardProp
         Esta ocorrência foi atualizada. Atualize para continuar.
       </p>
       <button
-        className="w-full rounded-md bg-orange-500 px-4 py-3 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50 sm:w-auto sm:self-start"
+        className="w-full rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 sm:w-auto sm:self-start"
         disabled={isRefreshing}
         type="button"
         onClick={onRefresh}

@@ -38,8 +38,12 @@ function mapHistoryRow(row: HistoryRow): OccurrenceStatusHistoryItem | null {
   };
 }
 
+/**
+ * Histórico por occurrence_id. Gate 13X.3: sem pré-filtro organization_id = EMPRESA atuante.
+ * `organizationId` permanece na assinatura por compatibilidade da query key.
+ */
 export async function getOccurrenceStatusHistory(
-  organizationId: string,
+  _organizationId: string,
   occurrenceId: string,
 ): Promise<OccurrenceStatusHistoryItem[]> {
   const supabase = createClient();
@@ -56,7 +60,6 @@ export async function getOccurrenceStatusHistory(
   const { data: occurrence, error: occurrenceError } = await supabase
     .from("occurrences")
     .select("id")
-    .eq("organization_id", organizationId)
     .eq("id", occurrenceId)
     .maybeSingle();
 

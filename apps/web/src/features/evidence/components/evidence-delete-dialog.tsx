@@ -38,7 +38,7 @@ export function EvidenceDeleteDialog({
           <AlertDialogTitle>Remover evidência?</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div>
-              <p>A imagem deixará de aparecer nesta ocorrência.</p>
+              <p>A evidência deixará de aparecer nesta ocorrência.</p>
               <p className="mt-2">Esta ação será registrada na auditoria.</p>
             </div>
           </AlertDialogDescription>

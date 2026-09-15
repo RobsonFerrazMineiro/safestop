@@ -18,6 +18,7 @@ type AttachmentRow = {
   organization_id: string;
   storage_bucket: string;
   storage_path: string;
+  original_file_name: string;
   upload_status: string;
   mime_type: string;
   file_size: number;
@@ -46,6 +47,7 @@ function mapAttachmentRow(row: AttachmentRow): ActionItemAttachmentEnriched | nu
     caption: row.caption,
     createdAt: row.created_at,
     createdBy: row.uploaded_by,
+    originalFileName: row.original_file_name,
   };
 }
 
@@ -58,7 +60,7 @@ export async function getActionItemAttachments(
   const { data, error } = await supabase
     .from("action_item_attachments")
     .select(
-      "id, action_item_id, organization_id, storage_bucket, storage_path, upload_status, mime_type, file_size, caption, created_at, uploaded_by",
+      "id, action_item_id, organization_id, storage_bucket, storage_path, original_file_name, upload_status, mime_type, file_size, caption, created_at, uploaded_by",
     )
     .eq("organization_id", organizationId)
     .eq("action_item_id", itemId)

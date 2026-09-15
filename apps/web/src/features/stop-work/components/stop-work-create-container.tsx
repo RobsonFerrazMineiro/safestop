@@ -12,6 +12,7 @@ import { PlusCircle } from "lucide-react";
 
 import { FormField } from "@/components/form-field";
 import { PageHeader } from "@/components/page-header";
+import { PageShell } from "@/components/page-shell";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useRequirePermission } from "@/features/authorization";
 import { formatOccurrenceSeverity } from "@/features/occurrences/utils/format-labels";
+import { useActiveWorkspace } from "@/features/workspace";
 
 import { usePreventiveStopDraft } from "../hooks/use-preventive-stop-draft";
 import {
@@ -54,6 +56,8 @@ import {
   resolveCreatePopStateAction,
   shouldPromptPreventiveStopCreateLeave,
 } from "../utils/preventive-stop-create-leave";
+import { OWN_TEAM_CONTRACT_OPTION_ID } from "@/features/occurrences/utils/workspace-create-rules";
+import type { WorkspaceContractOption } from "@/features/occurrences/types";
 import { StopWorkError, StopWorkLoading } from "./stop-work-states";
 
 const DRAFT_DEBOUNCE_MS = 400;
@@ -125,6 +129,7 @@ function toFormValues(draft: Partial<CreatePreventiveStopInput>): CreatePreventi
     immediateActionDescription: draft.immediateActionDescription ?? "",
     severity: draft.severity ?? "MEDIUM",
     areaId: draft.areaId ?? "",
+    contractId: draft.contractId ?? "",
     contractorOrganizationId: draft.contractorOrganizationId ?? "",
   };
 }
@@ -140,6 +145,8 @@ export function StopWorkCreateContainer() {
   } = usePreventiveStopAreas();
   const {
     contractors,
+    contracts,
+    allowsOwnTeam,
     isLoading: isContractorsLoading,
     isError: isContractorsError,
     error: contractorsError,
@@ -170,9 +177,11 @@ export function StopWorkCreateContainer() {
 
   return (
     <StopWorkCreateForm
+      allowsOwnTeam={allowsOwnTeam}
       areas={areas}
       clearDraft={clearDraft}
       contractors={contractors}
+      contracts={contracts}
       flushDraft={flushDraft}
       hasLocalDraft={hasLocalDraft}
       initialValues={toFormValues(draft)}
@@ -183,6 +192,8 @@ export function StopWorkCreateContainer() {
 type StopWorkCreateFormProps = {
   areas: SelectOption[];
   contractors: SelectOption[];
+  contracts: WorkspaceContractOption[];
+  allowsOwnTeam: boolean;
   initialValues: CreatePreventiveStopInput;
   hasLocalDraft: boolean;
   flushDraft: (values: CreatePreventiveStopInput) => void;
@@ -192,12 +203,15 @@ type StopWorkCreateFormProps = {
 function StopWorkCreateForm({
   areas,
   contractors,
+  contracts,
+  allowsOwnTeam,
   initialValues,
   hasLocalDraft,
   flushDraft,
   clearDraft,
 }: StopWorkCreateFormProps) {
   const router = useRouter();
+  const { activeWorkspace } = useActiveWorkspace();
   const { createPreventiveStop, isCreating, error: createError, reset } = useCreatePreventiveStop();
   const [formError, setFormError] = useState<string | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
@@ -212,12 +226,46 @@ function StopWorkCreateForm({
     handleSubmit,
     control,
     getValues,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<CreatePreventiveStopInput>({
     resolver: zodResolver(createPreventiveStopSchema),
     defaultValues: initialValues,
   });
+
+  const contractPickerOptions: SelectOption[] = [
+    ...(allowsOwnTeam ? [{ id: OWN_TEAM_CONTRACT_OPTION_ID, name: "Equipe própria" }] : []),
+    ...contractors,
+  ];
+
+  const watchedContractId = watch("contractId");
+  const watchedContractorId = watch("contractorOrganizationId");
+  const contractPickerValue =
+    typeof watchedContractId === "string" && watchedContractId.length > 0
+      ? watchedContractId
+      : allowsOwnTeam &&
+          (watchedContractorId === undefined ||
+            watchedContractorId === null ||
+            watchedContractorId === "")
+        ? OWN_TEAM_CONTRACT_OPTION_ID
+        : "";
+
+  function handleContractPickerChange(value: string) {
+    if (value === OWN_TEAM_CONTRACT_OPTION_ID) {
+      setValue("contractId", undefined, { shouldDirty: true });
+      setValue("contractorOrganizationId", undefined, { shouldDirty: true });
+      return;
+    }
+
+    const selected = contracts.find((contract) => contract.id === value);
+    if (!selected) {
+      return;
+    }
+
+    setValue("contractId", selected.id, { shouldDirty: true });
+    setValue("contractorOrganizationId", selected.contractorOrganizationId, { shouldDirty: true });
+  }
 
   useEffect(() => {
     const subscription = watch((values) => {
@@ -356,6 +404,16 @@ function StopWorkCreateForm({
     setFormError(null);
     reset();
 
+    if (!activeWorkspace?.id) {
+      setFormError("Ambiente ativo é obrigatório para registrar a paralisação.");
+      return;
+    }
+
+    if (!allowsOwnTeam && (!values.contractId || !values.contractorOrganizationId)) {
+      setFormError("Contrato é obrigatório neste Ambiente.");
+      return;
+    }
+
     try {
       const created = await createPreventiveStop(values);
       allowLeaveRef.current = true;
@@ -409,19 +467,22 @@ function StopWorkCreateForm({
   } = getPreventiveStopCreateControlState({
     isCreating,
     areasCount: areas.length,
-    contractorsCount: contractors.length,
+    contractsCount: contracts.length,
+    hasActiveWorkspace: Boolean(activeWorkspace?.id),
+    allowsOwnTeam,
   });
   const severityErrorId = errors.severity?.message ? "severity-error" : undefined;
   const showDraftBanner = hasLocalDraft || hasPreventiveStopDraftContent(watch());
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-2xl flex-col gap-6 px-6 py-10">
+    <PageShell className="gap-6" width="default">
       <PageHeader
         backHref="/stop-work"
         backLabel="Voltar para paralisações"
+        eyebrow="REGISTRO OPERACIONAL"
+        icon={PlusCircle}
         subtitle="Preencha os dados mínimos para registrar a paralisação na organização ativa."
         title="Nova Paralisação Preventiva"
-        icon={PlusCircle}
       />
 
       {showDraftBanner ? (
@@ -438,9 +499,11 @@ function StopWorkCreateForm({
       </p>
 
       <form className="flex flex-col gap-5" onSubmit={handleSubmit(onSubmit)}>
-        <Card className="gap-4 py-4">
+        <Card className="gap-4 border-border bg-card/60 py-4 shadow-sm">
           <CardHeader className="px-4">
-            <CardTitle className="text-base">Onde e quem</CardTitle>
+            <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+              Onde e quem
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 px-4">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -472,34 +535,30 @@ function StopWorkCreateForm({
               </FormField>
             </div>
 
-            <Controller
-              control={control}
-              name="contractorOrganizationId"
-              render={({ field }) => (
-                <FormField
-                  error={errors.contractorOrganizationId?.message}
-                  id="contractorOrganizationId"
-                  label="Contratada"
-                >
-                  <DraftSelectControl
-                    disabled={isContractorDisabled}
-                    options={contractors}
-                    placeholder="Selecione a empresa"
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  />
-                </FormField>
-              )}
-            />
+            <FormField
+              error={errors.contractId?.message ?? errors.contractorOrganizationId?.message}
+              id="contractId"
+              label="Contrato"
+            >
+              <DraftSelectControl
+                disabled={isContractorDisabled}
+                options={contractPickerOptions}
+                placeholder={allowsOwnTeam ? "Contrato ou equipe própria" : "Selecione o contrato"}
+                value={contractPickerValue}
+                onValueChange={handleContractPickerChange}
+              />
+            </FormField>
             {showEmptyContractorsMessage ? (
               <p className="text-sm text-status-warning-fg">{EMPTY_ACTIVE_CONTRACTORS_MESSAGE}</p>
             ) : null}
           </CardContent>
         </Card>
 
-        <Card className="gap-4 py-4">
+        <Card className="gap-4 border-border bg-card/60 py-4 shadow-sm">
           <CardHeader className="px-4">
-            <CardTitle className="text-base">O que está acontecendo</CardTitle>
+            <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+              O que está acontecendo
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 px-4">
             <FormField
@@ -572,9 +631,11 @@ function StopWorkCreateForm({
           </CardContent>
         </Card>
 
-        <Card className="gap-4 py-4">
+        <Card className="gap-4 border-border bg-card/60 py-4 shadow-sm">
           <CardHeader className="px-4">
-            <CardTitle className="text-base">Complemento</CardTitle>
+            <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+              Complemento
+            </CardTitle>
           </CardHeader>
           <CardContent className="px-4">
             <FormField id="immediateActionDescription" label="Medida imediata (opcional)">
@@ -627,6 +688,6 @@ function StopWorkCreateForm({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </main>
+    </PageShell>
   );
 }

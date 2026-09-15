@@ -42,6 +42,7 @@ async function getMobileDashboardKpisClientFallback(
     personal: {
       myPendingActions: personalActions.myPendingActions,
       myOverdueActions: personalActions.myOverdueActions,
+      myDueSoonActions: personalActions.myDueSoonActions,
       myPendingAwareness: personalAwareness.myPendingAwareness,
     },
     operational,

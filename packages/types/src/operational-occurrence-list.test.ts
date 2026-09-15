@@ -19,7 +19,17 @@ describe("buildListOperationalOccurrencesRpcArgs", () => {
       p_ims_reference_code: null,
       p_cursor: null,
       p_limit: 20,
+      p_workspace_id: null,
     });
+  });
+
+  it("envia p_workspace_id quando workspaceId é informado (Gate 13C.1)", () => {
+    expect(
+      buildListOperationalOccurrencesRpcArgs("org-1", { workspaceId: " ws-1 " }).p_workspace_id,
+    ).toBe("ws-1");
+    expect(
+      buildListOperationalOccurrencesRpcArgs("org-1", { workspaceId: "   " }).p_workspace_id,
+    ).toBeNull();
   });
 
   it("faz trim de p_search e trata vazio/whitespace como null", () => {
@@ -97,6 +107,7 @@ describe("buildListOperationalOccurrencesRpcArgs", () => {
       p_ims_reference_code: null,
       p_cursor: { sortValue: "2026-08-01 10:00:00.000000", id: "occ-9" },
       p_limit: 50,
+      p_workspace_id: null,
     });
   });
 });

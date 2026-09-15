@@ -20,7 +20,12 @@ export const OCCURRENCE_ATTACHMENT_UPLOAD_STATUSES = ["PENDING", "COMPLETED", "F
 export type OccurrenceAttachmentUploadStatus =
   (typeof OCCURRENCE_ATTACHMENT_UPLOAD_STATUSES)[number];
 
-export const OCCURRENCE_ATTACHMENT_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const OCCURRENCE_ATTACHMENT_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+] as const;
 
 export type OccurrenceAttachmentMimeType = (typeof OCCURRENCE_ATTACHMENT_MIME_TYPES)[number];
 

@@ -1,5 +1,6 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors } from "@safestop/ui";
 
 import { EvidenceSection } from "@/features/evidence";
 import { getOccurrenceStatusLabel } from "@/features/occurrences/utils/occurrence-labels";
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   code: {
-    color: "#F97316",
+    color: colors.primary,
     fontFamily: "monospace",
     fontSize: 28,
     fontWeight: "700",
@@ -120,14 +121,14 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignItems: "center",
-    backgroundColor: "#F97316",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     minHeight: 52,
     width: "100%",
   },
   primaryButtonText: {
-    color: "#0F1115",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
   },

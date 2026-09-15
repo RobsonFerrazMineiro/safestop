@@ -48,7 +48,7 @@ export function EvidenceSection({ occurrenceId }: EvidenceSectionProps) {
   return (
     <section
       className={`flex flex-col gap-3 rounded-lg border bg-gray-900/40 p-4 transition ${
-        isDragActive ? "border-orange-400 bg-orange-500/5" : "border-gray-800"
+        isDragActive ? "border-primary bg-primary/5" : "border-gray-800"
       }`}
       onDragEnter={(event) => {
         event.preventDefault();
@@ -104,7 +104,7 @@ export function EvidenceSection({ occurrenceId }: EvidenceSectionProps) {
             <div className="text-sm text-gray-500">
               <p>Nenhuma evidência anexada.</p>
               <p className="mt-1 text-xs">
-                Adicione fotos da condição insegura para fortalecer o registro.
+                Adicione arquivos JPG, PNG, WebP ou PDF para fortalecer o registro.
               </p>
             </div>
           ) : null}

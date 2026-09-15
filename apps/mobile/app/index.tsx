@@ -1,5 +1,6 @@
 import { Redirect } from "expo-router";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { colors } from "@safestop/ui";
 
 import { useAuth } from "@/hooks/use-auth";
 import { authRoutes } from "@/lib/auth/routes";
@@ -10,7 +11,7 @@ export default function IndexScreen() {
   if (isLoading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#F97316" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }

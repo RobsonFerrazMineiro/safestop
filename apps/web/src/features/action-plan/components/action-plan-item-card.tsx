@@ -41,7 +41,7 @@ function priorityBadgeClass(priority: ActionItemEnriched["priority"]): string {
     case "MEDIUM":
       return "border-blue-600/60 bg-blue-950/40 text-blue-300";
     default:
-      return "border-gray-600 bg-gray-900 text-gray-300";
+      return "border-border bg-card text-muted-foreground";
   }
 }
 
@@ -93,14 +93,14 @@ export function ActionPlanItemCard({
   }
 
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-gray-700/80 bg-gray-950/40 p-4">
+    <article className="flex flex-col gap-3 rounded-lg border border-border bg-card/60 p-3.5 sm:p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span
           className={`rounded-full border px-2 py-0.5 text-xs font-medium ${priorityBadgeClass(item.priority)}`}
         >
           {formatActionItemPriority(item.priority)}
         </span>
-        <span className="rounded-full border border-gray-600 px-2 py-0.5 text-xs text-gray-300">
+        <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
           {formatActionItemStatus(item.status)}
         </span>
         {overdue ? (
@@ -111,13 +111,13 @@ export function ActionPlanItemCard({
       </div>
 
       <div className="flex flex-col gap-1">
-        <h3 className="text-base font-medium text-gray-100">{item.title}</h3>
+        <h3 className="text-base font-medium text-foreground">{item.title}</h3>
         {item.description ? (
-          <p className="line-clamp-2 text-sm text-gray-400">{item.description}</p>
+          <p className="line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-1 text-sm text-gray-400">
+      <div className="flex flex-col gap-1 text-sm text-muted-foreground">
         <span>
           Responsável: {item.responsibleMemberName ?? "—"}
           {item.responsibleOrganizationName ? ` · ${item.responsibleOrganizationName}` : ""}
@@ -128,14 +128,14 @@ export function ActionPlanItemCard({
       {isOffline && (canShowStart || canShowSubmit) ? <ActionPlanOfflineNotice /> : null}
 
       {actionError ? (
-        <p className="text-sm text-red-400" role="alert">
+        <p className="text-sm text-destructive" role="alert">
           {actionError}
         </p>
       ) : null}
 
       {canShowStart ? (
         <button
-          className="w-full rounded-md bg-orange-500 px-4 py-3 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50 sm:w-auto sm:self-start"
+          className="w-full rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 sm:w-auto sm:self-start"
           disabled={startMutation.isPending || isOffline}
           type="button"
           onClick={() => {
@@ -148,7 +148,7 @@ export function ActionPlanItemCard({
 
       {canShowSubmit ? (
         <button
-          className="w-full rounded-md bg-orange-500 px-4 py-3 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50 sm:w-auto sm:self-start"
+          className="w-full rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 sm:w-auto sm:self-start"
           disabled={isOffline}
           type="button"
           onClick={() => {

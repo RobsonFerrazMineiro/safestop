@@ -35,7 +35,7 @@ type ChartTooltipEntry = {
   payload?: ChartBucket;
 };
 
-const CHART_PRIMARY = "#F97316";
+const CHART_PRIMARY = "#D32F2F";
 const CHART_TICK = "#9CA3AF";
 const CHART_GRID = "#2E3440";
 const CHART_TOOLTIP_BG = "#2A303B";
@@ -80,7 +80,7 @@ function ChartTitle({
   icon: ComponentType<{ className?: string }>;
 }) {
   return (
-    <h2 className="flex items-center gap-2 text-sm font-semibold">
+    <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
       <SurfaceIcon className="text-muted-foreground" icon={Icon} variant="chart" />
       {title}
     </h2>
@@ -96,8 +96,8 @@ export function DashboardMainChart({
   const isEmpty = buckets.every((bucket) => bucket.count === 0);
 
   return (
-    <Card className="h-full py-4">
-      <CardContent className="flex flex-col gap-3">
+    <Card className="h-full min-w-0 py-4">
+      <CardContent className="flex min-w-0 flex-col gap-3">
         <ChartTitle icon={titleIcon} title={title} />
 
         {isEmpty ? (
@@ -143,8 +143,8 @@ export function DashboardDistributionChart({
   const chartHeight = Math.max(buckets.length * 36, 160);
 
   return (
-    <Card className="h-full py-4">
-      <CardContent className="flex flex-col gap-3">
+    <Card className="h-full min-w-0 py-4">
+      <CardContent className="flex min-w-0 flex-col gap-3">
         <ChartTitle icon={titleIcon} title={title} />
 
         {isEmpty ? (
@@ -201,8 +201,8 @@ export function DashboardStatusDonutChart({
   const slices = buckets.filter((bucket) => bucket.count > 0);
 
   return (
-    <Card className="h-full py-4">
-      <CardContent className="flex flex-col gap-4">
+    <Card className="h-full min-w-0 py-4">
+      <CardContent className="flex min-w-0 flex-col gap-4">
         <ChartTitle icon={titleIcon} title={title} />
 
         {isEmpty ? (
@@ -210,7 +210,7 @@ export function DashboardStatusDonutChart({
             {emptyMessage}
           </p>
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-3">
             <div aria-label={title} className="h-36 w-36 shrink-0" role="img">
               <ResponsiveContainer height="100%" width="100%">
                 <PieChart>

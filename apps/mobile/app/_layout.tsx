@@ -4,6 +4,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { OrganizationProvider } from "@/features/organization/provider/organization-provider";
 import { AuthorizationProvider } from "@/features/authorization";
+import { WorkspaceProvider } from "@/features/workspace";
 import { AuthProvider, QueryProvider } from "@/providers";
 
 export default function RootLayout() {
@@ -12,10 +13,12 @@ export default function RootLayout() {
       <QueryProvider>
         <AuthProvider>
           <OrganizationProvider>
-            <AuthorizationProvider>
-              <StatusBar style="light" />
-              <Stack screenOptions={{ headerShown: false }} />
-            </AuthorizationProvider>
+            <WorkspaceProvider>
+              <AuthorizationProvider>
+                <StatusBar style="light" />
+                <Stack screenOptions={{ headerShown: false }} />
+              </AuthorizationProvider>
+            </WorkspaceProvider>
           </OrganizationProvider>
         </AuthProvider>
       </QueryProvider>

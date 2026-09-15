@@ -6,7 +6,9 @@ import { computeAwarenessReportSummary, type AwarenessReportSortField } from "@s
 
 import { Bell } from "lucide-react";
 
+import { FilterShell } from "@/components/filter-shell";
 import { PageHeader } from "@/components/page-header";
+import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
@@ -41,8 +43,6 @@ import {
   ReportPageSkeleton,
 } from "./report-states";
 import { ReportSummaryKpiCard } from "./report-summary-kpi-card";
-
-const REPORTS_SHELL_CLASS = "flex w-full flex-1 flex-col gap-6 px-6 py-10";
 
 function countAwarenessActiveFilters(state: AwarenessReportViewState): number {
   let count = 0;
@@ -114,15 +114,16 @@ export function AwarenessReportPage() {
 
   if (isAuthLoading || !isReady) {
     return (
-      <main className={REPORTS_SHELL_CLASS}>
+      <PageShell width="wide">
         <PageHeader
           backHref="/reports"
           backLabel={REPORT_COPY.hubTitle}
-          title={REPORT_COPY.awareness}
+          eyebrow="RELATÓRIO DE CIÊNCIA"
           icon={Bell}
+          title={REPORT_COPY.awareness}
         />
         <ReportPageSkeleton />
-      </main>
+      </PageShell>
     );
   }
 
@@ -131,40 +132,46 @@ export function AwarenessReportPage() {
   }
 
   return (
-    <main className={REPORTS_SHELL_CLASS} data-testid="report-awareness-page">
+    <PageShell data-testid="report-awareness-page" width="wide">
       <PageHeader
         backHref="/reports"
         backLabel={REPORT_COPY.hubTitle}
+        eyebrow="RELATÓRIO DE CIÊNCIA"
+        icon={Bell}
         subtitle={`${activeOrganization?.name ?? "Organização"} · ${items.length} registros nesta página`}
         title={REPORT_COPY.awareness}
-        icon={Bell}
       />
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <ReportSummaryKpiCard
+          description={REPORT_COPY.onThisPage}
           isLoading={query.isLoading}
           label={`${REPORT_COPY.onThisPage}: total`}
-          description={REPORT_COPY.onThisPage}
           value={summary.totalRows}
         />
         <ReportSummaryKpiCard
+          description={REPORT_COPY.onThisPage}
           isLoading={query.isLoading}
           label="Pendentes de ciência"
-          description={REPORT_COPY.onThisPage}
           tone="warning"
           value={summary.pendingCount}
         />
       </section>
 
-      <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <ReportPeriodFilter activePreset={viewState.periodPreset} onChange={handlePeriodChange} />
-          <div className="flex flex-wrap items-center gap-2">
-            <AwarenessReportFiltersDialog
-              activeFilterCount={activeFilterCount}
-              filters={viewState}
-              onApply={replaceViewState}
-            />
+      <FilterShell
+        actions={
+          <>
+            {activeFilters ? (
+              <Button
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={handleClearFilters}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                {REPORT_COPY.clearFilters}
+              </Button>
+            ) : null}
             <ReportExportMenu
               isExporting={isExporting}
               onExportCsv={() => {
@@ -176,10 +183,30 @@ export function AwarenessReportPage() {
                 );
               }}
             />
+          </>
+        }
+        meta={
+          activeFilterCount > 0 ? (
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+              {activeFilterCount} {activeFilterCount === 1 ? "filtro ativo" : "filtros ativos"}
+            </span>
+          ) : null
+        }
+        title="Filtros e busca"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <ReportPeriodFilter
+              activePreset={viewState.periodPreset}
+              onChange={handlePeriodChange}
+            />
+            <AwarenessReportFiltersDialog
+              activeFilterCount={activeFilterCount}
+              filters={viewState}
+              onApply={replaceViewState}
+            />
           </div>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               checked={viewState.showOptionalColumns}
@@ -194,36 +221,25 @@ export function AwarenessReportPage() {
             />
             {REPORT_COPY.showOptionalColumns}
           </label>
+
           {activeFilters ? (
-            <Button
-              className="h-auto px-0"
-              size="sm"
-              type="button"
-              variant="link"
-              onClick={handleClearFilters}
-            >
-              {REPORT_COPY.clearFilters}
-            </Button>
+            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              {DASHBOARD_PERIOD_PRESETS.map((preset) =>
+                viewState.periodPreset === preset.id ? (
+                  <span key={preset.id} className="rounded-full border border-border px-2 py-1">
+                    Período: {preset.label}
+                  </span>
+                ) : null,
+              )}
+              {viewState.pendingOnly ? (
+                <span className="rounded-full border border-border px-2 py-1">
+                  Pendentes de ciência
+                </span>
+              ) : null}
+            </div>
           ) : null}
         </div>
-
-        {activeFilters ? (
-          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-            {DASHBOARD_PERIOD_PRESETS.map((preset) =>
-              viewState.periodPreset === preset.id ? (
-                <span key={preset.id} className="rounded-full border border-border px-2 py-1">
-                  Período: {preset.label}
-                </span>
-              ) : null,
-            )}
-            {viewState.pendingOnly ? (
-              <span className="rounded-full border border-border px-2 py-1">
-                Pendentes de ciência
-              </span>
-            ) : null}
-          </div>
-        ) : null}
-      </section>
+      </FilterShell>
 
       {exportError ? (
         <div className="mb-4">
@@ -265,6 +281,6 @@ export function AwarenessReportPage() {
           </>
         )
       ) : null}
-    </main>
+    </PageShell>
   );
 }

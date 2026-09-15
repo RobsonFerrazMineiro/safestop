@@ -1,6 +1,7 @@
 import { getSupabaseClient } from "@/lib/auth/client";
 
 import { mapOccurrenceDetailsRow, type OccurrenceDetailsRow } from "./map-occurrence";
+import { buildOccurrenceDetailLookup } from "../utils/workspace-create-rules";
 
 const OCCURRENCE_DETAIL_SELECT = `
   id,
@@ -20,6 +21,8 @@ const OCCURRENCE_DETAIL_SELECT = `
   occurred_at,
   stopped_at,
   organization_id,
+  origin_organization_id,
+  workspace_id,
   area_id,
   unit_id,
   contract_id,
@@ -49,7 +52,8 @@ const OCCURRENCE_DETAIL_SELECT = `
   evaluator:profiles!occurrences_assigned_evaluator_id_fkey (full_name),
   ims_registered_by:profiles!occurrences_ims_reference_registered_by_fkey (full_name),
   ims_updated_by:profiles!occurrences_ims_reference_updated_by_fkey (full_name),
-  contractor_organizations:contractor_organization_id (name)
+  contractor_organizations:contractor_organization_id (name),
+  origin_organizations:organizations!occurrences_origin_organization_id_fkey (name)
 `;
 
 type GetOccurrenceParams = {
@@ -57,8 +61,13 @@ type GetOccurrenceParams = {
   organizationId: string;
 };
 
+/**
+ * Detalhe por id. Gate 13X.4: NÃO filtra pela EMPRESA atuante.
+ * `organizationId` permanece na assinatura para query key / callers; RLS autoriza.
+ */
 export async function getOccurrence(params: GetOccurrenceParams) {
   const supabase = getSupabaseClient();
+  const lookup = buildOccurrenceDetailLookup(params.occurrenceId);
 
   const {
     data: { user },
@@ -69,11 +78,14 @@ export async function getOccurrence(params: GetOccurrenceParams) {
     throw new Error("Não autenticado.");
   }
 
+  if (lookup.filterByActingOrganization) {
+    throw new Error("Lookup de detalhe não deve filtrar pela EMPRESA atuante.");
+  }
+
   const { data, error } = await supabase
     .from("occurrences")
     .select(OCCURRENCE_DETAIL_SELECT)
-    .eq("id", params.occurrenceId)
-    .eq("organization_id", params.organizationId)
+    .eq("id", lookup.occurrenceId)
     .maybeSingle();
 
   if (error) {

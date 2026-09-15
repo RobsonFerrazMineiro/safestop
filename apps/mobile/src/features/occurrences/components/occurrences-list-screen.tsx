@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors } from "@safestop/ui";
 
 import { Can } from "@/features/authorization/components/can";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
@@ -62,9 +63,9 @@ export function OccurrencesListScreen() {
         ListEmptyComponent={<OccurrenceEmpty />}
         refreshControl={
           <RefreshControl
-            colors={["#F97316"]}
+            colors={[colors.primary]}
             refreshing={isFetching}
-            tintColor="#F97316"
+            tintColor={colors.primary}
             onRefresh={() => {
               void refetch();
             }}
@@ -93,7 +94,7 @@ export function OccurrencesListScreen() {
 
 const styles = StyleSheet.create({
   backLink: {
-    color: "#F97316",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -106,13 +107,13 @@ const styles = StyleSheet.create({
   },
   createButton: {
     alignItems: "center",
-    backgroundColor: "#F97316",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     minHeight: 48,
   },
   createButtonText: {
-    color: "#0F1115",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
   },

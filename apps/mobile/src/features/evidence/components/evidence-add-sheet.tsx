@@ -8,6 +8,7 @@ type EvidenceAddSheetProps = {
   onClose: () => void;
   onPickCamera: () => void;
   onPickLibrary: () => void;
+  onPickPdf: () => void;
   isBusy?: boolean;
 };
 
@@ -16,6 +17,7 @@ export function EvidenceAddSheet({
   onClose,
   onPickCamera,
   onPickLibrary,
+  onPickPdf,
   isBusy,
 }: EvidenceAddSheetProps) {
   return (
@@ -25,6 +27,7 @@ export function EvidenceAddSheet({
           <View style={styles.handle} />
 
           <Text style={styles.title}>Adicionar evidência</Text>
+          <Text style={styles.hint}>JPG, PNG, WebP ou PDF · máx. 10 MiB</Text>
 
           <Button
             accessibilityLabel="Tirar foto"
@@ -36,12 +39,21 @@ export function EvidenceAddSheet({
           </Button>
 
           <Button
-            accessibilityLabel="Escolher da galeria"
+            accessibilityLabel="Escolher imagem"
             disabled={isBusy}
             variant="secondary"
             onPress={onPickLibrary}
           >
-            Escolher da galeria
+            Escolher imagem
+          </Button>
+
+          <Button
+            accessibilityLabel="Escolher PDF"
+            disabled={isBusy}
+            variant="secondary"
+            onPress={onPickPdf}
+          >
+            Escolher PDF
           </Button>
 
           <Button accessibilityLabel="Cancelar" variant="ghost" onPress={onClose}>
@@ -66,6 +78,11 @@ const styles = StyleSheet.create({
     height: 4,
     marginBottom: spacing[4],
     width: 40,
+  },
+  hint: {
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
+    marginBottom: spacing[1],
   },
   sheet: {
     backgroundColor: colors.background,

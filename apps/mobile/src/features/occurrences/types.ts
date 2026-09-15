@@ -23,6 +23,15 @@ export type OccurrenceContractOption = {
   name: string;
 };
 
+/** Contrato ativo do Ambiente (picker do create — Gate 13X.4). */
+export type WorkspaceContractOption = {
+  id: string;
+  name: string;
+  contractNumber: string | null;
+  contractorOrganizationId: string;
+  contractorOrganizationName: string;
+};
+
 export type OccurrenceSyncStatus = "saved_locally" | "registered_on_server";
 
 export type { OccurrenceListFilters };

@@ -53,6 +53,9 @@ export type OccurrenceDetailsRow = OccurrenceSummaryRow & {
   occurred_at: string;
   stopped_at: string | null;
   organization_id: string;
+  workspace_id: string | null;
+  origin_organization_id: string | null;
+  origin_organizations: OrganizationJoin;
   area_id: string;
   unit_id: string | null;
   contract_id: string | null;
@@ -164,6 +167,9 @@ export function mapOccurrenceDetailsRow(row: OccurrenceDetailsRow): OccurrenceDe
     occurredAt: row.occurred_at,
     stoppedAt: row.stopped_at,
     organizationId: row.organization_id,
+    workspaceId: row.workspace_id ?? null,
+    originOrganizationId: row.origin_organization_id ?? null,
+    originOrganizationName: resolveJoinName(row.origin_organizations, "name"),
     areaId: row.area_id,
     unitId: row.unit_id,
     contractId: row.contract_id,

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { AuthProvider, QueryProvider } from "@/providers";
 import { AuthorizationProvider } from "@/features/authorization";
 import { OrganizationProvider } from "@/features/organization/provider/organization-provider";
+import { WorkspaceProvider } from "@/features/workspace";
 import { UiProviders } from "@/components/ui/ui-providers";
 import "./globals.css";
 
@@ -27,7 +28,9 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           <AuthProvider>
             <OrganizationProvider>
               <AuthorizationProvider>
-                <UiProviders>{children}</UiProviders>
+                <WorkspaceProvider>
+                  <UiProviders>{children}</UiProviders>
+                </WorkspaceProvider>
               </AuthorizationProvider>
             </OrganizationProvider>
           </AuthProvider>

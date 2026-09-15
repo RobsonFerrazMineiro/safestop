@@ -39,9 +39,9 @@ export function DashboardRecentOccurrences({
   return (
     <section aria-label="Ocorrências recentes" className="flex flex-col gap-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-gray-100">Ocorrências recentes</h2>
+        <h2 className="text-base font-semibold text-foreground">Ocorrências recentes</h2>
         <Link
-          className="text-sm text-orange-400 hover:text-orange-300"
+          className="text-sm text-primary hover:text-primary/80"
           href={dashboardDeepLinks.stopWorkActive}
         >
           Ver todas
@@ -58,7 +58,7 @@ export function DashboardRecentOccurrences({
       ) : null}
 
       {!isLoading && !isError && items.length === 0 ? (
-        <p className="text-sm text-gray-500" role="status">
+        <p className="text-sm text-muted-foreground" role="status">
           Nenhuma ocorrência recente.
         </p>
       ) : null}
@@ -68,16 +68,16 @@ export function DashboardRecentOccurrences({
           {items.map((item) => (
             <Link
               key={item.id}
-              className="flex flex-col gap-2 rounded-lg border border-gray-800 bg-gray-900/40 p-4 transition hover:border-gray-600"
+              className="flex flex-col gap-2 rounded-lg border border-border bg-card/60 p-3.5 transition hover:border-border/80 hover:bg-accent/30 sm:p-4"
               href={dashboardDeepLinks.stopWorkOccurrence(item.id)}
             >
-              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
-                <span className="font-mono text-orange-400">{item.publicCode}</span>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                <span className="font-mono font-medium text-primary">{item.publicCode}</span>
                 <span>{formatOccurrenceStatus(item.status as OccurrenceStatus)}</span>
                 <span>{formatOccurrenceSeverity(item.severity as OccurrenceSeverity)}</span>
               </div>
-              <h3 className="line-clamp-2 font-medium text-gray-100">{item.title}</h3>
-              <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+              <h3 className="line-clamp-2 font-medium text-foreground">{item.title}</h3>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                 {item.areaName ? <span>{item.areaName}</span> : null}
                 <time dateTime={item.createdAt}>
                   {formatRelativeNotificationTime(item.createdAt)}

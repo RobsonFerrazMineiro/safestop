@@ -1,10 +1,10 @@
 import {
-  useContractorOrganizations,
   useCreateOccurrence,
   useOccurrence,
   useOccurrences,
   useOccurrenceStatusHistory,
-  useOrganizationAreas,
+  useWorkspaceAreas,
+  useWorkspaceContracts,
 } from "@/features/occurrences";
 import type { OccurrenceListFilters } from "@safestop/types";
 import { createPreventiveStopSchema, type CreatePreventiveStopInput } from "@safestop/validation";
@@ -37,11 +37,24 @@ export function usePreventiveStopHistory(occurrenceId: string | undefined) {
 }
 
 export function usePreventiveStopAreas() {
-  return useOrganizationAreas();
+  return useWorkspaceAreas();
 }
 
+export function usePreventiveStopContracts() {
+  return useWorkspaceContracts();
+}
+
+/** @deprecated Use usePreventiveStopContracts — mantido como alias tipado para o create. */
 export function usePreventiveStopContractors() {
-  return useContractorOrganizations();
+  const result = useWorkspaceContracts();
+  return {
+    contractors: result.contractOptions,
+    contracts: result.contracts,
+    allowsOwnTeam: result.allowsOwnTeam,
+    isLoading: result.isLoading,
+    isError: result.isError,
+    error: result.error,
+  };
 }
 
 export function useCreatePreventiveStop() {

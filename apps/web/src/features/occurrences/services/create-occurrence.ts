@@ -12,9 +12,14 @@ type RpcCreatedOccurrence = {
   status: string;
 };
 
-function mapInputToRpcPayload(organizationId: string, input: CreateOccurrenceInput) {
+function mapInputToRpcPayload(
+  organizationId: string,
+  input: CreateOccurrenceInput,
+  workspaceId: string,
+) {
   return {
     organization_id: organizationId,
+    workspace_id: workspaceId,
     area_id: input.areaId,
     title: input.title,
     task_description: input.taskDescription,
@@ -35,6 +40,7 @@ function mapInputToRpcPayload(organizationId: string, input: CreateOccurrenceInp
 export async function createOccurrence(
   organizationId: string,
   input: CreateOccurrenceInput,
+  workspaceId: string,
 ): Promise<CreateOccurrenceResult> {
   const supabase = createClient();
 
@@ -47,8 +53,12 @@ export async function createOccurrence(
     throw new Error("Não autenticado.");
   }
 
+  if (!workspaceId) {
+    throw new Error("Workspace ativo é obrigatório para registrar a ocorrência.");
+  }
+
   const { data, error } = await supabase.rpc("create_occurrence", {
-    payload: mapInputToRpcPayload(organizationId, input),
+    payload: mapInputToRpcPayload(organizationId, input, workspaceId),
   });
 
   if (error) {

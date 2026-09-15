@@ -8,15 +8,15 @@
 
 /*
  * SafeStop identity (Seção O / @safestop/ui) + shadcn semantic tokens.
- * html.dark — tema único grafite + primary #F97316 (sem tema claro).
+ * html.dark — tema único grafite + primary #D32F2F (sem tema claro).
  */
 :root {
   /* SafeStop raw tokens (espelho @safestop/ui) */
   --surface: #171a21;
   --surface-muted: #20242d;
   --surface-elevated: #2a303b;
-  --primary-hover: #ea580c;
-  --primary-active: #c2410c;
+  --primary-hover: #b71c1c;
+  --primary-active: #9a0007;
   --success: #16a34a;
   --warning: #facc15;
   --info: #2563eb;
@@ -29,8 +29,8 @@
   --card-foreground: #f3f4f6;
   --popover: #2a303b;
   --popover-foreground: #f3f4f6;
-  --primary: #f97316;
-  --primary-foreground: #0f1115;
+  --primary: #d32f2f;
+  --primary-foreground: #ffffff;
   --secondary: #20242d;
   --secondary-foreground: #f3f4f6;
   --muted: #20242d;
@@ -41,12 +41,12 @@
   --destructive-foreground: #f3f4f6;
   --border: #2e3440;
   --input: #2e3440;
-  --ring: #f97316;
+  --ring: #d32f2f;
   /* Base radius: input/button SafeStop (8px) — não 0.625rem Base44 */
   --radius: 8px;
 
   /* Recharts / chart chrome */
-  --chart-1: #f97316;
+  --chart-1: #d32f2f;
   --chart-2: #2563eb;
   --chart-3: #16a34a;
   --chart-4: #facc15;
@@ -65,9 +65,9 @@
   --status-info-fg: #bfdbfe;
   --status-info-bg: #1e3a5f;
   --status-info-border: #2563eb;
-  --status-primary-fg: #ffedd5;
-  --status-primary-bg: #7c2d12;
-  --status-primary-border: #f97316;
+  --status-primary-fg: #fecaca;
+  --status-primary-bg: #4a0d0d;
+  --status-primary-border: #d32f2f;
   --status-muted-fg: #9ca3af;
   --status-muted-bg: #20242d;
   --status-muted-border: #2e3440;
@@ -93,8 +93,8 @@
   --card-foreground: #f3f4f6;
   --popover: #2a303b;
   --popover-foreground: #f3f4f6;
-  --primary: #f97316;
-  --primary-foreground: #0f1115;
+  --primary: #d32f2f;
+  --primary-foreground: #ffffff;
   --secondary: #20242d;
   --secondary-foreground: #f3f4f6;
   --muted: #20242d;
@@ -105,7 +105,7 @@
   --destructive-foreground: #f3f4f6;
   --border: #2e3440;
   --input: #2e3440;
-  --ring: #f97316;
+  --ring: #d32f2f;
 
   --status-success-fg: #bbf7d0;
   --status-success-bg: #14532d;
@@ -119,9 +119,9 @@
   --status-info-fg: #bfdbfe;
   --status-info-bg: #1e3a5f;
   --status-info-border: #2563eb;
-  --status-primary-fg: #ffedd5;
-  --status-primary-bg: #7c2d12;
-  --status-primary-border: #f97316;
+  --status-primary-fg: #fecaca;
+  --status-primary-bg: #4a0d0d;
+  --status-primary-border: #d32f2f;
   --status-muted-fg: #9ca3af;
   --status-muted-bg: #20242d;
   --status-muted-border: #2e3440;

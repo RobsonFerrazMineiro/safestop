@@ -42,7 +42,7 @@ export function MdhoErrorState({
     >
       <p className="text-sm text-red-300">{message}</p>
       <button
-        className="text-sm text-orange-400 hover:text-orange-300"
+        className="text-sm text-primary hover:text-primary/80"
         type="button"
         onClick={onRetry}
       >

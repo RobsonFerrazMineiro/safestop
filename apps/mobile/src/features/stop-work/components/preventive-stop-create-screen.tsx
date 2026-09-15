@@ -22,12 +22,12 @@ import { useRequirePermission } from "@/features/authorization/hooks/use-require
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
+import { useWorkspaceAreas } from "@/features/occurrences/hooks/use-workspace-areas";
+import { useWorkspaceContracts } from "@/features/occurrences/hooks/use-workspace-contracts";
+import { OWN_TEAM_CONTRACT_OPTION_ID } from "@/features/occurrences/utils/workspace-create-rules";
+import { WorkspaceOperationalGate, WorkspaceSwitcher } from "@/features/workspace";
 import { usePreventiveStopDraftNavigation } from "@/features/navigation/context/preventive-stop-draft-navigation-context";
 import { confirmPreventiveStopDraftLeave } from "@/features/navigation/utils/confirm-preventive-stop-draft-leave";
-import { useOccurrenceAreas } from "@/features/occurrences/hooks/use-occurrence-areas";
-import { useOccurrenceContracts } from "@/features/occurrences/hooks/use-occurrence-contracts";
-import { useOccurrenceContractors } from "@/features/occurrences/hooks/use-occurrence-contractors";
-import { formatContractOptionLabel } from "@/features/occurrences/services/get-contracts";
 import { stopWorkDetailRoute, stopWorkRoute } from "@/lib/auth/routes";
 
 import { FormSelectField } from "./form-select-field";
@@ -38,6 +38,10 @@ import { useCreatePreventiveStop } from "../hooks/use-create-preventive-stop";
 import { usePreventiveStopDraft } from "../hooks/use-preventive-stop-draft";
 import { usePreventiveStopGeo } from "../hooks/use-preventive-stop-geo";
 import { hasPreventiveStopDraftContent } from "../stores/preventive-stop-draft-store";
+import {
+  EMPTY_ACTIVE_CONTRACTORS_MESSAGE,
+  getPreventiveStopCreateControlState,
+} from "../utils/preventive-stop-create-controls";
 
 const HEADER_ICON_SIZE = 22;
 const GEO_ICON_SIZE = 14;
@@ -98,13 +102,16 @@ export function PreventiveStopCreateScreen() {
   const { isReady: isOrgReady } = useActiveOrganization();
   useRequirePermission("occurrence.create");
 
-  const { createPreventiveStop, isCreating, canCreate } = useCreatePreventiveStop();
-  const { areas, isLoading: isAreasLoading, isError: isAreasError } = useOccurrenceAreas();
+  const { createPreventiveStop, isCreating, canCreate, hasActiveWorkspace } =
+    useCreatePreventiveStop();
+  const { areas, isLoading: isAreasLoading, isError: isAreasError } = useWorkspaceAreas();
   const {
-    contractors,
-    isLoading: isContractorsLoading,
-    isError: isContractorsError,
-  } = useOccurrenceContractors();
+    contracts,
+    contractOptions,
+    allowsOwnTeam,
+    isLoading: isContractsLoading,
+    isError: isContractsError,
+  } = useWorkspaceContracts();
   const {
     draft,
     updateDraft,
@@ -127,17 +134,10 @@ export function PreventiveStopCreateScreen() {
       defaultValues: DEFAULT_VALUES,
     });
 
+  const selectedContractId = watch("contractId");
   const selectedContractorId = watch("contractorOrganizationId");
-  const {
-    contracts,
-    isLoading: isContractsLoading,
-    isError: isContractsError,
-  } = useOccurrenceContracts({
-    contractorOrganizationId: selectedContractorId || undefined,
-  });
 
   const hasHydratedFormRef = useRef(false);
-  const autoContractRef = useRef<string | null>(null);
 
   const persistCurrentDraft = () => {
     updateDraft(getValues());
@@ -165,26 +165,6 @@ export function PreventiveStopCreateScreen() {
       severity: draft.severity ?? "MEDIUM",
     });
   }, [draft, isDraftReady, isHydrated, reset]);
-
-  useEffect(() => {
-    if (!selectedContractorId || isContractsLoading || contracts.length !== 1) {
-      return;
-    }
-
-    const singleContractId = contracts[0]?.id;
-
-    if (!singleContractId || autoContractRef.current === singleContractId) {
-      return;
-    }
-
-    autoContractRef.current = singleContractId;
-    setValue("contractId", singleContractId);
-    updateDraft({ contractId: singleContractId });
-  }, [contracts, isContractsLoading, selectedContractorId, setValue, updateDraft]);
-
-  useEffect(() => {
-    autoContractRef.current = null;
-  }, [selectedContractorId]);
 
   const leaveToStopWorkList = useCallback(() => {
     router.replace(stopWorkRoute);
@@ -254,10 +234,20 @@ export function PreventiveStopCreateScreen() {
     );
   }
 
+  if (!hasActiveWorkspace) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <WorkspaceOperationalGate>
+          <View />
+        </WorkspaceOperationalGate>
+      </SafeAreaView>
+    );
+  }
+
   if (!canCreate) {
     return (
       <SafeAreaView style={styles.container}>
-        <OccurrenceError message="Você não possui permissão para registrar paralisações nesta organização." />
+        <OccurrenceError message="Você não possui permissão para registrar paralisações nesta empresa." />
       </SafeAreaView>
     );
   }
@@ -279,7 +269,7 @@ export function PreventiveStopCreateScreen() {
     );
   }
 
-  if (!isHydrated || isAreasLoading || isContractorsLoading) {
+  if (!isHydrated || isAreasLoading || isContractsLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <OccurrenceLoading />
@@ -287,7 +277,7 @@ export function PreventiveStopCreateScreen() {
     );
   }
 
-  if (isAreasError || isContractorsError) {
+  if (isAreasError || isContractsError) {
     return (
       <SafeAreaView style={styles.container}>
         <OccurrenceError message="Não foi possível carregar as opções do formulário." />
@@ -296,15 +286,54 @@ export function PreventiveStopCreateScreen() {
   }
 
   const hasAreas = areas.length > 0;
-  const hasContractors = contractors.length > 0;
-  const canSubmit = hasAreas && hasContractors && !isOffline && !isCreating;
+  const contractPickerItems = [
+    ...(allowsOwnTeam ? [{ id: OWN_TEAM_CONTRACT_OPTION_ID, label: "Equipe própria" }] : []),
+    ...contractOptions.map((option) => ({ id: option.id, label: option.name })),
+  ];
+  const contractPickerValue =
+    typeof selectedContractId === "string" && selectedContractId.length > 0
+      ? selectedContractId
+      : allowsOwnTeam &&
+          (selectedContractorId === undefined ||
+            selectedContractorId === null ||
+            selectedContractorId === "")
+        ? OWN_TEAM_CONTRACT_OPTION_ID
+        : "";
+  const controlState = getPreventiveStopCreateControlState({
+    isCreating,
+    isOffline,
+    areasCount: areas.length,
+    contractsCount: contracts.length,
+    hasActiveWorkspace,
+    allowsOwnTeam,
+  });
+  const canSubmit = !controlState.isSubmitDisabled;
   const setupBlockedMessage = !hasAreas
-    ? "Cadastre ao menos uma área ativa na organização para registrar paralisações."
-    : !hasContractors
-      ? "Cadastre ao menos uma contratada com contrato ativo na organização para registrar paralisações."
+    ? "Cadastre ao menos uma área ativa neste Ambiente para registrar paralisações."
+    : controlState.showEmptyContractorsMessage
+      ? EMPTY_ACTIVE_CONTRACTORS_MESSAGE
       : null;
-  const showContractField =
-    Boolean(selectedContractorId) && !isContractsLoading && contracts.length > 0;
+
+  function handleContractPickerChange(value: string) {
+    if (value === OWN_TEAM_CONTRACT_OPTION_ID) {
+      setValue("contractId", "");
+      setValue("contractorOrganizationId", "");
+      updateDraft({ contractId: undefined, contractorOrganizationId: undefined });
+      return;
+    }
+
+    const selected = contracts.find((contract) => contract.id === value);
+    if (!selected) {
+      return;
+    }
+
+    setValue("contractId", selected.id);
+    setValue("contractorOrganizationId", selected.contractorOrganizationId);
+    updateDraft({
+      contractId: selected.id,
+      contractorOrganizationId: selected.contractorOrganizationId,
+    });
+  }
 
   async function onSubmit(values: CreatePreventiveStopInput) {
     setFormError(null);
@@ -314,9 +343,20 @@ export function PreventiveStopCreateScreen() {
       return;
     }
 
+    if (
+      !allowsOwnTeam &&
+      (!values.contractId?.trim() || !values.contractorOrganizationId?.trim())
+    ) {
+      setFormError("Contrato é obrigatório neste Ambiente.");
+      return;
+    }
+
     const payload = {
       ...values,
       contractId: values.contractId?.trim() ? values.contractId : undefined,
+      contractorOrganizationId: values.contractorOrganizationId?.trim()
+        ? values.contractorOrganizationId
+        : undefined,
       ...geo.coords,
     };
 
@@ -382,6 +422,7 @@ export function PreventiveStopCreateScreen() {
               <Text style={styles.title}>Nova Paralisação Preventiva</Text>
             </View>
             <Text style={styles.subtitle}>Identifique a condição insegura</Text>
+            <WorkspaceSwitcher />
           </View>
 
           {hasLocalDraft ? (
@@ -404,10 +445,8 @@ export function PreventiveStopCreateScreen() {
                 name="areaId"
                 render={({ field: { onChange, value } }) => (
                   <FormSelectField
-                    disabled={isCreating}
-                    emptyMessage={
-                      hasAreas ? undefined : "Nenhuma área cadastrada para esta organização."
-                    }
+                    disabled={controlState.isAreaDisabled}
+                    emptyMessage={hasAreas ? undefined : "Nenhuma área cadastrada neste Ambiente."}
                     items={areas.map((area) => ({
                       id: area.id,
                       label: area.name,
@@ -430,7 +469,7 @@ export function PreventiveStopCreateScreen() {
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
                     accessibilityLabel="Local"
-                    disabled={isCreating}
+                    disabled={controlState.areIndependentFieldsDisabled}
                     label="Local *"
                     placeholder="Ex: Galpão 3"
                     value={value}
@@ -443,64 +482,19 @@ export function PreventiveStopCreateScreen() {
                 )}
               />
 
-              <Controller
-                control={control}
-                name="contractorOrganizationId"
-                render={({ field: { onChange, value } }) => (
-                  <FormSelectField
-                    disabled={isCreating}
-                    emptyMessage={
-                      hasContractors
-                        ? undefined
-                        : "Nenhuma contratada com contrato ativo nesta organização."
-                    }
-                    items={contractors.map((contractor) => ({
-                      id: contractor.id,
-                      label: contractor.name,
-                    }))}
-                    label="Contratada *"
-                    placeholder="Selecione a empresa"
-                    selectedId={value}
-                    onSelect={(id) => {
-                      onChange(id);
-                      setValue("contractId", "");
-                      updateDraft({ contractorOrganizationId: id, contractId: undefined });
-                    }}
-                  />
-                )}
+              <FormSelectField
+                disabled={controlState.isContractorDisabled}
+                emptyMessage={
+                  controlState.showEmptyContractorsMessage
+                    ? EMPTY_ACTIVE_CONTRACTORS_MESSAGE
+                    : undefined
+                }
+                items={contractPickerItems}
+                label="Contrato"
+                placeholder="Selecione o contrato"
+                selectedId={contractPickerValue}
+                onSelect={handleContractPickerChange}
               />
-
-              {selectedContractorId && isContractsLoading ? (
-                <Text style={styles.hint}>Carregando contratos…</Text>
-              ) : null}
-
-              {showContractField ? (
-                <Controller
-                  control={control}
-                  name="contractId"
-                  render={({ field: { onChange, value } }) => (
-                    <FormSelectField
-                      disabled={isCreating}
-                      items={contracts.map((contract) => ({
-                        id: contract.id,
-                        label: formatContractOptionLabel(contract),
-                      }))}
-                      label="Contrato (opcional)"
-                      noneOptionLabel="Nenhum contrato específico"
-                      placeholder="Selecione o contrato"
-                      selectedId={value ?? ""}
-                      onSelect={(id) => {
-                        onChange(id);
-                        updateDraft({ contractId: id || undefined });
-                      }}
-                    />
-                  )}
-                />
-              ) : null}
-
-              {isContractsError ? (
-                <Text style={styles.error}>Não foi possível carregar os contratos.</Text>
-              ) : null}
             </View>
 
             <View style={styles.section}>
@@ -512,7 +506,7 @@ export function PreventiveStopCreateScreen() {
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
                     accessibilityLabel="Atividade"
-                    disabled={isCreating}
+                    disabled={controlState.areIndependentFieldsDisabled}
                     label="Atividade *"
                     placeholder="Atividade sendo realizada"
                     value={value}
@@ -531,7 +525,7 @@ export function PreventiveStopCreateScreen() {
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
                     accessibilityLabel="Condição insegura"
-                    disabled={isCreating}
+                    disabled={controlState.areIndependentFieldsDisabled}
                     inputStyle={styles.multilineLarge}
                     label="Condição insegura *"
                     multiline
@@ -553,7 +547,7 @@ export function PreventiveStopCreateScreen() {
                   name="severity"
                   render={({ field: { onChange, value } }) => (
                     <SeveritySelector
-                      disabled={isCreating}
+                      disabled={controlState.areIndependentFieldsDisabled}
                       value={value}
                       onChange={(severity) => {
                         onChange(severity);
@@ -574,7 +568,7 @@ export function PreventiveStopCreateScreen() {
                 render={({ field: { onChange, onBlur, value } }) => (
                   <TextField
                     accessibilityLabel="Medida imediata"
-                    disabled={isCreating}
+                    disabled={controlState.areIndependentFieldsDisabled}
                     inputStyle={styles.multilineSmall}
                     label="Medida imediata (opcional)"
                     multiline

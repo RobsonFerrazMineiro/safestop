@@ -305,6 +305,7 @@ export type Database = {
           organization_id: string
           unit_id: string
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
           code?: string | null
@@ -316,6 +317,7 @@ export type Database = {
           organization_id: string
           unit_id: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
           code?: string | null
@@ -327,6 +329,7 @@ export type Database = {
           organization_id?: string
           unit_id?: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -350,6 +353,74 @@ export type Database = {
             referencedRelation: "units"
             referencedColumns: ["id", "organization_id"]
           },
+          {
+            foreignKeyName: "areas_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contract_assignments: {
+        Row: {
+          assignment_role: string
+          contract_id: string
+          created_at: string
+          granted_at: string
+          id: string
+          is_active: boolean
+          organization_id: string
+          organization_member_id: string
+          revoked_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          assignment_role: string
+          contract_id: string
+          created_at?: string
+          granted_at?: string
+          id?: string
+          is_active?: boolean
+          organization_id: string
+          organization_member_id: string
+          revoked_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assignment_role?: string
+          contract_id?: string
+          created_at?: string
+          granted_at?: string
+          id?: string
+          is_active?: boolean
+          organization_id?: string
+          organization_member_id?: string
+          revoked_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contract_assignments_contract_id_fkey"
+            columns: ["contract_id"]
+            isOneToOne: false
+            referencedRelation: "contracts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contract_assignments_member_org_consistency"
+            columns: ["organization_member_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "contract_assignments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contracts: {
@@ -366,6 +437,7 @@ export type Database = {
           starts_at: string
           unit_id: string | null
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
           client_organization_id: string
@@ -380,6 +452,7 @@ export type Database = {
           starts_at: string
           unit_id?: string | null
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
           client_organization_id?: string
@@ -394,6 +467,7 @@ export type Database = {
           starts_at?: string
           unit_id?: string | null
           updated_at?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -424,6 +498,13 @@ export type Database = {
             referencedRelation: "units"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contracts_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       management_departments: {
@@ -436,6 +517,7 @@ export type Database = {
           organization_id: string
           unit_id: string
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
           code?: string | null
@@ -446,6 +528,7 @@ export type Database = {
           organization_id: string
           unit_id: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
           code?: string | null
@@ -456,6 +539,7 @@ export type Database = {
           organization_id?: string
           unit_id?: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -478,6 +562,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "units"
             referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "management_departments_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1324,6 +1415,7 @@ export type Database = {
           management_department_id: string | null
           occurred_at: string
           organization_id: string
+          origin_organization_id: string | null
           public_code: string
           released_at: string | null
           severity: string
@@ -1333,6 +1425,7 @@ export type Database = {
           title: string
           unit_id: string | null
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
           area_id: string
@@ -1361,6 +1454,7 @@ export type Database = {
           management_department_id?: string | null
           occurred_at?: string
           organization_id: string
+          origin_organization_id?: string | null
           public_code: string
           released_at?: string | null
           severity: string
@@ -1370,6 +1464,7 @@ export type Database = {
           title: string
           unit_id?: string | null
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
           area_id?: string
@@ -1398,6 +1493,7 @@ export type Database = {
           management_department_id?: string | null
           occurred_at?: string
           organization_id?: string
+          origin_organization_id?: string | null
           public_code?: string
           released_at?: string | null
           severity?: string
@@ -1407,15 +1503,9 @@ export type Database = {
           title?: string
           unit_id?: string | null
           updated_at?: string
+          workspace_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "occurrences_area_org_consistency"
-            columns: ["area_id", "organization_id"]
-            isOneToOne: false
-            referencedRelation: "areas"
-            referencedColumns: ["id", "organization_id"]
-          },
           {
             foreignKeyName: "occurrences_assigned_evaluator_id_fkey"
             columns: ["assigned_evaluator_id"]
@@ -1459,13 +1549,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "occurrences_management_department_org_consistency"
-            columns: ["management_department_id", "organization_id"]
-            isOneToOne: false
-            referencedRelation: "management_departments"
-            referencedColumns: ["id", "organization_id"]
-          },
-          {
             foreignKeyName: "occurrences_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -1473,11 +1556,18 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "occurrences_unit_org_consistency"
-            columns: ["unit_id", "organization_id"]
+            foreignKeyName: "occurrences_origin_organization_id_fkey"
+            columns: ["origin_organization_id"]
             isOneToOne: false
-            referencedRelation: "units"
-            referencedColumns: ["id", "organization_id"]
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "occurrences_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1650,6 +1740,51 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_workspace_links: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          organization_id: string
+          participation_role: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          organization_id: string
+          participation_role?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          organization_id?: string
+          participation_role?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_workspace_links_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_workspace_links_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -1887,6 +2022,7 @@ export type Database = {
           name: string
           organization_id: string
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
           address?: string | null
@@ -1899,6 +2035,7 @@ export type Database = {
           name: string
           organization_id: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
           address?: string | null
@@ -1911,11 +2048,122 @@ export type Database = {
           name?: string
           organization_id?: string
           updated_at?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "units_organization_id_fkey"
             columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "units_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_memberships: {
+        Row: {
+          created_at: string
+          granted_at: string
+          id: string
+          is_active: boolean
+          organization_id: string
+          organization_member_id: string
+          revoked_at: string | null
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_at?: string
+          id?: string
+          is_active?: boolean
+          organization_id: string
+          organization_member_id: string
+          revoked_at?: string | null
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_at?: string
+          id?: string
+          is_active?: boolean
+          organization_id?: string
+          organization_member_id?: string
+          revoked_at?: string | null
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_memberships_member_org_consistency"
+            columns: ["organization_member_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "organization_members"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "workspace_memberships_org_workspace_link_consistency"
+            columns: ["organization_id", "workspace_id"]
+            isOneToOne: false
+            referencedRelation: "organization_workspace_links"
+            referencedColumns: ["organization_id", "workspace_id"]
+          },
+          {
+            foreignKeyName: "workspace_memberships_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_memberships_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspaces: {
+        Row: {
+          code: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          owner_organization_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          owner_organization_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          owner_organization_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspaces_owner_organization_id_fkey"
+            columns: ["owner_organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
             referencedColumns: ["id"]
@@ -1936,8 +2184,29 @@ export type Database = {
         Args: { target_occurrence_id: string }
         Returns: boolean
       }
+      can_access_workspace: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      can_manage_contract_assignment: {
+        Args: { p_contract_id: string; p_member_organization_id: string }
+        Returns: boolean
+      }
+      can_read_contract_assignment: {
+        Args: {
+          p_assignment_organization_id: string
+          p_contract_id: string
+          p_is_active: boolean
+          p_organization_member_id: string
+        }
+        Returns: boolean
+      }
       can_read_occurrence_in_org: {
         Args: { p_organization_id: string }
+        Returns: boolean
+      }
+      can_read_occurrence_record: {
+        Args: { p_occurrence_id: string }
         Returns: boolean
       }
       cancel_action_item: { Args: { p_payload: Json }; Returns: Json }
@@ -1981,6 +2250,7 @@ export type Database = {
         Returns: string
       }
       current_profile_id: { Args: never; Returns: string }
+      current_workspace_ids: { Args: never; Returns: string[] }
       delete_action_item_attachment: {
         Args: { target_attachment_id: string }
         Returns: Json
@@ -2105,6 +2375,7 @@ export type Database = {
           p_search?: string
           p_severity?: string[]
           p_status?: string[]
+          p_workspace_id?: string
         }
         Returns: Json
       }

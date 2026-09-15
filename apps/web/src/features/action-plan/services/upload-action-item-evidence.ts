@@ -2,7 +2,7 @@ import { createClient } from "@/lib/auth/client";
 import { assertRpcSuccess } from "@/features/occurrences/utils/rpc-error";
 
 import { uploadToStorageWithProgress } from "@/features/evidence/services/upload-to-storage";
-import { compressImageForUpload } from "@/features/evidence/utils/compress-image";
+import { prepareEvidenceFileForUpload } from "@/features/evidence/utils/prepare-evidence-file";
 
 type PrepareResult = {
   attachment_id: string;
@@ -18,6 +18,10 @@ export type UploadActionItemEvidenceInput = {
   onProgress?: (percent: number) => void;
 };
 
+/**
+ * Upload de evidência de action item — reutiliza prepareEvidenceFileForUpload
+ * (mesma allowlist e branch PDF vs imagem).
+ */
 export async function uploadActionItemEvidence({
   actionItemId,
   file,
@@ -27,15 +31,15 @@ export async function uploadActionItemEvidence({
   const supabase = createClient();
 
   onProgress?.(5);
-  const compressed = await compressImageForUpload(file);
+  const preparedFile = await prepareEvidenceFileForUpload(file);
   onProgress?.(15);
 
   const { data, error } = await supabase.rpc("prepare_action_item_attachment_upload", {
     payload: {
       action_item_id: actionItemId,
-      original_file_name: compressed.fileName,
-      mime_type: compressed.mimeType,
-      file_size: compressed.fileSize,
+      original_file_name: preparedFile.fileName,
+      mime_type: preparedFile.mimeType,
+      file_size: preparedFile.fileSize,
       caption,
     },
   });
@@ -55,8 +59,8 @@ export async function uploadActionItemEvidence({
     await uploadToStorageWithProgress({
       bucket: prepared.bucket,
       storagePath: prepared.storage_path,
-      body: compressed.blob,
-      mimeType: compressed.mimeType,
+      body: preparedFile.blob,
+      mimeType: preparedFile.mimeType,
       onProgress: (storagePercent) => {
         onProgress?.(20 + Math.round(storagePercent * 0.65));
       },

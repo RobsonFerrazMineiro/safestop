@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getPrimaryNavItems, isStopWorkListNavActive } from "./get-nav-items";
+import { getNavSections, getPrimaryNavItems, isStopWorkListNavActive } from "./get-nav-items";
 
 const navParams = {
   canApproveMdho: false,
@@ -32,5 +32,67 @@ describe("getPrimaryNavItems stop-work active state", () => {
     expect(create?.isActive("/stop-work")).toBe(false);
     expect(list?.isActive("/stop-work/occ-1")).toBe(true);
     expect(create?.isActive("/stop-work/occ-1")).toBe(false);
+  });
+});
+
+describe("getNavSections semântico e RBAC", () => {
+  it("omite a seção Gestão se nenhuma permissão de gestão estiver ativa", () => {
+    const sections = getNavSections({
+      canApproveMdho: false,
+      canManageContacts: false,
+      canReadReports: false,
+      canCreateOccurrence: true,
+    });
+
+    const keys = sections.map((s) => s.key);
+    expect(keys).toEqual(["operation", "system"]);
+
+    const operationSection = sections.find((s) => s.key === "operation");
+    expect(operationSection?.items.map((item) => item.key)).toEqual([
+      "dashboard",
+      "stop-work",
+      "stop-work-new",
+    ]);
+
+    const systemSection = sections.find((s) => s.key === "system");
+    expect(systemSection?.items.map((item) => item.key)).toEqual(["notifications", "profile"]);
+  });
+
+  it("inclui a seção Gestão apenas com itens autorizados quando houver permissões parciais", () => {
+    const sections = getNavSections({
+      canApproveMdho: true,
+      canManageContacts: false,
+      canReadReports: false,
+      canCreateOccurrence: false,
+    });
+
+    const keys = sections.map((s) => s.key);
+    expect(keys).toEqual(["operation", "management", "system"]);
+
+    const managementSection = sections.find((s) => s.key === "management");
+    expect(managementSection?.label).toBe("Gestão");
+    expect(managementSection?.items.map((item) => item.key)).toEqual(["mdho-approvals"]);
+
+    const operationSection = sections.find((s) => s.key === "operation");
+    expect(operationSection?.items.map((item) => item.key)).toEqual(["dashboard", "stop-work"]);
+  });
+
+  it("inclui todos os itens de Gestão quando todas as permissões estiverem ativas", () => {
+    const sections = getNavSections({
+      canApproveMdho: true,
+      canManageContacts: true,
+      canReadReports: true,
+      canCreateOccurrence: true,
+    });
+
+    const keys = sections.map((s) => s.key);
+    expect(keys).toEqual(["operation", "management", "system"]);
+
+    const managementSection = sections.find((s) => s.key === "management");
+    expect(managementSection?.items.map((item) => item.key)).toEqual([
+      "mdho-approvals",
+      "organization-contacts",
+      "reports",
+    ]);
   });
 });

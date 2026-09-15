@@ -7,6 +7,8 @@ export {
   useOccurrenceStatusHistory,
   useOperationalOccurrences,
   useOrganizationAreas,
+  useWorkspaceAreas,
+  useWorkspaceContracts,
 } from "./hooks";
 export {
   OCCURRENCE_DETAIL_STALE_TIME_MS,
@@ -21,4 +23,5 @@ export type {
   OccurrenceStatusHistoryItem,
   OccurrenceSummaryEnriched,
   OrganizationAreaOption,
+  WorkspaceContractOption,
 } from "./types";

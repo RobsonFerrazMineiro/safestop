@@ -6,7 +6,9 @@ import { computeOccurrenceReportSummary, type OccurrenceReportSortField } from "
 
 import { OctagonAlert, ShieldAlert } from "lucide-react";
 
+import { FilterShell } from "@/components/filter-shell";
 import { PageHeader } from "@/components/page-header";
+import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuthorization } from "@/features/authorization";
@@ -46,8 +48,6 @@ import {
   ReportPageSkeleton,
 } from "./report-states";
 import { ReportSummaryKpiCard } from "./report-summary-kpi-card";
-
-const REPORTS_SHELL_CLASS = "flex w-full flex-1 flex-col gap-6 px-6 py-10";
 
 function countOccurrenceActiveFilters(state: OccurrenceReportViewState): number {
   let count = 0;
@@ -99,6 +99,7 @@ export function OccurrencesReportPage() {
 
   const activeFilters = hasActiveOccurrenceReportFilters(viewState);
   const activeFilterCount = countOccurrenceActiveFilters(viewState);
+  const hasDiscovery = activeFilters || Boolean(viewState.search);
   const items = query.data?.items ?? [];
   const hasNext = query.data?.hasNext ?? false;
 
@@ -123,15 +124,16 @@ export function OccurrencesReportPage() {
 
   if (isAuthLoading || !isReady) {
     return (
-      <main className={REPORTS_SHELL_CLASS}>
+      <PageShell width="wide">
         <PageHeader
           backHref="/reports"
           backLabel={REPORT_COPY.hubTitle}
-          title={REPORT_COPY.occurrences}
+          eyebrow="RELATÓRIO DE OCORRÊNCIAS"
           icon={OctagonAlert}
+          title={REPORT_COPY.occurrences}
         />
         <ReportPageSkeleton />
-      </main>
+      </PageShell>
     );
   }
 
@@ -140,41 +142,47 @@ export function OccurrencesReportPage() {
   }
 
   return (
-    <main className={REPORTS_SHELL_CLASS} data-testid="report-occurrences-page">
+    <PageShell data-testid="report-occurrences-page" width="wide">
       <PageHeader
         backHref="/reports"
         backLabel={REPORT_COPY.hubTitle}
+        eyebrow="RELATÓRIO DE OCORRÊNCIAS"
+        icon={OctagonAlert}
         subtitle={`${activeOrganization?.name ?? "Organização"} · ${items.length} registros nesta página`}
         title={REPORT_COPY.occurrences}
-        icon={OctagonAlert}
       />
 
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         <ReportSummaryKpiCard
+          description={REPORT_COPY.onThisPage}
           isLoading={query.isLoading}
           label={`${REPORT_COPY.onThisPage}: total`}
-          description={REPORT_COPY.onThisPage}
           value={summary.totalRows}
         />
         <ReportSummaryKpiCard
+          description={REPORT_COPY.onThisPage}
+          icon={ShieldAlert}
           isLoading={query.isLoading}
           label={`${REPORT_COPY.onThisPage}: interdições ativas`}
-          description={REPORT_COPY.onThisPage}
           tone="destructive"
-          icon={ShieldAlert}
           value={summary.activeInterdictionsCount}
         />
       </section>
 
-      <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <ReportPeriodFilter activePreset={viewState.periodPreset} onChange={handlePeriodChange} />
-          <div className="flex flex-wrap items-center gap-2">
-            <OccurrenceReportFiltersDialog
-              activeFilterCount={activeFilterCount}
-              filters={viewState}
-              onApply={replaceViewState}
-            />
+      <FilterShell
+        actions={
+          <>
+            {hasDiscovery ? (
+              <Button
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={handleClearFilters}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                {REPORT_COPY.clearFilters}
+              </Button>
+            ) : null}
             <ReportExportMenu
               isExporting={isExporting}
               onExportCsv={() => {
@@ -188,24 +196,46 @@ export function OccurrencesReportPage() {
                 );
               }}
             />
+          </>
+        }
+        meta={
+          activeFilterCount > 0 ? (
+            <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+              {activeFilterCount} {activeFilterCount === 1 ? "filtro ativo" : "filtros ativos"}
+            </span>
+          ) : null
+        }
+        title="Filtros e busca"
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <ReportPeriodFilter
+              activePreset={viewState.periodPreset}
+              onChange={handlePeriodChange}
+            />
+            <OccurrenceReportFiltersDialog
+              activeFilterCount={activeFilterCount}
+              filters={viewState}
+              onApply={replaceViewState}
+            />
           </div>
-        </div>
 
-        <label className="flex max-w-md flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">{REPORT_COPY.searchByCode}</span>
-          <Input
-            type="search"
-            value={viewState.search ?? ""}
-            onChange={(event) => {
-              replaceViewState({
-                ...viewState,
-                search: event.target.value.trim() ? event.target.value : null,
-              });
-            }}
-          />
-        </label>
+          <label className="flex max-w-md flex-col gap-1.5 text-sm">
+            <span className="text-xs font-medium text-muted-foreground">
+              {REPORT_COPY.searchByCode}
+            </span>
+            <Input
+              type="search"
+              value={viewState.search ?? ""}
+              onChange={(event) => {
+                replaceViewState({
+                  ...viewState,
+                  search: event.target.value.trim() ? event.target.value : null,
+                });
+              }}
+            />
+          </label>
 
-        <div className="flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               checked={viewState.showOptionalColumns}
@@ -220,41 +250,30 @@ export function OccurrencesReportPage() {
             />
             {REPORT_COPY.showOptionalColumns}
           </label>
-          {activeFilters || viewState.search ? (
-            <Button
-              className="h-auto px-0"
-              size="sm"
-              type="button"
-              variant="link"
-              onClick={handleClearFilters}
-            >
-              {REPORT_COPY.clearFilters}
-            </Button>
+
+          {hasDiscovery ? (
+            <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+              {DASHBOARD_PERIOD_PRESETS.map((preset) =>
+                viewState.periodPreset === preset.id ? (
+                  <span key={preset.id} className="rounded-full border border-border px-2 py-1">
+                    Período: {preset.label}
+                  </span>
+                ) : null,
+              )}
+              {viewState.status.map((status) => (
+                <span key={status} className="rounded-full border border-border px-2 py-1">
+                  Status: {formatOccurrenceStatus(status)}
+                </span>
+              ))}
+              {viewState.severity.map((severity) => (
+                <span key={severity} className="rounded-full border border-border px-2 py-1">
+                  Criticidade: {formatOccurrenceSeverity(severity)}
+                </span>
+              ))}
+            </div>
           ) : null}
         </div>
-
-        {(activeFilters || viewState.search) && (
-          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-            {DASHBOARD_PERIOD_PRESETS.map((preset) =>
-              viewState.periodPreset === preset.id ? (
-                <span key={preset.id} className="rounded-full border border-border px-2 py-1">
-                  Período: {preset.label}
-                </span>
-              ) : null,
-            )}
-            {viewState.status.map((status) => (
-              <span key={status} className="rounded-full border border-border px-2 py-1">
-                Status: {formatOccurrenceStatus(status)}
-              </span>
-            ))}
-            {viewState.severity.map((severity) => (
-              <span key={severity} className="rounded-full border border-border px-2 py-1">
-                Criticidade: {formatOccurrenceSeverity(severity)}
-              </span>
-            ))}
-          </div>
-        )}
-      </section>
+      </FilterShell>
 
       {exportError ? (
         <div className="mb-4">
@@ -269,7 +288,7 @@ export function OccurrencesReportPage() {
       {!query.isLoading && !query.isError ? (
         items.length === 0 ? (
           <ReportEmptyState
-            variant={activeFilters || viewState.search ? "no-results" : "empty"}
+            variant={hasDiscovery ? "no-results" : "empty"}
             onClearFilters={handleClearFilters}
           />
         ) : (
@@ -296,6 +315,6 @@ export function OccurrencesReportPage() {
           </>
         )
       ) : null}
-    </main>
+    </PageShell>
   );
 }

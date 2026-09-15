@@ -30,9 +30,12 @@ type OccurrenceListRow = {
   unit_id: string | null;
   contract_id: string | null;
   management_department_id: string | null;
+  workspace_id: string | null;
+  origin_organization_id?: string | null;
   areas: AreaJoin | AreaJoin[] | null;
   profiles: ProfileJoin | ProfileJoin[] | null;
   contractor_organizations: OrganizationJoin | OrganizationJoin[] | null;
+  origin_organizations?: OrganizationJoin | OrganizationJoin[] | null;
 };
 
 type OccurrenceDecisionJoin = {
@@ -57,6 +60,7 @@ type OccurrenceDetailRow = OccurrenceListRow & {
   occurred_at: string;
   stopped_at: string | null;
   organization_id: string;
+  origin_organization_id: string | null;
   area_id: string;
   unit_id: string | null;
   contract_id: string | null;
@@ -78,7 +82,11 @@ type OccurrenceDetailRow = OccurrenceListRow & {
   occurrence_decisions: OccurrenceDecisionJoin | OccurrenceDecisionJoin[] | null;
 };
 
-function normalizeJoin<T>(value: T | T[] | null): T | null {
+function normalizeJoin<T>(value: T | T[] | null | undefined): T | null {
+  if (value == null) {
+    return null;
+  }
+
   if (Array.isArray(value)) {
     return value[0] ?? null;
   }
@@ -89,6 +97,11 @@ function normalizeJoin<T>(value: T | T[] | null): T | null {
 function mapContractorOrganizationName(row: OccurrenceListRow): string | null {
   const contractor = normalizeJoin(row.contractor_organizations);
   return contractor?.name ?? null;
+}
+
+function mapOriginOrganizationName(row: OccurrenceListRow): string | null {
+  const origin = normalizeJoin(row.origin_organizations);
+  return origin?.name ?? null;
 }
 
 function mapOccurrenceDecisionEmbed(
@@ -138,6 +151,9 @@ function mapSummaryFields(row: OccurrenceListRow): OccurrenceSummaryEnriched | n
     unitId: row.unit_id,
     contractId: row.contract_id,
     managementDepartmentId: row.management_department_id,
+    workspaceId: row.workspace_id ?? null,
+    originOrganizationId: row.origin_organization_id ?? null,
+    originOrganizationName: mapOriginOrganizationName(row),
     createdAt: row.created_at,
     createdByName: profile?.full_name ?? null,
     contractorOrganizationName: mapContractorOrganizationName(row),
@@ -181,6 +197,7 @@ export function mapOccurrenceDetailRow(row: OccurrenceDetailRow): OccurrenceDeta
     occurredAt: row.occurred_at,
     stoppedAt: row.stopped_at,
     organizationId: row.organization_id,
+    workspaceId: row.workspace_id ?? null,
     areaId: row.area_id,
     unitId: row.unit_id,
     contractId: row.contract_id,

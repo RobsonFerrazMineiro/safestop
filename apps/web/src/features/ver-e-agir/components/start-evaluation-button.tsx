@@ -38,7 +38,7 @@ export function StartEvaluationButton({
   return (
     <>
       <button
-        className="w-full rounded-md bg-orange-600 px-4 py-3 text-sm font-medium text-white hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
         disabled={isPending || isOffline}
         type="button"
         onClick={() => {

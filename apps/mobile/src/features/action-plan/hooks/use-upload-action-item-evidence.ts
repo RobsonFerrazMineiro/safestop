@@ -3,16 +3,19 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import * as ImagePicker from "expo-image-picker";
 import {
   ACTION_ITEM_ATTACHMENT_MAX_FILE_SIZE_BYTES,
-  ACTION_ITEM_ATTACHMENT_MIME_TYPES,
   type ActionItemAttachmentMimeType,
 } from "@safestop/types";
 import { actionPlanKeys } from "@safestop/query-keys";
 
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
+import { resolvePickerMimeType } from "@/features/evidence/services/compress-image";
+import { pickEvidencePdf } from "@/features/evidence/services/pick-evidence-pdf";
 import {
-  compressEvidenceImage,
-  resolvePickerMimeType,
-} from "@/features/evidence/services/compress-image";
+  EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE,
+  prepareEvidenceAssetForUpload,
+  type EvidenceSourceAsset,
+} from "@/features/evidence/services/prepare-evidence-asset";
+import { isEvidenceImageMimeType } from "@/features/evidence/utils/is-evidence-mime";
 
 import {
   completeActionItemAttachmentUpload,
@@ -22,9 +25,11 @@ import {
 } from "../services/action-item-attachment-upload";
 import { ACTION_ITEM_ATTACHMENT_MAX_COUNT } from "../types";
 
-function isAcceptedMimeType(mimeType: string | undefined, uri: string): boolean {
+export type ActionItemEvidencePickResult = "canceled" | "uploaded";
+
+function isAcceptedImageMimeType(mimeType: string | undefined, uri: string): boolean {
   const resolved = resolvePickerMimeType(mimeType, uri);
-  return (ACTION_ITEM_ATTACHMENT_MIME_TYPES as readonly string[]).includes(resolved);
+  return isEvidenceImageMimeType(resolved);
 }
 
 type UploadParams = {
@@ -53,27 +58,27 @@ export function useUploadActionItemEvidence({
   }, [itemId, organizationId, queryClient]);
 
   const uploadMutation = useMutation({
-    mutationFn: async (asset: ImagePicker.ImagePickerAsset) => {
-      const compressed = await compressEvidenceImage(asset.uri);
+    mutationFn: async (source: EvidenceSourceAsset) => {
+      const preparedAsset = await prepareEvidenceAssetForUpload(source);
 
-      if (compressed.fileSize > ACTION_ITEM_ATTACHMENT_MAX_FILE_SIZE_BYTES) {
+      if (preparedAsset.fileSize > ACTION_ITEM_ATTACHMENT_MAX_FILE_SIZE_BYTES) {
         throw new Error("Arquivo excede o limite de 10 MiB.");
       }
 
-      const mimeType = compressed.mimeType as ActionItemAttachmentMimeType;
+      const mimeType = preparedAsset.mimeType as ActionItemAttachmentMimeType;
 
       const prepared = await prepareActionItemAttachmentUpload({
         actionItemId: itemId,
-        originalFileName: compressed.fileName,
+        originalFileName: preparedAsset.fileName,
         mimeType,
-        fileSize: compressed.fileSize,
+        fileSize: preparedAsset.fileSize,
       });
 
       try {
         await uploadActionItemAttachmentToStorage({
           bucket: prepared.bucket,
           storagePath: prepared.storagePath,
-          uri: compressed.uri,
+          uri: preparedAsset.uri,
           mimeType,
         });
       } catch (error) {
@@ -100,7 +105,7 @@ export function useUploadActionItemEvidence({
     }
   }, [completedCount]);
 
-  const pickFromLibrary = useCallback(async () => {
+  const pickFromLibrary = useCallback(async (): Promise<ActionItemEvidencePickResult> => {
     assertCanUpload();
 
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -118,19 +123,26 @@ export function useUploadActionItemEvidence({
     });
 
     if (result.canceled || !result.assets[0]) {
-      return;
+      return "canceled";
     }
 
     const asset = result.assets[0];
 
-    if (!isAcceptedMimeType(asset.mimeType, asset.uri)) {
-      throw new Error("Use apenas imagens JPG, PNG ou WebP.");
+    if (!isAcceptedImageMimeType(asset.mimeType, asset.uri)) {
+      throw new Error(EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE);
     }
 
-    await uploadMutation.mutateAsync(asset);
+    await uploadMutation.mutateAsync({
+      uri: asset.uri,
+      fileName: asset.fileName,
+      mimeType: resolvePickerMimeType(asset.mimeType, asset.uri),
+      fileSize: asset.fileSize && asset.fileSize > 0 ? asset.fileSize : null,
+    });
+
+    return "uploaded";
   }, [assertCanUpload, uploadMutation]);
 
-  const pickFromCamera = useCallback(async () => {
+  const pickFromCamera = useCallback(async (): Promise<ActionItemEvidencePickResult> => {
     assertCanUpload();
 
     const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -148,21 +160,42 @@ export function useUploadActionItemEvidence({
     });
 
     if (result.canceled || !result.assets[0]) {
-      return;
+      return "canceled";
     }
 
     const asset = result.assets[0];
 
-    if (!isAcceptedMimeType(asset.mimeType, asset.uri)) {
-      throw new Error("Use apenas imagens JPG, PNG ou WebP.");
+    if (!isAcceptedImageMimeType(asset.mimeType, asset.uri)) {
+      throw new Error(EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE);
     }
 
-    await uploadMutation.mutateAsync(asset);
+    await uploadMutation.mutateAsync({
+      uri: asset.uri,
+      fileName: asset.fileName,
+      mimeType: resolvePickerMimeType(asset.mimeType, asset.uri),
+      fileSize: asset.fileSize && asset.fileSize > 0 ? asset.fileSize : null,
+    });
+
+    return "uploaded";
+  }, [assertCanUpload, uploadMutation]);
+
+  const pickFromPdf = useCallback(async (): Promise<ActionItemEvidencePickResult> => {
+    assertCanUpload();
+
+    const picked = await pickEvidencePdf();
+
+    if (picked.canceled) {
+      return "canceled";
+    }
+
+    await uploadMutation.mutateAsync(picked.asset);
+    return "uploaded";
   }, [assertCanUpload, uploadMutation]);
 
   return {
     pickFromCamera,
     pickFromLibrary,
+    pickFromPdf,
     isUploading: uploadMutation.isPending,
   };
 }

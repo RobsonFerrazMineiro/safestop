@@ -76,7 +76,12 @@ export const ACTION_ITEM_ATTACHMENT_CAPTION_MAX_LENGTH = 500;
 
 export const ACTION_ITEM_ATTACHMENT_MAX_FILE_SIZE_BYTES = 10_485_760;
 
-export const ACTION_ITEM_ATTACHMENT_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+export const ACTION_ITEM_ATTACHMENT_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "application/pdf",
+] as const;
 
 export type ActionItemAttachmentMimeType = (typeof ACTION_ITEM_ATTACHMENT_MIME_TYPES)[number];
 

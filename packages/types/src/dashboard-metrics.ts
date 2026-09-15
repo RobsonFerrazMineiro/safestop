@@ -38,6 +38,13 @@ export const DASHBOARD_METRIC_CATALOG = {
     unit: "count",
     stock: true,
   },
+  myDueSoonActions: {
+    key: "myDueSoonActions",
+    label: "Minhas ações próximas do vencimento",
+    scope: "personal",
+    unit: "count",
+    stock: true,
+  },
   myPendingAwareness: {
     key: "myPendingAwareness",
     label: "Minhas ciências pendentes",
@@ -167,6 +174,7 @@ export type DashboardKpiFilters = {
 export type DashboardPersonalKpis = {
   myPendingActions: number;
   myOverdueActions: number;
+  myDueSoonActions: number;
   myPendingAwareness: number;
 };
 
@@ -294,6 +302,7 @@ export type DashboardKpisRpcPayload = import("./dashboard-rpc").DashboardKpisRpc
 export type MyActionItemsSummary = {
   myPendingActions: number;
   myOverdueActions: number;
+  myDueSoonActions: number;
 };
 
 export type MyAwarenessSummary = {

@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Bell } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { useRequirePermission } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
@@ -152,31 +153,34 @@ export function NotificationCenterContainer() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
+    <PageShell className="gap-6" width="default">
       <PageHeader
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              disabled={markAllMutation.isPending || isOffline || items.length === 0}
+              size="sm"
+              type="button"
+              variant="outline"
+              onClick={handleMarkAllRead}
+            >
+              {markAllMutation.isPending ? "Marcando…" : "Marcar todas como lidas"}
+            </Button>
+            <Link className="text-sm text-primary hover:text-primary/90" href="/stop-work">
+              Paralisações
+            </Link>
+          </div>
+        }
+        eyebrow="CENTRAL DE ALERTAS"
         icon={Bell}
         subtitle={`${unreadCount} não lidas · ${pendingAwarenessCount} aguardando ciência`}
         title="Notificações"
       />
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          disabled={markAllMutation.isPending || isOffline || items.length === 0}
-          type="button"
-          variant="outline"
-          onClick={handleMarkAllRead}
-        >
-          {markAllMutation.isPending ? "Marcando…" : "Marcar todas como lidas"}
-        </Button>
-        <Link className="text-sm text-primary hover:text-primary/90" href="/stop-work">
-          Paralisações
-        </Link>
-      </div>
-
       {isOffline ? <NotificationOfflineNotice /> : null}
 
       {statusMessage ? (
-        <p className="text-sm text-green-300" role="status">
+        <p className="text-sm text-status-success-fg" role="status">
           {statusMessage}
         </p>
       ) : null}
@@ -225,6 +229,6 @@ export function NotificationCenterContainer() {
           {isFetchingNextPage ? "Carregando…" : "Carregar mais"}
         </Button>
       ) : null}
-    </section>
+    </PageShell>
   );
 }

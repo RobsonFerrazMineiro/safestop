@@ -708,7 +708,7 @@ KPIs agregados de estoque e fluxo. Contrato: `docs/decisions/DASHBOARD-DECISIONS
 
 - Permissão: autenticado + vínculo ativo na organização; gates **internos** por seção (`has_permission`)
 - `SECURITY DEFINER` — agregação org-wide em `notifications` exige bypass RLS controlado (`pendingAwarenessOrg` → `report.read`)
-- `p_due_soon_days`: 1–30 (default 3) — janela `dueSoonActionItems`
+- `p_due_soon_days`: 1–30 (default 3) — janela `dueSoonActionItems` e `personal.myDueSoonActions`
 - `p_period_start` / `p_period_end`: opcionais — métricas de fluxo retornam `null` quando ausentes (não agregam “todo o histórico”)
 - Spoof de org: `ORGANIZATION_NOT_ALLOWED` (`42501`)
 
@@ -719,6 +719,7 @@ KPIs agregados de estoque e fluxo. Contrato: `docs/decisions/DASHBOARD-DECISIONS
   "personal": {
     "myPendingActions": 0,
     "myOverdueActions": 0,
+    "myDueSoonActions": 0,
     "myPendingAwareness": 0
   },
   "operational": {

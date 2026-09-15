@@ -17,8 +17,10 @@ export function OrganizationCard({
     <button
       aria-pressed={isActive}
       className={cn(
-        "flex w-full flex-col gap-2 rounded-lg border px-4 py-4 text-left transition",
-        isActive ? "border-primary bg-primary/10" : "border-border bg-card hover:border-primary/50",
+        "flex w-full flex-col gap-2 rounded-lg border px-4 py-4 text-left transition-colors",
+        isActive
+          ? "border-primary bg-primary/10"
+          : "border-border bg-card/60 hover:border-primary/50 hover:bg-accent/40",
       )}
       onClick={() => {
         onSelect(organization.id);

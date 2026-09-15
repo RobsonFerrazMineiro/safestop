@@ -1,24 +1,32 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
-import { AlarmClock, Bell, ListTodo, OctagonAlert, type LucideIcon } from "lucide-react-native";
-import { DASHBOARD_METRIC_CATALOG, type DashboardMetricKey } from "@safestop/types";
+import {
+  AlarmClock,
+  Bell,
+  ClipboardCheck,
+  ClipboardList,
+  Clock,
+  ListTodo,
+  OctagonAlert,
+  ShieldAlert,
+  type LucideIcon,
+} from "lucide-react-native";
+import type { DashboardMetricKey } from "@safestop/types";
+import { DASHBOARD_METRIC_CATALOG } from "@safestop/types";
 import { colors, controlHeight, radius, spacing, statusChip, typography } from "@safestop/ui";
 
-type PendingKpiMetricKey =
-  "myOverdueActions" | "myPendingAwareness" | "myPendingActions" | "activeOccurrences";
-
-type PendingKpiCardTone = "danger" | "warning" | "info" | "neutral";
+import { toneForHomeMetric, type HomeKpiTone } from "../utils/kpi-config";
 
 type PendingKpiCardProps = {
-  metricKey: PendingKpiMetricKey;
+  metricKey: DashboardMetricKey;
   value: number | undefined;
   isLoading?: boolean;
-  tone?: PendingKpiCardTone;
+  tone?: HomeKpiTone;
   accessibilityHint?: string;
   onPress?: () => void;
 };
 
 const TONE_STYLES: Record<
-  PendingKpiCardTone,
+  HomeKpiTone,
   { backgroundColor: string; borderColor: string; iconColor: string }
 > = {
   danger: {
@@ -43,36 +51,43 @@ const TONE_STYLES: Record<
   },
 };
 
-const METRIC_ICONS: Record<PendingKpiMetricKey, LucideIcon> = {
+const METRIC_ICONS: Partial<Record<DashboardMetricKey, LucideIcon>> = {
   myPendingActions: ListTodo,
   myOverdueActions: AlarmClock,
+  myDueSoonActions: Clock,
   myPendingAwareness: Bell,
   activeOccurrences: OctagonAlert,
+  scopedOpenOccurrences: OctagonAlert,
+  scopedPendingAwareness: Bell,
+  pendingEvaluation: ClipboardList,
+  activeInterdictions: ShieldAlert,
+  awaitingValidation: ClipboardCheck,
+  mdhoPendingApproval: ClipboardCheck,
+  dueSoonActionItems: Clock,
 };
 
 const KPI_ICON_SIZE = 16;
 const KPI_VALUE_MIN_SCALE = 0.75;
 
-function detailForMetric(key: PendingKpiMetricKey): string {
-  return DASHBOARD_METRIC_CATALOG[key as DashboardMetricKey].stock
-    ? "Independente do período"
-    : "No período selecionado";
+function detailForMetric(key: DashboardMetricKey): string {
+  return DASHBOARD_METRIC_CATALOG[key].stock ? "Independente do período" : "No período selecionado";
 }
 
 export function PendingKpiCard({
   metricKey,
   value,
   isLoading = false,
-  tone = "neutral",
+  tone,
   accessibilityHint,
   onPress,
 }: PendingKpiCardProps) {
-  const toneStyle = TONE_STYLES[tone];
-  const label = DASHBOARD_METRIC_CATALOG[metricKey as DashboardMetricKey].label;
+  const resolvedTone = tone ?? toneForHomeMetric(metricKey);
+  const toneStyle = TONE_STYLES[resolvedTone];
+  const label = DASHBOARD_METRIC_CATALOG[metricKey].label;
   const detail = detailForMetric(metricKey);
   const displayValue = value === undefined ? "—" : String(value);
   const accessibilityLabel = `${label}: ${displayValue}`;
-  const MetricIcon = METRIC_ICONS[metricKey];
+  const MetricIcon = METRIC_ICONS[metricKey] ?? OctagonAlert;
 
   return (
     <Pressable

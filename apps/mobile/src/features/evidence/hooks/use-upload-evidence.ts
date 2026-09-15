@@ -3,7 +3,6 @@ import * as ImagePicker from "expo-image-picker";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   OCCURRENCE_ATTACHMENT_MAX_COUNT_PER_OCCURRENCE,
-  OCCURRENCE_ATTACHMENT_MIME_TYPES,
   type OccurrenceAttachmentType,
 } from "@safestop/types";
 import { prepareAttachmentUploadSchema } from "@safestop/validation";
@@ -11,13 +10,18 @@ import { prepareAttachmentUploadSchema } from "@safestop/validation";
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
-import { compressEvidenceImage, resolvePickerMimeType } from "../services/compress-image";
+import { resolvePickerMimeType } from "../services/compress-image";
 import {
   completeAttachmentUpload,
   failAttachmentUpload,
   prepareAttachmentUpload,
   uploadAttachmentToStorage,
 } from "../services/evidence-upload";
+import { pickEvidencePdf } from "../services/pick-evidence-pdf";
+import {
+  EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE,
+  prepareEvidenceAssetForUpload,
+} from "../services/prepare-evidence-asset";
 import {
   getEvidenceUploadQueue,
   getEvidenceUploadQueueSnapshot,
@@ -31,6 +35,7 @@ import {
   evidenceQueryKeys,
   type EvidenceUploadQueueItem,
 } from "../types";
+import { isEvidenceImageMimeType } from "../utils/is-evidence-mime";
 
 import { useOccurrenceEvidence } from "./use-occurrence-evidence";
 
@@ -46,9 +51,9 @@ function isOnline(): boolean {
   return browserGlobal.navigator?.onLine !== false;
 }
 
-function isAcceptedMimeType(mimeType: string | undefined, uri: string): boolean {
+function isAcceptedImageMimeType(mimeType: string | undefined, uri: string): boolean {
   const resolved = resolvePickerMimeType(mimeType, uri);
-  return (OCCURRENCE_ATTACHMENT_MIME_TYPES as readonly string[]).includes(resolved);
+  return isEvidenceImageMimeType(resolved);
 }
 
 type UploadEvidenceParams = {
@@ -99,23 +104,30 @@ export function useUploadEvidence({
 
   const uploadItemMutation = useMutation({
     mutationFn: async (item: EvidenceUploadQueueItem) => {
+      const isPdf = item.mimeType === "application/pdf";
+
       let workingItem: EvidenceUploadQueueItem = {
         ...item,
-        status: "compressing",
+        status: isPdf ? "preparing" : "compressing",
         progress: 0.1,
         error: null,
       };
       updateQueueItem(workingItem);
 
-      const compressed = await compressEvidenceImage(item.uri);
+      const preparedAsset = await prepareEvidenceAssetForUpload({
+        uri: item.uri,
+        fileName: item.originalFileName,
+        mimeType: item.mimeType,
+        fileSize: item.fileSize > 0 ? item.fileSize : null,
+      });
 
       workingItem = {
         ...workingItem,
-        uri: compressed.uri,
-        previewUri: compressed.uri,
-        originalFileName: compressed.fileName,
-        mimeType: compressed.mimeType,
-        fileSize: compressed.fileSize,
+        uri: preparedAsset.uri,
+        previewUri: preparedAsset.uri,
+        originalFileName: preparedAsset.fileName,
+        mimeType: preparedAsset.mimeType,
+        fileSize: preparedAsset.fileSize,
         status: "preparing",
         progress: 0.25,
       };
@@ -124,9 +136,9 @@ export function useUploadEvidence({
       const prepareInput = prepareAttachmentUploadSchema.parse({
         occurrenceId,
         attachmentType: workingItem.attachmentType,
-        originalFileName: compressed.fileName,
-        mimeType: compressed.mimeType,
-        fileSize: compressed.fileSize,
+        originalFileName: preparedAsset.fileName,
+        mimeType: preparedAsset.mimeType,
+        fileSize: preparedAsset.fileSize,
       });
 
       const prepared = await prepareAttachmentUpload(prepareInput);
@@ -143,8 +155,8 @@ export function useUploadEvidence({
         await uploadAttachmentToStorage({
           bucket: prepared.bucket,
           storagePath: prepared.storagePath,
-          uri: compressed.uri,
-          mimeType: compressed.mimeType,
+          uri: preparedAsset.uri,
+          mimeType: preparedAsset.mimeType,
         });
       } catch (error) {
         await failAttachmentUpload(
@@ -221,11 +233,11 @@ export function useUploadEvidence({
     }
 
     const acceptedAssets = result.assets.filter((asset) =>
-      isAcceptedMimeType(asset.mimeType, asset.uri),
+      isAcceptedImageMimeType(asset.mimeType, asset.uri),
     );
 
     if (acceptedAssets.length === 0) {
-      throw new Error("Use apenas imagens JPG, PNG ou WebP.");
+      throw new Error(EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE);
     }
 
     const current = getEvidenceUploadQueue(occurrenceId);
@@ -243,7 +255,7 @@ export function useUploadEvidence({
       previewUri: asset.uri,
       originalFileName: asset.fileName ?? `evidencia-${Date.now()}.jpg`,
       mimeType: resolvePickerMimeType(asset.mimeType, asset.uri),
-      fileSize: asset.fileSize ?? 0,
+      fileSize: asset.fileSize && asset.fileSize > 0 ? asset.fileSize : 0,
       attachmentType,
       status: "queued",
       progress: 0,
@@ -288,11 +300,9 @@ export function useUploadEvidence({
 
     const asset = result.assets[0];
 
-    if (!isAcceptedMimeType(asset.mimeType, asset.uri)) {
-      throw new Error("Use apenas imagens JPG, PNG ou WebP.");
+    if (!isAcceptedImageMimeType(asset.mimeType, asset.uri)) {
+      throw new Error(EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE);
     }
-
-    const current = getEvidenceUploadQueue(occurrenceId);
 
     if (countActiveEvidence() >= OCCURRENCE_ATTACHMENT_MAX_COUNT_PER_OCCURRENCE) {
       throw new Error("Limite de evidências por ocorrência atingido.");
@@ -305,7 +315,7 @@ export function useUploadEvidence({
       previewUri: asset.uri,
       originalFileName: asset.fileName ?? `evidencia-${Date.now()}.jpg`,
       mimeType: resolvePickerMimeType(asset.mimeType, asset.uri),
-      fileSize: asset.fileSize ?? 0,
+      fileSize: asset.fileSize && asset.fileSize > 0 ? asset.fileSize : 0,
       attachmentType,
       status: "queued",
       progress: 0,
@@ -313,7 +323,49 @@ export function useUploadEvidence({
       attachmentId: null,
     };
 
-    syncQueue([...current, item]);
+    syncQueue([...getEvidenceUploadQueue(occurrenceId), item]);
+    await uploadItemMutation.mutateAsync(item);
+  }, [
+    assertCanUpload,
+    attachmentType,
+    countActiveEvidence,
+    occurrenceId,
+    syncQueue,
+    uploadItemMutation,
+  ]);
+
+  const pickFromPdf = useCallback(async () => {
+    assertCanUpload();
+
+    if (countActiveEvidence() >= OCCURRENCE_ATTACHMENT_MAX_COUNT_PER_OCCURRENCE) {
+      throw new Error("Limite de evidências por ocorrência atingido.");
+    }
+
+    const picked = await pickEvidencePdf();
+
+    if (picked.canceled) {
+      return;
+    }
+
+    const item: EvidenceUploadQueueItem = {
+      localId: createLocalId(),
+      occurrenceId,
+      uri: picked.asset.uri,
+      previewUri: picked.asset.uri,
+      originalFileName: picked.asset.fileName?.trim() || "evidencia.pdf",
+      mimeType: "application/pdf",
+      fileSize:
+        typeof picked.asset.fileSize === "number" && picked.asset.fileSize > 0
+          ? picked.asset.fileSize
+          : 0,
+      attachmentType,
+      status: "queued",
+      progress: 0,
+      error: null,
+      attachmentId: null,
+    };
+
+    syncQueue([...getEvidenceUploadQueue(occurrenceId), item]);
     await uploadItemMutation.mutateAsync(item);
   }, [
     assertCanUpload,
@@ -363,6 +415,7 @@ export function useUploadEvidence({
     queue: activeQueue,
     pickFromCamera,
     pickFromLibrary,
+    pickFromPdf,
     retryUpload,
     removeQueuedItem,
     isUploading: uploadItemMutation.isPending,

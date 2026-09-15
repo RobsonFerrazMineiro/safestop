@@ -47,11 +47,11 @@ export function DashboardActionAttentionList({
   return (
     <section aria-label={title} className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-base font-semibold text-gray-100">
+        <h2 className="text-base font-semibold text-foreground">
           {title}
-          <span className="ml-2 text-sm font-normal text-gray-400">({count})</span>
+          <span className="ml-2 text-sm font-normal text-muted-foreground">({count})</span>
         </h2>
-        <Link className="text-sm text-orange-400 hover:text-orange-300" href={viewAllHref}>
+        <Link className="text-sm text-primary hover:text-primary/80" href={viewAllHref}>
           Ver todas
         </Link>
       </div>
@@ -63,7 +63,7 @@ export function DashboardActionAttentionList({
       ) : null}
 
       {!isLoading && !isError && visibleItems.length === 0 ? (
-        <p className="text-sm text-gray-500" role="status">
+        <p className="text-sm text-muted-foreground" role="status">
           {emptyMessage}
         </p>
       ) : null}
@@ -79,14 +79,14 @@ export function DashboardActionAttentionList({
             return (
               <li key={item.id}>
                 <Link
-                  className="flex flex-col gap-1 rounded-lg border border-gray-800 bg-gray-900/40 px-3 py-3 transition hover:border-gray-600"
+                  className="flex flex-col gap-1.5 rounded-lg border border-border bg-card/60 px-3.5 py-3 transition hover:border-border/80 hover:bg-accent/30"
                   href={href}
                 >
-                  <span className="font-medium text-gray-100">{item.title}</span>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                  <span className="font-medium text-foreground">{item.title}</span>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span>Prazo: {formatDueAt(item.dueAt)}</span>
                     {days >= 0 && days <= 3 ? (
-                      <span className="rounded-full border border-amber-600/50 px-2 py-0.5 text-amber-200">
+                      <span className="rounded-full border border-amber-600/40 bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-400">
                         Em {days} dia{days === 1 ? "" : "s"}
                       </span>
                     ) : null}

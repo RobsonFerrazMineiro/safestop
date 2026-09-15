@@ -7,6 +7,8 @@ import { OctagonAlert, Plus, Search } from "lucide-react";
 import { OperationalOccurrenceListRpcError } from "@safestop/types";
 
 import { PageHeader } from "@/components/page-header";
+import { PageShell } from "@/components/page-shell";
+import { FilterShell } from "@/components/filter-shell";
 import { Can, useRequirePermission } from "@/features/authorization";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,7 @@ import {
   EMPTY_OPERATIONAL_FUNNEL,
   OPERATIONAL_LIST_SEARCH_DEBOUNCE_MS,
   OPERATIONAL_LIST_SEARCH_PLACEHOLDER,
+  countActiveOperationalFunnelFilters,
   hasActiveOperationalDiscovery,
   toOperationalOccurrenceListFilters,
   type OperationalListFunnelState,
@@ -81,6 +84,8 @@ export function StopWorkListContainer() {
     viewParams.dashboardScope !== null ||
     viewParams.dashboardAttention !== null;
 
+  const activeFilterCount = useMemo(() => countActiveOperationalFunnelFilters(funnel), [funnel]);
+
   function clearSearchAndFunnel() {
     setSearchInput("");
     setDebouncedSearch("");
@@ -89,15 +94,17 @@ export function StopWorkListContainer() {
 
   if (isAttentionView && !canViewAttention) {
     return (
-      <main className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6 text-center">
-        <h1 className="text-2xl font-semibold text-foreground">Acesso negado</h1>
-        <p className="max-w-md text-base text-muted-foreground">
-          Você não possui permissão para visualizar ações do plano de ação.
-        </p>
-        <Link className="text-sm text-primary hover:underline" href="/">
-          Voltar ao dashboard
-        </Link>
-      </main>
+      <PageShell width="wide">
+        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+          <h1 className="text-2xl font-semibold text-foreground">Acesso negado</h1>
+          <p className="max-w-md text-base text-muted-foreground">
+            Você não possui permissão para visualizar ações do plano de ação.
+          </p>
+          <Link className="text-sm text-primary hover:underline" href="/">
+            Voltar ao dashboard
+          </Link>
+        </div>
+      </PageShell>
     );
   }
 
@@ -107,22 +114,24 @@ export function StopWorkListContainer() {
 
   if (isAttentionView && isError) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="max-w-md text-base text-destructive" role="alert">
-          {error instanceof Error
-            ? error.message
-            : "Não foi possível carregar as Paralisações Preventivas."}
-        </p>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            void refetch();
-          }}
-        >
-          Tentar novamente
-        </Button>
-      </main>
+      <PageShell width="wide">
+        <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+          <p className="max-w-md text-base text-destructive" role="alert">
+            {error instanceof Error
+              ? error.message
+              : "Não foi possível carregar as Paralisações Preventivas."}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              void refetch();
+            }}
+          >
+            Tentar novamente
+          </Button>
+        </div>
+      </PageShell>
     );
   }
 
@@ -139,20 +148,21 @@ export function StopWorkListContainer() {
         : "Não foi possível carregar as Paralisações Preventivas.";
 
   return (
-    <section className="flex w-full flex-1 flex-col gap-6 px-6 py-10">
+    <PageShell width="wide">
       <PageHeader
         actions={
           <Can permission="occurrence.create">
-            <Button asChild>
+            <Button asChild size="sm">
               <Link href="/stop-work/new">
-                <Plus />
+                <Plus className="size-4" />
                 Nova Paralisação
               </Link>
             </Button>
           </Can>
         }
         backHref="/"
-        backLabel="Voltar"
+        backLabel="Dashboard"
+        eyebrow="GESTÃO OPERACIONAL"
         icon={OctagonAlert}
         subtitle={
           isAttentionView
@@ -163,21 +173,45 @@ export function StopWorkListContainer() {
       />
 
       {isStandardOperationalList ? (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative min-w-0 flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              aria-label="Buscar Paralisações Preventivas"
-              className="pl-9"
-              placeholder={OPERATIONAL_LIST_SEARCH_PLACEHOLDER}
-              value={searchInput}
-              onChange={(event) => {
-                setSearchInput(event.target.value);
-              }}
-            />
+        <FilterShell
+          actions={
+            hasDiscovery ? (
+              <Button
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={clearSearchAndFunnel}
+                size="sm"
+                type="button"
+                variant="ghost"
+              >
+                Limpar filtros
+              </Button>
+            ) : null
+          }
+          meta={
+            activeFilterCount > 0 ? (
+              <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                {activeFilterCount} {activeFilterCount === 1 ? "filtro ativo" : "filtros ativos"}
+              </span>
+            ) : null
+          }
+          title="Filtros e busca"
+        >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                aria-label="Buscar Paralisações Preventivas"
+                className="pl-9"
+                placeholder={OPERATIONAL_LIST_SEARCH_PLACEHOLDER}
+                value={searchInput}
+                onChange={(event) => {
+                  setSearchInput(event.target.value);
+                }}
+              />
+            </div>
+            <StopWorkOperationalFiltersDialog funnel={funnel} onApply={setFunnel} />
           </div>
-          <StopWorkOperationalFiltersDialog funnel={funnel} onApply={setFunnel} />
-        </div>
+        </FilterShell>
       ) : null}
 
       {isAttentionView ? (
@@ -196,7 +230,7 @@ export function StopWorkListContainer() {
       ) : isLoading && occurrences.length === 0 ? (
         <p className="text-sm text-muted-foreground">Carregando Paralisações Preventivas…</p>
       ) : isError ? (
-        <div className="flex flex-col items-start gap-3">
+        <div className="flex flex-col items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
           <p className="text-sm text-destructive" role="alert">
             {errorMessage}
           </p>
@@ -212,7 +246,7 @@ export function StopWorkListContainer() {
         </div>
       ) : occurrences.length === 0 ? (
         isStandardOperationalList && hasDiscovery ? (
-          <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card px-6 py-10 text-center">
+          <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card/60 px-6 py-10 text-center">
             <p className="text-base text-foreground">
               Nenhuma Paralisação Preventiva encontrada para esta busca/filtros.
             </p>
@@ -221,7 +255,7 @@ export function StopWorkListContainer() {
             </Button>
           </div>
         ) : hasDashboardFilter ? (
-          <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card px-6 py-10 text-center">
+          <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card/60 px-6 py-10 text-center">
             <p className="text-base text-foreground">
               Nenhuma Paralisação Preventiva neste filtro.
             </p>
@@ -252,6 +286,6 @@ export function StopWorkListContainer() {
           ) : null}
         </div>
       )}
-    </section>
+    </PageShell>
   );
 }

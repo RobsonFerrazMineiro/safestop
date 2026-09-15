@@ -27,7 +27,7 @@ export function OccurrenceListPage() {
     <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-2">
-          <Link className="text-sm text-orange-400 hover:text-orange-300" href="/">
+          <Link className="text-sm text-primary hover:text-primary/80" href="/">
             ← Voltar
           </Link>
           <h1 className="text-3xl font-bold text-gray-100">Ocorrências</h1>
@@ -37,7 +37,7 @@ export function OccurrenceListPage() {
         </div>
         <Can permission="occurrence.create">
           <Link
-            className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-400"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
             href="/stop-work/new"
           >
             Nova ocorrência

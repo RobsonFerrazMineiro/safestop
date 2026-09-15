@@ -1,5 +1,7 @@
 "use client";
 
+import { FileText } from "lucide-react";
+
 import { Can } from "@/features/authorization";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,9 +11,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SurfaceIcon } from "@/components/surface-icon";
 
 import { useEvidenceSignedUrl } from "../hooks/use-evidence";
 import type { EvidenceListItem } from "../types";
+import { isEvidencePdfMimeType } from "../utils/is-evidence-mime";
+import { openEvidenceSignedUrl } from "../utils/open-evidence-signed-url";
 
 type EvidencePreviewModalProps = {
   occurrenceId: string;
@@ -41,6 +46,8 @@ export function EvidencePreviewModal({
     return null;
   }
 
+  const isPdf = isEvidencePdfMimeType(evidence.mimeType);
+
   return (
     <Dialog
       onOpenChange={(open) => {
@@ -55,7 +62,7 @@ export function EvidencePreviewModal({
           <header className="flex items-start justify-between gap-4">
             <DialogHeader className="min-w-0 text-left">
               <p className="text-xs tracking-wide text-muted-foreground uppercase">
-                Evidência inicial
+                {isPdf ? "Evidência PDF" : "Evidência inicial"}
               </p>
               <DialogTitle className="truncate">{evidence.originalFileName}</DialogTitle>
               <DialogDescription>
@@ -78,10 +85,12 @@ export function EvidencePreviewModal({
 
           <div className="flex min-h-[240px] items-center justify-center rounded-md border border-border bg-background/40">
             {isLoading ? (
-              <p className="text-sm text-muted-foreground">Carregando imagem...</p>
+              <p className="text-sm text-muted-foreground">
+                {isPdf ? "Carregando documento..." : "Carregando imagem..."}
+              </p>
             ) : isError || !signedUrl ? (
               <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
-                <p>Não foi possível carregar a imagem.</p>
+                <p>Não foi possível carregar a evidência.</p>
                 <Button
                   type="button"
                   variant="link"
@@ -90,6 +99,22 @@ export function EvidencePreviewModal({
                   }}
                 >
                   Tentar novamente
+                </Button>
+              </div>
+            ) : isPdf ? (
+              <div className="flex flex-col items-center gap-4 px-6 py-10 text-center">
+                <SurfaceIcon className="text-primary" icon={FileText} variant="empty" />
+                <div className="flex flex-col gap-1">
+                  <p className="text-sm font-medium text-foreground">{evidence.originalFileName}</p>
+                  <p className="text-xs tracking-wide text-muted-foreground uppercase">PDF</p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    openEvidenceSignedUrl(signedUrl);
+                  }}
+                >
+                  Abrir PDF
                 </Button>
               </div>
             ) : (

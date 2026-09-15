@@ -4,15 +4,22 @@ import { useAuthorization } from "@/features/authorization/hooks/use-authorizati
 import { useOperationalOccurrences } from "@/features/occurrences/hooks/use-operational-occurrences";
 import { useDashboardAttention } from "@/features/dashboard/hooks/use-dashboard-attention";
 
-import { DASHBOARD_ATTENTION, type DashboardAttentionFilter } from "../utils/dashboard-list-params";
+import {
+  DASHBOARD_ATTENTION,
+  DASHBOARD_ATTENTION_SCOPE,
+  type DashboardAttentionFilter,
+  type DashboardAttentionScope,
+} from "../utils/dashboard-list-params";
 
 type UseStopWorkListViewOptions = {
   dashboardAttention?: DashboardAttentionFilter | null;
+  dashboardAttentionScope?: DashboardAttentionScope;
   operationalFilters?: OccurrenceListFilters;
 };
 
 export function useStopWorkListView({
   dashboardAttention = null,
+  dashboardAttentionScope = DASHBOARD_ATTENTION_SCOPE.organization,
   operationalFilters = {},
 }: UseStopWorkListViewOptions = {}) {
   const { can, canAny } = useAuthorization();
@@ -21,7 +28,10 @@ export function useStopWorkListView({
   const operationalQuery = useOperationalOccurrences(operationalFilters, {
     enabled: !isAttentionView,
   });
-  const attentionQuery = useDashboardAttention({ enabled: isAttentionView });
+  const attentionQuery = useDashboardAttention({
+    enabled: isAttentionView,
+    scope: dashboardAttentionScope,
+  });
 
   const canViewAttention =
     isAttentionView &&
@@ -29,11 +39,13 @@ export function useStopWorkListView({
     can("occurrence.read");
 
   const attentionItems =
-    dashboardAttention === DASHBOARD_ATTENTION.overdue
-      ? (attentionQuery.attention?.overdueItems ?? [])
-      : dashboardAttention === DASHBOARD_ATTENTION.dueSoon
-        ? (attentionQuery.attention?.dueSoonItems ?? [])
-        : [];
+    dashboardAttention === DASHBOARD_ATTENTION.pending
+      ? (attentionQuery.attention?.pendingItems ?? [])
+      : dashboardAttention === DASHBOARD_ATTENTION.overdue
+        ? (attentionQuery.attention?.overdueItems ?? [])
+        : dashboardAttention === DASHBOARD_ATTENTION.dueSoon
+          ? (attentionQuery.attention?.dueSoonItems ?? [])
+          : [];
 
   const isLoading = isAttentionView ? attentionQuery.isLoading : operationalQuery.isLoading;
 

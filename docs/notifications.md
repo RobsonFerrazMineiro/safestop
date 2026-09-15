@@ -4,6 +4,8 @@
 
 **Estado (Sprint 3.1):** notificações **in-app** implementadas (`notification_events`, `notifications`, RPCs de leitura/ciência/listagem). Destinatários automáticos via `organization_contacts` + patches de dispatch. **Push**, `notification_deliveries` e canais externos permanecem **fora** desta entrega. Decisões: `docs/decisions/NOTIFICATIONS-DECISIONS.md` · contrato eventos: PO-CON-21 (fechado na 3.1).
 
+**Gate 13X.5:** `contract_assignments` tornam-se administráveis (não só platform admin). **Não** entram no roteamento. Destinatários oficiais de `OCCURRENCE_CREATED` continuam `organization_contacts`. Assignment poderá ser fonte futura de responsáveis por contrato em Gate explícito posterior — não neste.
+
 ---
 
 # 1. Objetivo

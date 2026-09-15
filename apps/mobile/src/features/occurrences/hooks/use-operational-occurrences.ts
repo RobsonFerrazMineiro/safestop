@@ -4,43 +4,19 @@ import { OPERATIONAL_OCCURRENCE_LIST_DEFAULT_LIMIT } from "@safestop/types";
 
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
+import { useActiveWorkspace } from "@/features/workspace";
 
 import { listOperationalOccurrences } from "../services/list-operational-occurrences";
 import { OCCURRENCE_LIST_STALE_TIME_MS, occurrenceQueryKeys } from "../types";
+import {
+  buildOperationalOccurrenceListQueryFilters,
+  shouldEnableWorkspaceScopedOccurrenceList,
+} from "../utils/operational-occurrence-list-query";
 
-function listQueryFilters(filters: OccurrenceListFilters): OccurrenceListFilters {
-  const next: OccurrenceListFilters = {
-    pagination: {
-      limit: filters.pagination?.limit ?? OPERATIONAL_OCCURRENCE_LIST_DEFAULT_LIMIT,
-    },
-  };
-
-  if (filters.search !== undefined) {
-    next.search = filters.search;
-  }
-
-  if (filters.status !== undefined) {
-    next.status = filters.status;
-  }
-
-  if (filters.severity !== undefined) {
-    next.severity = filters.severity;
-  }
-
-  if (filters.areaId !== undefined) {
-    next.areaId = filters.areaId;
-  }
-
-  if (filters.contractorOrganizationId !== undefined) {
-    next.contractorOrganizationId = filters.contractorOrganizationId;
-  }
-
-  if (filters.imsReferenceCode !== undefined) {
-    next.imsReferenceCode = filters.imsReferenceCode;
-  }
-
-  return next;
-}
+export {
+  buildOperationalOccurrenceListQueryFilters,
+  shouldEnableWorkspaceScopedOccurrenceList,
+} from "../utils/operational-occurrence-list-query";
 
 export function useOperationalOccurrences(
   filters: OccurrenceListFilters = {},
@@ -48,24 +24,33 @@ export function useOperationalOccurrences(
 ) {
   const { can, isReady: isAuthzReady } = useAuthorization();
   const { activeOrganization, isReady: isOrgReady } = useActiveOrganization();
+  const { activeWorkspace } = useActiveWorkspace();
 
   const organizationId = activeOrganization?.id;
+  const workspaceId = activeWorkspace?.id;
   const canRead = can("occurrence.read");
-  const enabled =
-    (options?.enabled ?? true) &&
-    isOrgReady &&
-    isAuthzReady &&
-    organizationId !== undefined &&
-    canRead;
+  const enabled = shouldEnableWorkspaceScopedOccurrenceList({
+    optionEnabled: options?.enabled ?? true,
+    isOrgReady,
+    isAuthzReady,
+    organizationId,
+    workspaceId,
+    canRead,
+  });
 
-  const queryFilters = listQueryFilters(filters);
+  const queryFilters = buildOperationalOccurrenceListQueryFilters(filters);
   const pageLimit = filters.pagination?.limit ?? OPERATIONAL_OCCURRENCE_LIST_DEFAULT_LIMIT;
 
   const query = useInfiniteQuery({
-    queryKey: occurrenceQueryKeys.list(organizationId ?? "", queryFilters),
+    queryKey: occurrenceQueryKeys.workspaceList(
+      organizationId ?? "",
+      workspaceId ?? "",
+      queryFilters,
+    ),
     queryFn: ({ pageParam }) =>
       listOperationalOccurrences(organizationId!, {
         ...queryFilters,
+        workspaceId: workspaceId!,
         pagination: {
           cursor: pageParam,
           limit: pageLimit,

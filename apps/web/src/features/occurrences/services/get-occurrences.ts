@@ -3,6 +3,7 @@ import type { OccurrenceListFilters } from "@safestop/types";
 import { createClient } from "@/lib/auth/client";
 
 import { mapOccurrenceDetailRow, mapOccurrenceSummaryRows } from "../utils/map-occurrence";
+import { buildOccurrenceDetailLookup } from "../utils/workspace-create-rules";
 
 const LIST_SELECT = `
   id,
@@ -15,9 +16,12 @@ const LIST_SELECT = `
   unit_id,
   contract_id,
   management_department_id,
+  workspace_id,
+  origin_organization_id,
   areas ( name ),
   profiles!occurrences_created_by_fkey ( full_name ),
-  contractor_organizations:organizations!occurrences_contractor_organization_id_fkey ( name )
+  contractor_organizations:organizations!occurrences_contractor_organization_id_fkey ( name ),
+  origin_organizations:organizations!occurrences_origin_organization_id_fkey ( name )
 `;
 
 const DETAIL_SELECT = `
@@ -38,10 +42,13 @@ const DETAIL_SELECT = `
   occurred_at,
   stopped_at,
   organization_id,
+  origin_organization_id,
   area_id,
   unit_id,
   contract_id,
+  management_department_id,
   contractor_organization_id,
+  workspace_id,
   created_by,
   evaluated_at,
   released_at,
@@ -67,7 +74,8 @@ const DETAIL_SELECT = `
   ),
   areas ( name ),
   profiles!occurrences_created_by_fkey ( full_name ),
-  contractor_organizations:organizations!occurrences_contractor_organization_id_fkey ( name )
+  contractor_organizations:organizations!occurrences_contractor_organization_id_fkey ( name ),
+  origin_organizations:organizations!occurrences_origin_organization_id_fkey ( name )
 `;
 
 type ListRow = Parameters<typeof mapOccurrenceSummaryRows>[0][number];
@@ -112,8 +120,13 @@ export async function getOccurrences(organizationId: string, filters: Occurrence
   return mapOccurrenceSummaryRows((data ?? []) as ListRow[]);
 }
 
-export async function getOccurrence(organizationId: string, occurrenceId: string) {
+/**
+ * Detalhe por id. Gate 13X.3: NÃO filtra pela EMPRESA atuante.
+ * `organizationId` permanece na assinatura para query key / callers; RLS autoriza.
+ */
+export async function getOccurrence(_organizationId: string, occurrenceId: string) {
   const supabase = createClient();
+  const lookup = buildOccurrenceDetailLookup(occurrenceId);
 
   const {
     data: { user },
@@ -127,8 +140,7 @@ export async function getOccurrence(organizationId: string, occurrenceId: string
   const { data, error } = await supabase
     .from("occurrences")
     .select(DETAIL_SELECT)
-    .eq("organization_id", organizationId)
-    .eq("id", occurrenceId)
+    .eq("id", lookup.occurrenceId)
     .maybeSingle();
 
   if (error) {

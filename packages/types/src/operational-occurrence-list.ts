@@ -1,10 +1,15 @@
 /**
  * Contratos da lista operacional de Paralisações Preventivas (PR-D1 / PO-UX-10).
- * Fonte da verdade: supabase/migrations/20260825220000_list_operational_occurrences.sql
+ * Fonte da verdade:
+ *   supabase/migrations/20260825220000_list_operational_occurrences.sql
+ *   supabase/migrations/20260913190000_gate13c1_list_operational_occurrences_workspace.sql
  *
  * Não reutilizar OccurrenceReportFilters / REPORT_* / report.read.
  * Helpers de nome (resolve_profile_display_name, resolve_organization_display_name)
  * são resolvidos no SQL — o client só mapeia o jsonb camelCase.
+ *
+ * Gate 13C.1: `p_workspace_id` opcional (DEFAULT NULL). Omitido ≡ NULL (legado).
+ * Consumo Web do parâmetro = Gate 13C.2.
  */
 
 import type { OccurrenceListFilters, OccurrenceSummary } from "./occurrence";
@@ -42,6 +47,8 @@ export type ListOperationalOccurrencesRpcArgs = {
   p_ims_reference_code: string | null;
   p_cursor: OperationalOccurrenceListCursor | null;
   p_limit: number;
+  /** Gate 13C.1 — NULL/omitido = legado Organization-scoped. */
+  p_workspace_id: string | null;
 };
 
 function clampOperationalOccurrenceListLimit(limit: number | undefined): number {
@@ -93,6 +100,7 @@ export function buildListOperationalOccurrencesRpcArgs(
     p_ims_reference_code: trimToNull(filters.imsReferenceCode),
     p_cursor: toCursor(filters.pagination?.cursor),
     p_limit: clampOperationalOccurrenceListLimit(filters.pagination?.limit),
+    p_workspace_id: toOptionalUuid(filters.workspaceId),
   };
 }
 

@@ -1,9 +1,10 @@
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { colors } from "@safestop/ui";
 
 export function AuthorizationLoading() {
   return (
     <View style={styles.container}>
-      <ActivityIndicator color="#F97316" size="large" />
+      <ActivityIndicator color={colors.primary} size="large" />
     </View>
   );
 }

@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { colors } from "@safestop/ui";
 
 import { confirmAction } from "@/lib/confirm-action";
 
@@ -78,7 +79,7 @@ const styles = StyleSheet.create({
   },
   button: {
     alignItems: "center",
-    backgroundColor: "#F97316",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     minHeight: 48,
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: "#0F1115",
+    color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
   },

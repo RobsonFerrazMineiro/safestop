@@ -29,8 +29,8 @@ const variantStyles: Record<ButtonVariant, VariantStyle> = {
   primary: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
-    textColor: colors.background,
-    indicatorColor: colors.background,
+    textColor: "#FFFFFF",
+    indicatorColor: "#FFFFFF",
   },
   secondary: {
     backgroundColor: colors.surfaceElevated,

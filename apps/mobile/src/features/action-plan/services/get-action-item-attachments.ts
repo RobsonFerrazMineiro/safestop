@@ -1,7 +1,10 @@
 import { getSupabaseClient } from "@/lib/auth/client";
 
+import { ACTION_ITEM_ATTACHMENTS_SELECT } from "./action-item-attachments-select";
 import { mapActionItemAttachmentRow } from "./map-action-plan";
 import type { ActionItemAttachmentEnriched } from "../types";
+
+export { ACTION_ITEM_ATTACHMENTS_SELECT } from "./action-item-attachments-select";
 
 export async function getActionItemAttachments(
   itemId: string,
@@ -10,9 +13,7 @@ export async function getActionItemAttachments(
 
   const { data, error } = await supabase
     .from("action_item_attachments")
-    .select(
-      "id, action_item_id, organization_id, storage_bucket, storage_path, upload_status, mime_type, file_size, caption, created_at, created_by",
-    )
+    .select(ACTION_ITEM_ATTACHMENTS_SELECT)
     .eq("action_item_id", itemId)
     .is("deleted_at", null)
     .order("created_at", { ascending: true });

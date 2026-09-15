@@ -1,6 +1,7 @@
 import type { OccurrenceSummary } from "@safestop/types";
 import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors } from "@safestop/ui";
 
 import { occurrenceDetailRoute } from "@/lib/auth/routes";
 
@@ -56,7 +57,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   code: {
-    color: "#F97316",
+    color: colors.primary,
     fontFamily: "monospace",
     fontSize: 13,
     fontWeight: "700",

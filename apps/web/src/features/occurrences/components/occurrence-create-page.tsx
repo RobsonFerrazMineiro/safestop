@@ -83,7 +83,7 @@ export function OccurrenceCreatePage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-2xl flex-col gap-6 px-6 py-10">
       <header className="flex flex-col gap-2">
-        <Link className="text-sm text-orange-400 hover:text-orange-300" href="/stop-work">
+        <Link className="text-sm text-primary hover:text-primary/80" href="/stop-work">
           ← Voltar para ocorrências
         </Link>
         <h1 className="text-3xl font-bold text-gray-100">Nova ocorrência</h1>
@@ -98,7 +98,7 @@ export function OccurrenceCreatePage() {
             Título
           </label>
           <input
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
+            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-primary"
             disabled={isCreating}
             id="title"
             {...register("title", { required: "Título é obrigatório." })}
@@ -111,7 +111,7 @@ export function OccurrenceCreatePage() {
             Área
           </label>
           <select
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
+            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-primary"
             disabled={isCreating || areas.length === 0}
             id="areaId"
             {...register("areaId", { required: "Área é obrigatória." })}
@@ -137,7 +137,7 @@ export function OccurrenceCreatePage() {
             Criticidade
           </label>
           <select
-            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
+            className="rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-primary"
             disabled={isCreating}
             id="severity"
             {...register("severity")}
@@ -155,7 +155,7 @@ export function OccurrenceCreatePage() {
             Atividade
           </label>
           <textarea
-            className="min-h-24 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
+            className="min-h-24 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-primary"
             disabled={isCreating}
             id="taskDescription"
             {...register("taskDescription", { required: "Atividade é obrigatória." })}
@@ -170,7 +170,7 @@ export function OccurrenceCreatePage() {
             Local
           </label>
           <textarea
-            className="min-h-20 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
+            className="min-h-20 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-primary"
             disabled={isCreating}
             id="locationDescription"
             {...register("locationDescription", { required: "Local é obrigatório." })}
@@ -185,7 +185,7 @@ export function OccurrenceCreatePage() {
             Condição insegura
           </label>
           <textarea
-            className="min-h-24 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
+            className="min-h-24 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-primary"
             disabled={isCreating}
             id="conditionDescription"
             {...register("conditionDescription", {
@@ -202,7 +202,7 @@ export function OccurrenceCreatePage() {
             Ação imediata (opcional)
           </label>
           <textarea
-            className="min-h-20 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-orange-500"
+            className="min-h-20 rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-base text-gray-100 outline-none focus:border-primary"
             disabled={isCreating}
             id="immediateActionDescription"
             {...register("immediateActionDescription")}
@@ -216,7 +216,7 @@ export function OccurrenceCreatePage() {
         ) : null}
 
         <button
-          className="rounded-lg bg-orange-500 px-4 py-2 text-base font-semibold text-white transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg bg-primary px-4 py-2 text-base font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           disabled={isCreating || areas.length === 0}
           type="submit"
         >

@@ -43,7 +43,12 @@ export function DashboardScopeFiltersPanel({ filters, onChange }: DashboardScope
       <div className="flex flex-wrap items-center gap-2">
         <DialogTrigger asChild>
           <Button
-            className={active ? "border-primary bg-primary/10 text-primary" : undefined}
+            className={
+              active
+                ? "border-primary bg-primary/10 font-medium text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            }
+            size="sm"
             type="button"
             variant="outline"
           >
@@ -51,7 +56,7 @@ export function DashboardScopeFiltersPanel({ filters, onChange }: DashboardScope
           </Button>
         </DialogTrigger>
         {active ? (
-          <Button type="button" variant="ghost" onClick={clearFilters}>
+          <Button size="sm" type="button" variant="ghost" onClick={clearFilters}>
             Limpar filtros
           </Button>
         ) : null}

@@ -8,6 +8,7 @@ import type { CreateOccurrenceResult } from "./types";
 
 type CreateOccurrenceParams = {
   organizationId: string;
+  workspaceId: string;
   input: CreateOccurrenceInput;
 };
 
@@ -45,9 +46,10 @@ function mapCreateOccurrenceResult(data: RpcCreatedOccurrence): CreateOccurrence
   };
 }
 
-function toRpcPayload(input: CreateOccurrenceInput, organizationId: string) {
+function toRpcPayload(input: CreateOccurrenceInput, organizationId: string, workspaceId: string) {
   return {
     organization_id: organizationId,
+    workspace_id: workspaceId,
     area_id: input.areaId,
     unit_id: input.unitId ?? null,
     contract_id: input.contractId ?? null,
@@ -79,8 +81,12 @@ export async function createOccurrence(
     throw new Error("Não autenticado.");
   }
 
+  if (!params.workspaceId) {
+    throw new Error("Workspace ativo é obrigatório para registrar a ocorrência.");
+  }
+
   const { data, error } = await supabase.rpc("create_occurrence", {
-    payload: toRpcPayload(params.input, params.organizationId),
+    payload: toRpcPayload(params.input, params.organizationId, params.workspaceId),
   });
 
   if (error) {

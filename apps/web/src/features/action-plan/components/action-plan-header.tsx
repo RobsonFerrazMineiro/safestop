@@ -46,12 +46,12 @@ export function ActionPlanHeader({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-gray-100">Plano de Ação</span>
-          <span className="rounded-full border border-gray-600 px-2 py-0.5 text-xs text-gray-300">
+          <span className="text-sm font-semibold text-foreground">Plano de Ação</span>
+          <span className="rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
             {formatActionPlanStatus(plan.status)}
           </span>
         </div>
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-muted-foreground">
           {completed} de {total} concluídas
         </span>
       </div>
@@ -61,11 +61,11 @@ export function ActionPlanHeader({
           aria-valuemax={total}
           aria-valuemin={0}
           aria-valuenow={completed}
-          className="h-2 w-full overflow-hidden rounded-full bg-gray-800"
+          className="h-2 w-full overflow-hidden rounded-full bg-muted"
           role="progressbar"
         >
           <div
-            className="h-full rounded-full bg-orange-500 transition-all"
+            className="h-full rounded-full bg-primary transition-all"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -73,7 +73,7 @@ export function ActionPlanHeader({
 
       {canManage && editable ? (
         <button
-          className="w-full rounded-md border border-gray-600 px-4 py-2 text-sm font-medium text-gray-200 hover:bg-gray-800 disabled:opacity-50 sm:w-auto sm:self-start"
+          className="w-full rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/40 disabled:opacity-50 sm:w-auto sm:self-start"
           disabled={isOffline}
           type="button"
           onClick={onAddAction}
@@ -84,7 +84,7 @@ export function ActionPlanHeader({
 
       {showCompleteCta ? (
         <button
-          className="w-full rounded-md bg-orange-500 px-4 py-3 text-sm font-medium text-white hover:bg-orange-400 disabled:opacity-50 sm:w-auto sm:self-start"
+          className="w-full rounded-md bg-primary px-4 py-3 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 sm:w-auto sm:self-start"
           disabled={isCompleting || isOffline}
           type="button"
           onClick={onCompletePlan}

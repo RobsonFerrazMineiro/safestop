@@ -43,5 +43,10 @@ export const ACTION_PLAN_COPY = {
   cancel: "Cancelar",
   confirm: "Confirmar",
   addEvidence: "Adicionar evidência",
+  evidenceFormats: "JPG, PNG, WebP ou PDF · máx. 10 MiB",
   evidenceLimit: (count: number, max: number) => `${count}/${max} evidências`,
+  evidenceListRefreshError:
+    "A evidência foi enviada, mas não foi possível atualizar a lista de anexos.",
+  openPdf: "Abrir PDF",
+  openEvidence: "Abrir evidência",
 } as const;

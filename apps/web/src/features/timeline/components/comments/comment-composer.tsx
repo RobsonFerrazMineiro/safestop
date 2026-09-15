@@ -80,7 +80,7 @@ export function CommentComposer({
 
       <textarea
         aria-label="Adicionar comentário"
-        className="min-h-24 w-full resize-y rounded-md border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-gray-100 outline-none focus:border-orange-500 disabled:opacity-50"
+        className="min-h-24 w-full resize-y rounded-md border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-gray-100 outline-none focus:border-primary disabled:opacity-50"
         disabled={isDisabled}
         maxLength={OCCURRENCE_COMMENT_MAX_LENGTH}
         placeholder="Adicionar comentário..."
@@ -96,7 +96,7 @@ export function CommentComposer({
           {content.length}/{OCCURRENCE_COMMENT_MAX_LENGTH}
         </span>
         <button
-          className="rounded-md bg-orange-500 px-4 py-2 text-sm font-medium text-gray-950 hover:bg-orange-400 disabled:opacity-50"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           disabled={!canSubmit || isDisabled}
           type="button"
           onClick={() => {

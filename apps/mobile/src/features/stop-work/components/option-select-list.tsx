@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors } from "@safestop/ui";
 
 type OptionSelectItem = {
   id: string;
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   optionSelected: {
-    borderColor: "#F97316",
+    borderColor: colors.primary,
   },
   optionText: {
     color: "#D1D5DB",

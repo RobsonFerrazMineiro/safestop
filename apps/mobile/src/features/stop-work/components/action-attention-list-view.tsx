@@ -1,5 +1,6 @@
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import type { DashboardActionItemAttentionItem } from "@safestop/types";
+import { colors } from "@safestop/ui";
 
 import { ActionAttentionItemCard } from "./action-attention-item-card";
 
@@ -34,9 +35,9 @@ export function ActionAttentionListView({
       refreshControl={
         onRefresh ? (
           <RefreshControl
-            colors={["#F97316"]}
+            colors={[colors.primary]}
             refreshing={isFetching}
-            tintColor="#F97316"
+            tintColor={colors.primary}
             onRefresh={onRefresh}
           />
         ) : undefined

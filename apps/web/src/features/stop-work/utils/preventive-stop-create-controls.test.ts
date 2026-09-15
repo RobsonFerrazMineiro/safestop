@@ -1,34 +1,34 @@
 import { describe, expect, it } from "vitest";
 
-import { hasPreventiveStopDraftContent } from "../stores/preventive-stop-draft-store";
-import { shouldPromptPreventiveStopCreateLeave } from "./preventive-stop-create-leave";
 import {
   EMPTY_ACTIVE_CONTRACTORS_MESSAGE,
   getPreventiveStopCreateControlState,
 } from "./preventive-stop-create-controls";
+import { hasPreventiveStopDraftContent } from "../stores/preventive-stop-draft-store";
+import { shouldPromptPreventiveStopCreateLeave } from "./preventive-stop-create-leave";
 
-describe("getPreventiveStopCreateControlState — empty de contratada", () => {
-  const emptyContractors = getPreventiveStopCreateControlState({
+describe("getPreventiveStopCreateControlState — empty de contrato", () => {
+  const emptyContracts = getPreventiveStopCreateControlState({
     isCreating: false,
     areasCount: 2,
-    contractorsCount: 0,
+    contractsCount: 0,
+    hasActiveWorkspace: true,
+    allowsOwnTeam: false,
   });
 
-  it("mantém a mensagem empty visível quando contratadas = []", () => {
-    expect(emptyContractors.showEmptyContractorsMessage).toBe(true);
-    expect(EMPTY_ACTIVE_CONTRACTORS_MESSAGE).toBe(
-      "Nenhuma contratada com contrato ativo nesta organização.",
-    );
+  it("mantém a mensagem empty visível quando contratos = [] e sem equipe própria", () => {
+    expect(emptyContracts.showEmptyContractorsMessage).toBe(true);
+    expect(EMPTY_ACTIVE_CONTRACTORS_MESSAGE).toBe("Nenhum contrato ativo neste Ambiente.");
   });
 
-  it("desabilita somente Contratada e o submit, não os demais campos", () => {
-    expect(emptyContractors.isContractorDisabled).toBe(true);
-    expect(emptyContractors.isSubmitDisabled).toBe(true);
-    expect(emptyContractors.isAreaDisabled).toBe(false);
-    expect(emptyContractors.areIndependentFieldsDisabled).toBe(false);
+  it("desabilita Contrato e o submit quando contrato é obrigatório", () => {
+    expect(emptyContracts.isContractorDisabled).toBe(true);
+    expect(emptyContracts.isSubmitDisabled).toBe(true);
+    expect(emptyContracts.isAreaDisabled).toBe(false);
+    expect(emptyContracts.areIndependentFieldsDisabled).toBe(false);
   });
 
-  it("permite conteúdo relevante de rascunho sem Contratada", () => {
+  it("permite conteúdo relevante de rascunho sem Contrato", () => {
     const values = { taskDescription: "Teste de rascunho" };
 
     expect(hasPreventiveStopDraftContent(values)).toBe(true);
@@ -41,12 +41,14 @@ describe("getPreventiveStopCreateControlState — empty de contratada", () => {
   });
 });
 
-describe("getPreventiveStopCreateControlState — loading/submit e empty de área", () => {
+describe("getPreventiveStopCreateControlState — equipe própria e loading", () => {
   it("durante isCreating bloqueia controles e submit", () => {
     const state = getPreventiveStopCreateControlState({
       isCreating: true,
       areasCount: 2,
-      contractorsCount: 1,
+      contractsCount: 1,
+      hasActiveWorkspace: true,
+      allowsOwnTeam: false,
     });
 
     expect(state.areIndependentFieldsDisabled).toBe(true);
@@ -55,16 +57,32 @@ describe("getPreventiveStopCreateControlState — loading/submit e empty de áre
     expect(state.isSubmitDisabled).toBe(true);
   });
 
-  it("sem áreas desabilita Área e submit, mas não os campos independentes", () => {
+  it("owner com equipe própria pode submeter sem contratos listados", () => {
     const state = getPreventiveStopCreateControlState({
       isCreating: false,
-      areasCount: 0,
-      contractorsCount: 1,
+      areasCount: 2,
+      contractsCount: 0,
+      hasActiveWorkspace: true,
+      allowsOwnTeam: true,
     });
 
-    expect(state.isAreaDisabled).toBe(true);
-    expect(state.isSubmitDisabled).toBe(true);
-    expect(state.areIndependentFieldsDisabled).toBe(false);
+    expect(state.isSubmitDisabled).toBe(false);
     expect(state.isContractorDisabled).toBe(false);
+    expect(state.showEmptyContractorsMessage).toBe(false);
+  });
+
+  it("sem Ambiente ativo bloqueia submit e campos", () => {
+    const state = getPreventiveStopCreateControlState({
+      isCreating: false,
+      areasCount: 2,
+      contractsCount: 1,
+      hasActiveWorkspace: false,
+      allowsOwnTeam: true,
+    });
+
+    expect(state.isSubmitDisabled).toBe(true);
+    expect(state.areIndependentFieldsDisabled).toBe(true);
+    expect(state.isAreaDisabled).toBe(true);
+    expect(state.isContractorDisabled).toBe(true);
   });
 });

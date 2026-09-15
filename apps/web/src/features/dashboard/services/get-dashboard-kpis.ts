@@ -23,7 +23,7 @@ async function getDashboardKpisClientFallback(
 ): Promise<DashboardKpis> {
   const [personalActions, personalAwareness, operational, occurrenceKpis, flowMetrics, attention] =
     await Promise.all([
-      getMyActionItemsSummary(organizationId, access),
+      getMyActionItemsSummary(organizationId, access, { dueSoonDays: filters.dueSoonDays }),
       getMyAwarenessSummary(organizationId, access),
       getScopedOperationalKpis(organizationId, access),
       getOccurrenceKpis(organizationId, access),
@@ -40,6 +40,7 @@ async function getDashboardKpisClientFallback(
     personal: {
       myPendingActions: personalActions.myPendingActions,
       myOverdueActions: personalActions.myOverdueActions,
+      myDueSoonActions: personalActions.myDueSoonActions,
       myPendingAwareness: personalAwareness.myPendingAwareness,
     },
     operational: operational ?? {

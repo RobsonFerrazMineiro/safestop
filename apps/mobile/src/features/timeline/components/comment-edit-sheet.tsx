@@ -8,6 +8,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { colors } from "@safestop/ui";
 import { OCCURRENCE_COMMENT_MAX_LENGTH } from "@safestop/types";
 
 type CommentEditSheetFormProps = {
@@ -186,7 +187,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     alignItems: "center",
-    backgroundColor: "#F97316",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     minHeight: 44,
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   saveText: {
-    color: "#0F1115",
+    color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
   },

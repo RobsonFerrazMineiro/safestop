@@ -6,19 +6,18 @@ import { useState } from "react";
 import { canManageOrganizationContacts } from "@safestop/types";
 
 import { useAuthorization } from "@/features/authorization";
-import { useAuth } from "@/hooks/use-auth";
 import { useNotificationBadgeCounts } from "@/features/notifications";
-import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatBadgeCount } from "@/features/notifications/utils/format-labels";
+import { cn } from "@/lib/utils";
 
-import { BrandMarkIcon, CloseIcon, LogOutIcon, MenuIcon } from "./nav-icons";
-import { getPrimaryNavItems, type NavItem } from "../utils/get-nav-items";
+import { BrandMarkIcon, CloseIcon, MenuIcon } from "./nav-icons";
+import { getNavSections, type NavItem, type NavSection } from "../utils/get-nav-items";
 
 const HIDDEN_PATH_PREFIXES = ["/organizations", "/login"];
 
-function useSidebarNavItems(): NavItem[] {
+function useSidebarNavSections(): NavSection[] {
   const { can, isPlatformAdmin } = useAuthorization();
 
   const canManageContacts = canManageOrganizationContacts({
@@ -26,7 +25,7 @@ function useSidebarNavItems(): NavItem[] {
     permissions: { organizationManage: can("organization.manage") },
   });
 
-  return getPrimaryNavItems({
+  return getNavSections({
     canApproveMdho: can("mdho.approve") || can("mdho.return"),
     canManageContacts,
     canReadReports: can("report.read"),
@@ -34,68 +33,118 @@ function useSidebarNavItems(): NavItem[] {
   });
 }
 
-type NavListProps = {
-  items: NavItem[];
+type NavItemLinkProps = {
+  item: NavItem;
   pathname: string;
   variant: "icon" | "full";
   unreadCount: number;
   onNavigate?: () => void;
 };
 
-function NavList({ items, pathname, variant, unreadCount, onNavigate }: NavListProps) {
-  return (
-    <ul className="flex flex-col gap-1">
-      {items.map((item) => {
-        const Icon = item.icon;
-        const active = item.isActive(pathname);
-        const showBadge = item.key === "notifications" && unreadCount > 0;
+function NavItemLink({ item, pathname, variant, unreadCount, onNavigate }: NavItemLinkProps) {
+  const Icon = item.icon;
+  const active = item.isActive(pathname);
+  const showBadge = item.key === "notifications" && unreadCount > 0;
 
-        const link = (
-          <Link
-            className={`flex items-center gap-3 rounded-full px-3 py-2.5 text-sm transition ${
-              active
-                ? "bg-[var(--surface-elevated)] text-[var(--foreground)]"
-                : "text-[var(--foreground-muted)] hover:bg-[var(--surface-elevated)]/60 hover:text-[var(--foreground)]"
-            } ${variant === "icon" ? "justify-center" : ""}`}
-            href={item.href}
-            onClick={onNavigate}
-          >
-            <span className="relative shrink-0">
-              <Icon className="h-5 w-5" />
-              {showBadge && variant === "icon" ? (
-                <span
-                  aria-hidden="true"
-                  className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[var(--primary)]"
-                />
-              ) : null}
-            </span>
-            {variant === "full" ? (
-              <span className="flex-1 truncate">{item.label}</span>
-            ) : (
-              <span className="sr-only">{item.label}</span>
-            )}
-            {showBadge && variant === "full" ? (
-              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--primary)] px-1 text-[10px] font-bold text-white">
-                {formatBadgeCount(unreadCount)}
-              </span>
-            ) : null}
-          </Link>
-        );
+  const link = (
+    <Link
+      className={cn(
+        "flex items-center gap-3 rounded-lg text-sm transition-colors duration-150",
+        variant === "icon" ? "justify-center p-2.5" : "px-3 py-2",
+        active
+          ? "bg-[var(--surface-elevated)] font-semibold text-[var(--foreground)]"
+          : "text-[var(--foreground-muted)] hover:bg-[var(--surface-elevated)]/60 hover:text-[var(--foreground)]",
+      )}
+      href={item.href}
+      onClick={onNavigate}
+    >
+      <span className="relative shrink-0">
+        <Icon className="h-5 w-5" />
+        {showBadge && variant === "icon" ? (
+          <span
+            aria-hidden="true"
+            className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[var(--primary)]"
+          />
+        ) : null}
+      </span>
+      {variant === "full" ? (
+        <span className="flex-1 truncate">{item.label}</span>
+      ) : (
+        <span className="sr-only">{item.label}</span>
+      )}
+      {showBadge && variant === "full" ? (
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--primary)] px-1 text-[10px] font-bold text-white">
+          {formatBadgeCount(unreadCount)}
+        </span>
+      ) : null}
+    </Link>
+  );
+
+  if (variant === "icon") {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{link}</TooltipTrigger>
+        <TooltipContent side="right">{item.label}</TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return link;
+}
+
+type NavSectionsListProps = {
+  sections: NavSection[];
+  pathname: string;
+  variant: "icon" | "full";
+  unreadCount: number;
+  onNavigate?: () => void;
+};
+
+function NavSectionsList({
+  sections,
+  pathname,
+  variant,
+  unreadCount,
+  onNavigate,
+}: NavSectionsListProps) {
+  return (
+    <div className={variant === "full" ? "flex flex-col gap-4" : "flex flex-col gap-1"}>
+      {sections.map((section, index) => {
+        if (section.items.length === 0) {
+          return null;
+        }
 
         return (
-          <li key={item.key}>
-            {variant === "icon" ? (
-              <Tooltip>
-                <TooltipTrigger asChild>{link}</TooltipTrigger>
-                <TooltipContent side="right">{item.label}</TooltipContent>
-              </Tooltip>
-            ) : (
-              link
-            )}
-          </li>
+          <div key={section.key} className="flex flex-col">
+            {variant === "icon" && index > 0 ? (
+              <div aria-hidden="true" className="my-2 mx-1 border-t border-[var(--border)]/60" />
+            ) : null}
+
+            {variant === "full" ? (
+              <div className="px-3 pt-2 pb-1.5 first:pt-0">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--foreground-muted)]/60">
+                  {section.label}
+                </span>
+              </div>
+            ) : null}
+
+            <ul className="flex flex-col gap-1">
+              {section.items.map((item) => (
+                <li key={item.key}>
+                  <NavItemLink
+                    item={item}
+                    onNavigate={onNavigate}
+                    pathname={pathname}
+                    unreadCount={unreadCount}
+                    variant={variant}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
         );
       })}
-    </ul>
+    </div>
   );
 }
 
@@ -112,92 +161,10 @@ function BrandBlock({ compact = false }: { compact?: boolean }) {
   );
 }
 
-type ActiveOrganizationBlockProps = {
-  compact?: boolean;
-};
-
-function ActiveOrganizationBlock({ compact = false }: ActiveOrganizationBlockProps) {
-  const { activeOrganization, hasMultipleOrganizations } = useActiveOrganization();
-
-  if (!activeOrganization) {
-    return null;
-  }
-
-  if (compact) {
-    return (
-      <div
-        className="flex h-9 w-9 items-center justify-center self-center rounded-lg bg-[var(--surface-muted)] text-xs font-semibold text-[var(--foreground-muted)]"
-        title={activeOrganization.name}
-      >
-        {activeOrganization.name.slice(0, 2).toUpperCase()}
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col gap-1 rounded-lg bg-[var(--surface-muted)] px-3 py-2.5">
-      <span className="truncate text-sm font-medium text-[var(--foreground)]">
-        {activeOrganization.name}
-      </span>
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-xs text-[var(--foreground-muted)]">
-          {activeOrganization.code ?? "—"}
-        </span>
-        {hasMultipleOrganizations ? (
-          <Link
-            className="shrink-0 text-xs text-[var(--primary)] hover:text-[var(--primary-hover)]"
-            href="/organizations"
-          >
-            Trocar
-          </Link>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-type SignOutButtonProps = {
-  compact?: boolean;
-  onNavigate?: () => void;
-};
-
-function SignOutButton({ compact = false, onNavigate }: SignOutButtonProps) {
-  const { signOut } = useAuth();
-  const [isSigningOut, setIsSigningOut] = useState(false);
-
-  async function handleSignOut() {
-    setIsSigningOut(true);
-
-    try {
-      await signOut();
-      onNavigate?.();
-    } finally {
-      setIsSigningOut(false);
-    }
-  }
-
-  return (
-    <button
-      className={`flex items-center gap-3 rounded-full px-3 py-2.5 text-sm text-[var(--foreground-muted)] transition hover:bg-[var(--surface-elevated)]/60 hover:text-[var(--foreground)] disabled:opacity-50 ${
-        compact ? "justify-center" : ""
-      }`}
-      disabled={isSigningOut}
-      title={compact ? "Sair" : undefined}
-      type="button"
-      onClick={() => {
-        void handleSignOut();
-      }}
-    >
-      <LogOutIcon className="h-5 w-5 shrink-0" />
-      {!compact ? <span>{isSigningOut ? "Saindo…" : "Sair"}</span> : null}
-    </button>
-  );
-}
-
 export function AppSidebar() {
   const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const items = useSidebarNavItems();
+  const sections = useSidebarNavSections();
   const { unreadCount } = useNotificationBadgeCounts();
 
   const hidden = HIDDEN_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -246,19 +213,15 @@ export function AppSidebar() {
               </button>
             </div>
 
-            <ActiveOrganizationBlock />
-
             <nav aria-label="Navegação principal" className="flex-1">
-              <NavList
-                items={items}
+              <NavSectionsList
+                onNavigate={() => setIsDrawerOpen(false)}
                 pathname={pathname}
+                sections={sections}
                 unreadCount={unreadCount}
                 variant="full"
-                onNavigate={() => setIsDrawerOpen(false)}
               />
             </nav>
-
-            <SignOutButton onNavigate={() => setIsDrawerOpen(false)} />
           </aside>
         </div>
       ) : null}
@@ -272,28 +235,24 @@ export function AppSidebar() {
           <BrandBlock />
         </div>
 
-        <div className="lg:hidden">
-          <ActiveOrganizationBlock compact />
-        </div>
-        <div className="hidden lg:block">
-          <ActiveOrganizationBlock />
-        </div>
-
         <nav aria-label="Navegação principal" className="flex-1">
           <div className="lg:hidden">
-            <NavList items={items} pathname={pathname} unreadCount={unreadCount} variant="icon" />
+            <NavSectionsList
+              pathname={pathname}
+              sections={sections}
+              unreadCount={unreadCount}
+              variant="icon"
+            />
           </div>
           <div className="hidden lg:block">
-            <NavList items={items} pathname={pathname} unreadCount={unreadCount} variant="full" />
+            <NavSectionsList
+              pathname={pathname}
+              sections={sections}
+              unreadCount={unreadCount}
+              variant="full"
+            />
           </div>
         </nav>
-
-        <div className="lg:hidden">
-          <SignOutButton compact />
-        </div>
-        <div className="hidden lg:block">
-          <SignOutButton />
-        </div>
       </aside>
     </>
   );

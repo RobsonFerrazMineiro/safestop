@@ -10,17 +10,14 @@ export function buildPreventiveStopTitle(taskDescription: string): string {
   return taskDescription.trim().slice(0, PREVENTIVE_STOP_TITLE_MAX_LENGTH);
 }
 
-const preventiveStopBaseSchema = createOccurrenceSchema
-  .omit({ title: true, contractorOrganizationId: true })
-  .extend({
-    contractorOrganizationId: z.string().uuid("Empresa envolvida é obrigatória."),
-  });
-
 /**
  * Formulário PP — sem campo title visível; título gerado antes do RPC (A-R3).
+ * Gate 13X.3: contractId + contractorOrganizationId opcionais (equipe própria do owner).
  * A-R6: taskDescription e conditionDescription obrigatórios;
  * immediateActionDescription opcional.
  */
+const preventiveStopBaseSchema = createOccurrenceSchema.omit({ title: true });
+
 export const createPreventiveStopSchema = preventiveStopBaseSchema.transform((input) => ({
   ...input,
   title: buildPreventiveStopTitle(input.taskDescription),

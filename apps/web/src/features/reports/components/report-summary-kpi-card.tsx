@@ -23,7 +23,7 @@ function toneClasses(tone: NonNullable<ReportSummaryKpiCardProps["tone"]>): stri
     case "info":
       return "border-status-info-border border-l-status-info-border bg-status-info-bg/40";
     default:
-      return "border-border border-l-border bg-card";
+      return "border-border border-l-border bg-card/60";
   }
 }
 
@@ -52,13 +52,13 @@ export function ReportSummaryKpiCard({
     <div
       aria-label={label}
       className={cn(
-        "flex min-h-[8.5rem] flex-col items-stretch justify-between gap-3 rounded-lg border border-l-4 p-4 text-left",
+        "flex min-h-[8.5rem] flex-col items-stretch justify-between gap-3 rounded-lg border border-l-4 p-3.5 text-left sm:p-4",
         toneClasses(tone),
       )}
       role="group"
     >
       <div className="flex items-start justify-between gap-3">
-        <span className="min-w-0 text-xs font-semibold uppercase tracking-wide text-muted-foreground line-clamp-2">
+        <span className="min-w-0 text-xs font-bold uppercase tracking-widest text-muted-foreground/80 line-clamp-2">
           {label}
         </span>
         {icon ? (
@@ -81,7 +81,7 @@ export function ReportSummaryKpiSkeleton() {
   return (
     <div
       aria-hidden="true"
-      className="min-h-[8.5rem] animate-pulse rounded-lg border border-border bg-card"
+      className="min-h-[8.5rem] animate-pulse rounded-lg border border-border bg-card/60"
     />
   );
 }

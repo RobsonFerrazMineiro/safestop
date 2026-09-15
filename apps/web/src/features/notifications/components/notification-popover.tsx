@@ -124,7 +124,7 @@ export function NotificationPopover({
 
       <div className="border-t border-gray-800 px-4 py-3 text-center">
         <Link
-          className="text-sm font-medium text-orange-400 hover:text-orange-300"
+          className="text-sm font-medium text-primary hover:text-primary/80"
           href="/notifications"
           onClick={onClose}
         >

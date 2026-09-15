@@ -1,4 +1,4 @@
-import { Camera } from "lucide-react-native";
+import { Camera, FileText } from "lucide-react-native";
 import {
   ActivityIndicator,
   Image,
@@ -12,9 +12,11 @@ import { colors, overlay, radius, typography } from "@safestop/ui";
 
 import { EVIDENCE_TILE_SIZE } from "../constants";
 import { getQueueStatusLabel } from "../utils/evidence-labels";
+import { isEvidencePdfMimeType } from "../utils/is-evidence-mime";
 import type { EvidenceUploadQueueItem } from "../types";
 
 const ADD_ICON_SIZE = 20;
+const PDF_ICON_SIZE = 28;
 
 type EvidenceAddTileProps = {
   onPress: () => void;
@@ -58,6 +60,7 @@ export function EvidenceQueueTile({ item, index, onPress, onRetry }: EvidenceQue
   const isFailed = item.status === "failed";
   const isProcessing = !isFailed && item.status !== "queued";
   const statusLabel = getQueueStatusLabel(item.status, item.progress);
+  const isPdf = isEvidencePdfMimeType(item.mimeType);
 
   return (
     <Pressable
@@ -73,7 +76,16 @@ export function EvidenceQueueTile({ item, index, onPress, onRetry }: EvidenceQue
         onPress?.();
       }}
     >
-      <Image source={{ uri: item.previewUri }} style={styles.image} />
+      {isPdf ? (
+        <View style={styles.documentTile}>
+          <FileText accessible={false} color={colors.foregroundMuted} size={PDF_ICON_SIZE} />
+          <Text numberOfLines={1} style={styles.pdfBadge}>
+            PDF
+          </Text>
+        </View>
+      ) : (
+        <Image source={{ uri: item.previewUri }} style={styles.image} />
+      )}
 
       {isProcessing ? (
         <View style={styles.overlay}>
@@ -141,6 +153,31 @@ export function EvidenceSyncedTile({
   );
 }
 
+type EvidenceSyncedPdfTileProps = {
+  index: number;
+  fileName: string;
+  onPress: () => void;
+};
+
+export function EvidenceSyncedPdfTile({ index, fileName, onPress }: EvidenceSyncedPdfTileProps) {
+  return (
+    <Pressable
+      accessibilityLabel={`Evidência ${index + 1}, PDF, ${fileName}`}
+      accessibilityRole="button"
+      style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
+      onPress={onPress}
+    >
+      <View style={styles.documentTile}>
+        <FileText accessible={false} color={colors.foregroundMuted} size={PDF_ICON_SIZE} />
+        <Text style={styles.pdfBadge}>PDF</Text>
+        <Text numberOfLines={2} style={styles.pdfFileName}>
+          {fileName}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   addLabel: {
     color: colors.foregroundMuted,
@@ -157,6 +194,13 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.5,
+  },
+  documentTile: {
+    alignItems: "center",
+    backgroundColor: colors.surfaceMuted,
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 4,
   },
   failedIcon: {
     color: colors.destructive,
@@ -186,6 +230,19 @@ const styles = StyleSheet.create({
     fontSize: typography.caption.fontSize,
     fontWeight: "600",
     marginTop: 4,
+    textAlign: "center",
+  },
+  pdfBadge: {
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+    marginTop: 4,
+  },
+  pdfFileName: {
+    color: colors.foregroundMuted,
+    fontSize: 9,
+    marginTop: 2,
     textAlign: "center",
   },
   placeholder: {

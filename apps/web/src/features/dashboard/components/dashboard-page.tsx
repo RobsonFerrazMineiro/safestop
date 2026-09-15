@@ -15,6 +15,7 @@ import {
 import { LayoutDashboard, PieChart, Plus, TrendingUp, Building2, MapPin } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Can, useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
@@ -234,17 +235,23 @@ export function DashboardPage() {
   }
 
   return (
-    <section className="flex w-full flex-col gap-8 px-6 py-10">
+    <PageShell width="wide" className="gap-8">
       <PageHeader
+        eyebrow="VISÃO OPERACIONAL"
+        title="Dashboard"
+        subtitle={`Visão operacional da organização ativa${
+          activeOrganization ? ` — ${activeOrganization.name}` : ""
+        }`}
+        icon={LayoutDashboard}
         actions={
           <div className="flex w-full flex-col gap-3 sm:w-auto lg:items-end">
             <DashboardPeriodFilter activePreset={periodPreset} onChange={setPeriodPreset} />
-            <div className="flex flex-wrap items-center gap-3 lg:justify-end">
+            <div className="flex flex-wrap items-center gap-2.5 sm:justify-end">
               <Can permission="occurrence.read">
                 <DashboardScopeFiltersPanel filters={scopeFilters} onChange={setScopeFilters} />
               </Can>
               <Can permission="occurrence.create">
-                <Button asChild className="hidden md:inline-flex">
+                <Button asChild size="sm" className="hidden sm:inline-flex">
                   <Link href="/stop-work/new">
                     <Plus />
                     Nova Paralisação
@@ -254,11 +261,6 @@ export function DashboardPage() {
             </div>
           </div>
         }
-        subtitle={`Visão operacional da organização ativa${
-          activeOrganization ? ` — ${activeOrganization.name}` : ""
-        }`}
-        title="Dashboard"
-        icon={LayoutDashboard}
       />
 
       {isKpisError ? (
@@ -343,9 +345,9 @@ export function DashboardPage() {
                 </div>
               ) : null}
 
-              <div className="hidden gap-4 md:grid md:grid-cols-3">
+              <div className="hidden gap-4 md:grid md:grid-cols-1 lg:grid-cols-3">
                 {!isVolumeLoading && !isVolumeError ? (
-                  <div className="min-w-0 md:col-span-2">
+                  <div className="min-w-0 lg:col-span-2">
                     <DashboardMainChart
                       buckets={volumeBuckets}
                       emptyMessage="Nenhuma paralisação neste período"
@@ -356,7 +358,7 @@ export function DashboardPage() {
                 ) : null}
 
                 {distributionEnabled && !isDistributionLoading && !isDistributionError ? (
-                  <div className="min-w-0 md:col-start-3">
+                  <div className="min-w-0 lg:col-start-3">
                     <DashboardStatusDonutChart
                       buckets={statusFamilyBuckets}
                       emptyMessage="Sem dados de distribuição"
@@ -410,6 +412,6 @@ export function DashboardPage() {
           </div>
         </>
       )}
-    </section>
+    </PageShell>
   );
 }

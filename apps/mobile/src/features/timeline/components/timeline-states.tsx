@@ -1,11 +1,12 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { colors as uiColors } from "@safestop/ui";
 
 const colors = {
   surface: "#1F2937",
   border: "#374151",
   foreground: "#F9FAFB",
   foregroundMuted: "#9CA3AF",
-  primary: "#F97316",
+  primary: uiColors.primary,
   destructive: "#F87171",
 };
 

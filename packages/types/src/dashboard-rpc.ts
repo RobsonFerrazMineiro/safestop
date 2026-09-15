@@ -11,6 +11,7 @@ import type {
   DashboardOperationalKpis,
   DashboardPersonalKpis,
 } from "./dashboard-metrics";
+import { DASHBOARD_DUE_SOON_DAYS_DEFAULT } from "./dashboard-formulas";
 
 /** Prazo para remover fallback client-side de agregação (S32-FIN-M01). */
 export const DASHBOARD_CLIENT_FALLBACK_DEADLINE = "2026-09-15";
@@ -44,7 +45,7 @@ export function buildDashboardKpisRpcArgs(
 ): DashboardKpisRpcArgs {
   return {
     p_organization_id: organizationId,
-    p_due_soon_days: filters.dueSoonDays ?? 3,
+    p_due_soon_days: filters.dueSoonDays ?? DASHBOARD_DUE_SOON_DAYS_DEFAULT,
     p_period_start: filters.period?.startAt ?? null,
     p_period_end: filters.period?.endAt ?? null,
   };
@@ -84,6 +85,8 @@ function readPersonal(value: unknown): DashboardPersonalKpis | null {
   return {
     myPendingActions: value.myPendingActions,
     myOverdueActions: value.myOverdueActions,
+    // Compatível com payloads anteriores à migration myDueSoonActions.
+    myDueSoonActions: typeof value.myDueSoonActions === "number" ? value.myDueSoonActions : 0,
     myPendingAwareness: value.myPendingAwareness,
   };
 }

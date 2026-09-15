@@ -28,6 +28,7 @@ import {
 import { useActionItemAttachments } from "../hooks/use-action-item-attachments";
 import { useValidateActionItem } from "../hooks/use-validate-action-item";
 import { getActionItemAttachmentSignedUrl } from "../services/get-action-item-attachment-signed-url";
+import { openEvidenceSignedUrl } from "@/features/evidence/utils/open-evidence-signed-url";
 import type { ActionItemEnriched } from "../types";
 import {
   isActionPlanRpcConflictError,
@@ -158,11 +159,13 @@ export function ActionPlanValidatePanel({
               variant="outline"
               onClick={() => {
                 void getActionItemAttachmentSignedUrl(attachment.id).then((url) => {
-                  window.open(url, "_blank", "noopener,noreferrer");
+                  openEvidenceSignedUrl(url);
                 });
               }}
             >
-              Ver evidência
+              {attachment.mimeType === "application/pdf"
+                ? `Abrir PDF · ${attachment.originalFileName}`
+                : `Ver evidência · ${attachment.originalFileName}`}
             </Button>
           ))}
         </div>

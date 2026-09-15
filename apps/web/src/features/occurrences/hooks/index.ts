@@ -7,5 +7,7 @@ export {
   useOccurrences,
   useOccurrenceStatusHistory,
   useOrganizationAreas,
+  useWorkspaceAreas,
+  useWorkspaceContracts,
 } from "./use-occurrences";
 export { useInvalidateOccurrenceDecisionCaches } from "./use-invalidate-occurrence-decision-caches";

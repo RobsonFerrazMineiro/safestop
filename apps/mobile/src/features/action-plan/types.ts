@@ -17,7 +17,10 @@ export type ActionItemEnriched = ActionItem & {
   responsibleMemberName: string | null;
 };
 
-export type ActionItemAttachmentEnriched = ActionItemAttachment;
+export type ActionItemAttachmentEnriched = ActionItemAttachment & {
+  /** Nome original persistido no banco (coluna ainda não espelhada no tipo shared). */
+  originalFileName: string;
+};
 
 export type OrganizationMemberOption = {
   id: string;

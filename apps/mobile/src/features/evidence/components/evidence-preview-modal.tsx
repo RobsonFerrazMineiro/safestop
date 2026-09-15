@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { FileText } from "lucide-react-native";
 import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, spacing, typography } from "@safestop/ui";
@@ -8,6 +10,8 @@ import { useAuthorization } from "@/features/authorization/hooks/use-authorizati
 import { useEvidenceSignedUrl } from "../hooks/use-evidence-signed-url";
 import type { EvidenceListItem } from "../types";
 import { formatEvidenceDate, getAttachmentTypeLabel } from "../utils/evidence-labels";
+import { isEvidencePdfMimeType } from "../utils/is-evidence-mime";
+import { openEvidenceSignedUrl } from "../utils/open-evidence-signed-url";
 
 type EvidencePreviewModalProps = {
   occurrenceId: string;
@@ -28,6 +32,7 @@ export function EvidencePreviewModal({
 }: EvidencePreviewModalProps) {
   const { can } = useAuthorization();
   const canDelete = can("occurrence.create");
+  const [openError, setOpenError] = useState<string | null>(null);
   const { signedUrl, isLoading, isError, refetch } = useEvidenceSignedUrl(
     occurrenceId,
     visible ? evidence?.id : null,
@@ -35,6 +40,22 @@ export function EvidencePreviewModal({
 
   if (!evidence) {
     return null;
+  }
+
+  const isPdf = isEvidencePdfMimeType(evidence.mimeType);
+
+  async function handleOpenPdf() {
+    if (!signedUrl) {
+      return;
+    }
+
+    setOpenError(null);
+
+    try {
+      await openEvidenceSignedUrl(signedUrl);
+    } catch (error) {
+      setOpenError(error instanceof Error ? error.message : "Não foi possível abrir o PDF.");
+    }
   }
 
   return (
@@ -55,7 +76,11 @@ export function EvidencePreviewModal({
             <ActivityIndicator color={colors.primary} size="large" />
           ) : isError || !signedUrl ? (
             <View style={styles.errorBox}>
-              <Text style={styles.errorText}>Não foi possível carregar a imagem.</Text>
+              <Text style={styles.errorText}>
+                {isPdf
+                  ? "Não foi possível carregar o documento."
+                  : "Não foi possível carregar a imagem."}
+              </Text>
               <Button
                 accessibilityLabel="Tentar novamente"
                 variant="ghost"
@@ -65,6 +90,16 @@ export function EvidencePreviewModal({
               >
                 Tentar novamente
               </Button>
+            </View>
+          ) : isPdf ? (
+            <View style={styles.pdfBox}>
+              <FileText accessible={false} color={colors.foregroundMuted} size={48} />
+              <Text style={styles.pdfBadge}>PDF</Text>
+              <Text style={styles.pdfName}>{evidence.originalFileName}</Text>
+              <Button accessibilityLabel="Abrir PDF" onPress={() => void handleOpenPdf()}>
+                Abrir PDF
+              </Button>
+              {openError ? <Text style={styles.errorText}>{openError}</Text> : null}
             </View>
           ) : (
             <Image
@@ -77,7 +112,9 @@ export function EvidencePreviewModal({
         </View>
 
         <View style={styles.meta}>
-          <Text style={styles.typeLabel}>{getAttachmentTypeLabel("INITIAL_EVIDENCE")}</Text>
+          <Text style={styles.typeLabel}>
+            {isPdf ? "Evidência PDF" : getAttachmentTypeLabel("INITIAL_EVIDENCE")}
+          </Text>
           <Text style={styles.fileName}>{evidence.originalFileName}</Text>
           <Text style={styles.metaLine}>
             {evidence.uploadedByName ? `Por ${evidence.uploadedByName} · ` : ""}
@@ -164,6 +201,24 @@ const styles = StyleSheet.create({
     color: colors.foregroundMuted,
     fontSize: typography.caption.fontSize,
     marginTop: spacing[1],
+  },
+  pdfBadge: {
+    color: colors.foregroundMuted,
+    fontSize: typography.caption.fontSize,
+    fontWeight: "700",
+    letterSpacing: 1,
+    marginTop: spacing[2],
+  },
+  pdfBox: {
+    alignItems: "center",
+    gap: spacing[3],
+    padding: spacing[4],
+  },
+  pdfName: {
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
+    fontWeight: "600",
+    textAlign: "center",
   },
   typeLabel: {
     color: colors.foregroundMuted,

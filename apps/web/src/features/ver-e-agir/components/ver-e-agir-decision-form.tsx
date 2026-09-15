@@ -117,7 +117,7 @@ export function VerEAgirDecisionForm({
     <div className="flex flex-col gap-3">
       <label className="flex flex-col gap-2" htmlFor="ver-e-agir-decision-reason">
         <span className="text-sm font-medium text-gray-200">
-          Justificativa <span className="text-orange-400">*</span>
+          Justificativa <span className="text-destructive">*</span>
         </span>
         <Textarea
           className="min-h-32"

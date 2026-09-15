@@ -19,12 +19,20 @@ export type NavItem = {
   isActive: (pathname: string) => boolean;
 };
 
+export type NavSectionKey = "operation" | "management" | "system";
+
+export type NavSection = {
+  key: NavSectionKey;
+  label: string;
+  items: NavItem[];
+};
+
 /** Lista e detalhe de ocorrência — não inclui `/stop-work/new`. */
 export function isStopWorkListNavActive(pathname: string): boolean {
   return pathname.startsWith("/stop-work") && pathname !== "/stop-work/new";
 }
 
-type NavItemsParams = {
+export type NavItemsParams = {
   canApproveMdho: boolean;
   canManageContacts: boolean;
   canReadReports: boolean;
@@ -32,19 +40,18 @@ type NavItemsParams = {
 };
 
 /**
- * RBAC de cada item replica exatamente `app-top-bar.tsx` (linhas ~41-71) —
- * Dashboard, Paralisações, Notificações e Perfil sempre visíveis; demais
- * itens condicionados às mesmas permissões já usadas hoje. "Nova Paralisação"
- * é o único item novo, com RBAC própria (occurrence.create), conforme
- * UX-CONVERGENCE-UI-SPEC.md Seção C.
+ * Resolve as seções semânticas de navegação (Operação, Gestão, Sistema).
+ * - Operação e Sistema são sempre exibidas.
+ * - Gestão é estritamente condicional ao RBAC: se nenhuma permissão estiver ativa,
+ *   a seção inteira é omitida.
  */
-export function getPrimaryNavItems({
+export function getNavSections({
   canApproveMdho,
   canManageContacts,
   canReadReports,
   canCreateOccurrence,
-}: NavItemsParams): NavItem[] {
-  const items: NavItem[] = [
+}: NavItemsParams): NavSection[] {
+  const operationItems: NavItem[] = [
     {
       key: "dashboard",
       label: "Dashboard",
@@ -62,7 +69,7 @@ export function getPrimaryNavItems({
   ];
 
   if (canCreateOccurrence) {
-    items.push({
+    operationItems.push({
       key: "stop-work-new",
       label: "Nova Paralisação",
       href: "/stop-work/new",
@@ -71,8 +78,10 @@ export function getPrimaryNavItems({
     });
   }
 
+  const managementItems: NavItem[] = [];
+
   if (canApproveMdho) {
-    items.push({
+    managementItems.push({
       key: "mdho-approvals",
       label: "Aprovações MDHO",
       href: "/approvals/mdho",
@@ -82,7 +91,7 @@ export function getPrimaryNavItems({
   }
 
   if (canManageContacts) {
-    items.push({
+    managementItems.push({
       key: "organization-contacts",
       label: "Responsáveis",
       href: "/organization-contacts",
@@ -92,7 +101,7 @@ export function getPrimaryNavItems({
   }
 
   if (canReadReports) {
-    items.push({
+    managementItems.push({
       key: "reports",
       label: "Relatórios",
       href: "/reports",
@@ -101,21 +110,52 @@ export function getPrimaryNavItems({
     });
   }
 
-  items.push({
-    key: "notifications",
-    label: "Notificações",
-    href: "/notifications",
-    icon: BellIconOutline,
-    isActive: (pathname) => pathname === "/notifications",
+  const systemItems: NavItem[] = [
+    {
+      key: "notifications",
+      label: "Notificações",
+      href: "/notifications",
+      icon: BellIconOutline,
+      isActive: (pathname) => pathname === "/notifications",
+    },
+    {
+      key: "profile",
+      label: "Perfil",
+      href: "/profile",
+      icon: ProfileIcon,
+      isActive: (pathname) => pathname === "/profile",
+    },
+  ];
+
+  const sections: NavSection[] = [
+    {
+      key: "operation",
+      label: "Operação",
+      items: operationItems,
+    },
+  ];
+
+  if (managementItems.length > 0) {
+    sections.push({
+      key: "management",
+      label: "Gestão",
+      items: managementItems,
+    });
+  }
+
+  sections.push({
+    key: "system",
+    label: "Sistema",
+    items: systemItems,
   });
 
-  items.push({
-    key: "profile",
-    label: "Perfil",
-    href: "/profile",
-    icon: ProfileIcon,
-    isActive: (pathname) => pathname === "/profile",
-  });
+  return sections;
+}
 
-  return items;
+/**
+ * Retorna todos os itens de navegação autorizados concatenados.
+ * Preserva compatibilidade e ordem semântica.
+ */
+export function getPrimaryNavItems(params: NavItemsParams): NavItem[] {
+  return getNavSections(params).flatMap((section) => section.items);
 }

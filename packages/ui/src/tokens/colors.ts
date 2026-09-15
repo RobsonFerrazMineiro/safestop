@@ -1,6 +1,6 @@
 /**
  * Paleta de cores — Seção O, UX-CONVERGENCE-UI-SPEC.md
- * Identidade: dark industrial, primary laranja #F97316.
+ * Identidade: dark industrial, primary vermelho #D32F2F.
  */
 
 export const colors = {
@@ -11,9 +11,9 @@ export const colors = {
   border: "#2E3440",
   foreground: "#F3F4F6",
   foregroundMuted: "#9CA3AF",
-  primary: "#F97316",
-  primaryHover: "#EA580C",
-  primaryActive: "#C2410C",
+  primary: "#D32F2F",
+  primaryHover: "#B71C1C",
+  primaryActive: "#9A0007",
   destructive: "#DC2626",
   success: "#16A34A",
   warning: "#FACC15",

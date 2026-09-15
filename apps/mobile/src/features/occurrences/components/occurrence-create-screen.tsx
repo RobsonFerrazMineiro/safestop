@@ -16,6 +16,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors } from "@safestop/ui";
 
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { authRoutes, occurrenceDetailRoute } from "@/lib/auth/routes";
@@ -430,7 +431,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   areaOptionSelected: {
-    borderColor: "#F97316",
+    borderColor: colors.primary,
   },
   areaOptionText: {
     color: "#D1D5DB",
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   backLink: {
-    color: "#F97316",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -507,8 +508,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   severityChipSelected: {
-    backgroundColor: "#F97316",
-    borderColor: "#F97316",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   severityChipText: {
     color: "#D1D5DB",
@@ -516,7 +517,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   severityChipTextSelected: {
-    color: "#0F1115",
+    color: "#FFFFFF",
   },
   severityRow: {
     flexDirection: "row",
@@ -525,7 +526,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     alignItems: "center",
-    backgroundColor: "#F97316",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     marginTop: 8,
@@ -535,7 +536,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   submitButtonText: {
-    color: "#0F1115",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
   },

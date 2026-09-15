@@ -1,5 +1,4 @@
-export const EMPTY_ACTIVE_CONTRACTORS_MESSAGE =
-  "Nenhuma contratada com contrato ativo nesta organização.";
+export const EMPTY_ACTIVE_CONTRACTORS_MESSAGE = "Nenhum contrato ativo neste Ambiente.";
 
 export type PreventiveStopCreateControlState = {
   isAreaDisabled: boolean;
@@ -10,22 +9,30 @@ export type PreventiveStopCreateControlState = {
 };
 
 /**
- * Empty de contratada não bloqueia o restante do formulário.
+ * Empty de contrato não bloqueia o restante do formulário quando equipe própria é permitida.
  * Loading/submit (`isCreating`) continua desabilitando os controles.
  */
 export function getPreventiveStopCreateControlState(input: {
   isCreating: boolean;
   areasCount: number;
-  contractorsCount: number;
+  contractsCount: number;
+  hasActiveWorkspace: boolean;
+  allowsOwnTeam: boolean;
 }): PreventiveStopCreateControlState {
   const hasAreas = input.areasCount > 0;
-  const hasContractors = input.contractorsCount > 0;
+  const hasWorkspace = input.hasActiveWorkspace;
+  const hasContractOptions = input.contractsCount > 0 || input.allowsOwnTeam;
+  const contractRequired = !input.allowsOwnTeam;
 
   return {
-    isAreaDisabled: input.isCreating || !hasAreas,
-    isContractorDisabled: input.isCreating || !hasContractors,
-    areIndependentFieldsDisabled: input.isCreating,
-    isSubmitDisabled: input.isCreating || !hasAreas || !hasContractors,
-    showEmptyContractorsMessage: !hasContractors,
+    isAreaDisabled: input.isCreating || !hasAreas || !hasWorkspace,
+    isContractorDisabled: input.isCreating || !hasWorkspace || !hasContractOptions,
+    areIndependentFieldsDisabled: input.isCreating || !hasWorkspace,
+    isSubmitDisabled:
+      input.isCreating ||
+      !hasAreas ||
+      !hasWorkspace ||
+      (contractRequired && input.contractsCount === 0),
+    showEmptyContractorsMessage: input.contractsCount === 0 && !input.allowsOwnTeam,
   };
 }

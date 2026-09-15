@@ -20,7 +20,7 @@ export function TimelineItemStatus({ item }: TimelineItemStatusProps) {
   const title = getTimelineItemTitle(item);
   const isCreate = item.kind === "OCCURRENCE_CREATED";
   const railClass =
-    isCreate || item.kind === "STATUS_CHANGED" ? "border-orange-500" : "border-gray-600";
+    isCreate || item.kind === "STATUS_CHANGED" ? "border-primary" : "border-gray-600";
 
   return (
     <li className={`flex gap-3 border-l-2 ${railClass} pl-4`}>

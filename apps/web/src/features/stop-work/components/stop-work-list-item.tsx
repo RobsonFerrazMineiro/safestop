@@ -18,12 +18,14 @@ function formatDate(value: string): string {
 export function StopWorkListItem({ item }: StopWorkListItemProps) {
   return (
     <Link
-      className="grid gap-2 rounded-lg border border-border bg-card px-4 py-4 transition hover:border-primary/50 sm:grid-cols-[minmax(0,1fr)_auto]"
+      className="grid gap-2 rounded-lg border border-border bg-card/60 px-4 py-4 transition-colors hover:border-primary/50 hover:bg-accent/40 sm:grid-cols-[minmax(0,1fr)_auto]"
       href={`/stop-work/${item.id}`}
     >
       <div className="flex min-w-0 flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-mono text-xs text-primary">{item.publicCode}</span>
+          <span className="font-mono text-xs font-bold tracking-wide text-primary">
+            {item.publicCode}
+          </span>
           <StatusBadge status={item.status} />
           <StatusBadge severity={item.severity} />
         </div>
@@ -43,13 +45,13 @@ export function StopWorkListItem({ item }: StopWorkListItemProps) {
 
 export function StopWorkEmpty() {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card px-6 py-10 text-center">
+    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-card/60 px-6 py-10 text-center">
       <SurfaceIcon className="text-muted-foreground" icon={OctagonAlert} variant="empty" />
       <p className="text-base text-foreground">Nenhuma Paralisação Preventiva encontrada.</p>
       <Can permission="occurrence.create">
-        <Button asChild>
+        <Button asChild size="sm">
           <Link href="/stop-work/new">
-            <Plus />
+            <Plus className="size-4" />
             Nova Paralisação
           </Link>
         </Button>

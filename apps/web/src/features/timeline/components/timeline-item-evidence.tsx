@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { FileText } from "lucide-react";
 import type { OccurrenceTimelineItem } from "@safestop/types";
 
 import type { EvidenceListItem } from "@/features/evidence";
 import { EvidencePreviewModal } from "@/features/evidence";
+import { SurfaceIcon } from "@/components/surface-icon";
 
 import { getMetadataString, getTimelineItemTitle } from "../services/map-timeline-item";
 
@@ -48,11 +50,24 @@ function mapToPreviewEvidence(
   };
 }
 
+function EvidenceKindIcon({ mimeType }: { mimeType: string | null }) {
+  if (mimeType === "application/pdf") {
+    return <SurfaceIcon className="text-primary" icon={FileText} variant="action" />;
+  }
+
+  return (
+    <span aria-hidden="true" className="text-base">
+      📷
+    </span>
+  );
+}
+
 export function TimelineItemEvidence({ item, occurrenceId }: TimelineItemEvidenceProps) {
   const [previewEvidence, setPreviewEvidence] = useState<EvidenceListItem | null>(null);
   const isRemoved = item.kind === "EVIDENCE_REMOVED";
   const title = getTimelineItemTitle(item);
   const attachmentId = getMetadataString(item.metadata, "attachmentId");
+  const mimeType = getMetadataString(item.metadata, "mimeType");
   const canPreview = item.kind === "EVIDENCE_ADDED" && attachmentId !== null;
 
   return (
@@ -71,17 +86,18 @@ export function TimelineItemEvidence({ item, occurrenceId }: TimelineItemEvidenc
               }
             >
               <div className="flex items-center gap-2">
-                <span aria-hidden="true" className="text-base">
-                  📷
-                </span>
+                <EvidenceKindIcon mimeType={mimeType} />
                 <span className="text-sm font-medium text-gray-100">{title}</span>
+                {mimeType === "application/pdf" ? (
+                  <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    PDF
+                  </span>
+                ) : null}
               </div>
             </button>
           ) : (
             <div className="flex items-center gap-2">
-              <span aria-hidden="true" className="text-base">
-                📷
-              </span>
+              <EvidenceKindIcon mimeType={mimeType} />
               <span
                 className={`text-sm font-medium text-gray-400 ${isRemoved ? "line-through" : ""}`}
               >

@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { colors } from "@safestop/ui";
 
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { authRoutes } from "@/lib/auth/routes";
@@ -100,6 +101,11 @@ export function OccurrenceDetailsScreen({ occurrenceId }: OccurrenceDetailsScree
         ) : null}
 
         <DetailField label="Área" value={occurrence.areaName ?? "—"} />
+        <DetailField label="Originadora" value={occurrence.originOrganizationName ?? "—"} />
+        <DetailField
+          label="Contratada"
+          value={occurrence.contractorOrganizationName ?? "Equipe própria"}
+        />
         <DetailField label="Registrado em" value={formatOccurrenceDate(occurrence.createdAt)} />
         <DetailField label="Ocorrido em" value={formatOccurrenceDate(occurrence.occurredAt)} />
 
@@ -124,7 +130,7 @@ export function OccurrenceDetailsScreen({ occurrenceId }: OccurrenceDetailsScree
 
 const styles = StyleSheet.create({
   backLink: {
-    color: "#F97316",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -132,7 +138,7 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   code: {
-    color: "#F97316",
+    color: colors.primary,
     fontFamily: "monospace",
     fontSize: 14,
     fontWeight: "700",

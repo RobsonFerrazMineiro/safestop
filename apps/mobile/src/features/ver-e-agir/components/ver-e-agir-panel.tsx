@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { colors } from "@safestop/ui";
 import {
   OCCURRENCE_DECISION_REASON_MAX_LENGTH,
   OCCURRENCE_DECISION_REASON_MIN_LENGTH,
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
   draftLink: {
-    color: "#F97316",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     alignItems: "center",
-    backgroundColor: "#F97316",
+    backgroundColor: colors.primary,
     borderRadius: 8,
     justifyContent: "center",
     minHeight: 48,
@@ -245,7 +246,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   submitText: {
-    color: "#0F1115",
+    color: "#FFFFFF",
     fontSize: 15,
     fontWeight: "700",
   },

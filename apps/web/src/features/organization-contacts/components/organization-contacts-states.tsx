@@ -3,13 +3,17 @@
 import { Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/page-shell";
 import { SurfaceIcon } from "@/components/surface-icon";
 
 export function OrganizationContactsLoadingSkeleton() {
   return (
     <div className="flex flex-col gap-2" role="status">
       {Array.from({ length: 4 }).map((_, index) => (
-        <div key={index} className="h-12 animate-pulse rounded-lg border border-border bg-card" />
+        <div
+          key={index}
+          className="h-12 animate-pulse rounded-lg border border-border bg-card/60"
+        />
       ))}
     </div>
   );
@@ -43,11 +47,13 @@ export function OrganizationContactsErrorState({ onRetry }: OrganizationContacts
 
 export function OrganizationContactsForbiddenState() {
   return (
-    <main className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6 text-center">
-      <h1 className="text-2xl font-semibold text-foreground">Acesso negado</h1>
-      <p className="max-w-md text-base text-muted-foreground">
-        Você não possui permissão para gerenciar responsáveis nesta organização.
-      </p>
-    </main>
+    <PageShell className="gap-6" width="wide">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+        <h1 className="text-2xl font-semibold text-foreground">Acesso negado</h1>
+        <p className="max-w-md text-base text-muted-foreground">
+          Você não possui permissão para gerenciar responsáveis nesta organização.
+        </p>
+      </div>
+    </PageShell>
   );
 }

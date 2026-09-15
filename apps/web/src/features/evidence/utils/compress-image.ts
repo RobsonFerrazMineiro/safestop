@@ -1,8 +1,9 @@
 import {
   OCCURRENCE_ATTACHMENT_MAX_FILE_SIZE_BYTES,
-  OCCURRENCE_ATTACHMENT_MIME_TYPES,
   type OccurrenceAttachmentMimeType,
 } from "@safestop/types";
+
+import { EVIDENCE_IMAGE_MIME_TYPES } from "./is-evidence-mime";
 
 const MAX_IMAGE_DIMENSION_PX = 1920;
 const JPEG_QUALITY = 0.85;
@@ -82,9 +83,10 @@ function canvasToBlob(
 
 /**
  * Remove EXIF e reduz dimensão/tamanho antes do upload (engineering.md §32.4).
+ * Somente imagens — PDF deve usar `prepareEvidenceFileForUpload`.
  */
 export async function compressImageForUpload(file: File): Promise<CompressedImage> {
-  if (!(OCCURRENCE_ATTACHMENT_MIME_TYPES as readonly string[]).includes(file.type)) {
+  if (!(EVIDENCE_IMAGE_MIME_TYPES as readonly string[]).includes(file.type)) {
     throw new Error("Formato de imagem não suportado.");
   }
 

@@ -14,7 +14,7 @@ export function OccurrenceListItem({ occurrence }: OccurrenceListItemProps) {
       href={`/stop-work/${occurrence.id}`}
     >
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <span className="font-mono text-xs text-orange-400">{occurrence.publicCode}</span>
+        <span className="font-mono text-xs text-primary">{occurrence.publicCode}</span>
         <span className="text-xs uppercase tracking-wide text-gray-500">
           {formatOccurrenceSeverity(occurrence.severity)}
         </span>

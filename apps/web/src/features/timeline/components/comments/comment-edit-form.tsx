@@ -25,7 +25,7 @@ export function CommentEditForm({
   return (
     <div className="mt-2 flex flex-col gap-2 rounded-md border border-gray-700 bg-gray-950/60 p-3">
       <textarea
-        className="min-h-20 w-full resize-y rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 outline-none focus:border-orange-500"
+        className="min-h-20 w-full resize-y rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 outline-none focus:border-primary"
         maxLength={OCCURRENCE_COMMENT_MAX_LENGTH}
         value={content}
         onChange={(event) => setContent(event.target.value)}
@@ -44,7 +44,7 @@ export function CommentEditForm({
             Cancelar
           </button>
           <button
-            className="rounded-md bg-orange-500 px-3 py-1.5 text-xs font-medium text-gray-950 hover:bg-orange-400 disabled:opacity-50"
+            className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             disabled={!canSave || isSaving}
             type="button"
             onClick={() => onSave(trimmed)}

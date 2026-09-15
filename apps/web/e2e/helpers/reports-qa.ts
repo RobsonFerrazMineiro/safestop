@@ -64,7 +64,7 @@ export function loadSupabaseEnv(): SupabaseEnv {
     process.env.NEXT_PUBLIC_SUPABASE_URL ??
     process.env.SUPABASE_URL ??
     envLocal.NEXT_PUBLIC_SUPABASE_URL ??
-    "http://127.0.0.1:54321";
+    "http://127.0.0.1:55421";
 
   const anonKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??

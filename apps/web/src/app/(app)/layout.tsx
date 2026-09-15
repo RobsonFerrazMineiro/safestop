@@ -1,5 +1,5 @@
 import { AuthorizationAppGate } from "@/features/authorization/components/authorization-app-gate";
-import { AppSidebar } from "@/features/navigation";
+import { AppSidebar, AppTopbar } from "@/features/navigation";
 import { OfflineIndicator } from "@/components/offline-indicator";
 import { OrganizationAppGate } from "@/features/organization/components/organization-app-gate";
 import type { ReactNode } from "react";
@@ -14,7 +14,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <AuthorizationAppGate>
         <div className="flex min-h-screen flex-col md:flex-row">
           <AppSidebar />
-          <div className="min-h-screen flex-1">
+          <div className="min-h-screen min-w-0 flex-1">
+            <AppTopbar />
             <OfflineIndicator />
             {children}
           </div>

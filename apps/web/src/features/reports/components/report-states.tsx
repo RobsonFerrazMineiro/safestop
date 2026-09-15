@@ -2,6 +2,7 @@
 
 import { Inbox, Search } from "lucide-react";
 
+import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { SurfaceIcon } from "@/components/surface-icon";
 
@@ -14,14 +15,17 @@ export function ReportPageSkeleton() {
         {Array.from({ length: 3 }).map((_, index) => (
           <div
             key={index}
-            className="min-h-[7rem] animate-pulse rounded-lg border border-border bg-card"
+            className="min-h-[7rem] animate-pulse rounded-lg border border-border bg-card/60"
           />
         ))}
       </div>
-      <div className="h-12 animate-pulse rounded-lg border border-border bg-card" />
+      <div className="h-12 animate-pulse rounded-lg border border-border bg-card/60" />
       <div className="flex flex-col gap-2">
         {Array.from({ length: 5 }).map((_, index) => (
-          <div key={index} className="h-12 animate-pulse rounded-lg border border-border bg-card" />
+          <div
+            key={index}
+            className="h-12 animate-pulse rounded-lg border border-border bg-card/60"
+          />
         ))}
       </div>
     </div>
@@ -57,7 +61,7 @@ type ReportEmptyStateProps = {
 export function ReportEmptyState({ variant, onClearFilters }: ReportEmptyStateProps) {
   return (
     <div
-      className="rounded-lg border border-dashed border-border px-6 py-10 text-center"
+      className="rounded-lg border border-border bg-card/60 px-6 py-10 text-center"
       data-testid={variant === "no-results" ? "report-no-results" : "report-empty"}
       role="status"
     >
@@ -80,13 +84,12 @@ export function ReportEmptyState({ variant, onClearFilters }: ReportEmptyStatePr
 
 export function ReportForbiddenState() {
   return (
-    <main
-      className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-6 text-center"
-      data-testid="report-forbidden"
-    >
-      <h1 className="text-2xl font-semibold text-foreground">Acesso negado</h1>
-      <p className="max-w-md text-base text-muted-foreground">{REPORT_COPY.forbidden}</p>
-    </main>
+    <PageShell data-testid="report-forbidden" width="wide">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 text-center">
+        <h1 className="text-2xl font-semibold text-foreground">Acesso negado</h1>
+        <p className="max-w-md text-base text-muted-foreground">{REPORT_COPY.forbidden}</p>
+      </div>
+    </PageShell>
   );
 }
 

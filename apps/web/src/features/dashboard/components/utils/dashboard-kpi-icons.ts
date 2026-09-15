@@ -38,6 +38,7 @@ export function iconForMetric(key: DashboardMetricKey): ComponentType<{ classNam
     case "mdhoPendingApproval":
       return ClipboardCheck;
     case "dueSoonActionItems":
+    case "myDueSoonActions":
       return Clock;
     case "openActionPlans":
       return ListChecks;

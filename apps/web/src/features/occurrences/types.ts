@@ -40,6 +40,9 @@ export type OccurrenceSummaryEnriched = {
   unitId: string | null;
   contractId: string | null;
   managementDepartmentId: string | null;
+  workspaceId: string | null;
+  originOrganizationId: string | null;
+  originOrganizationName: string | null;
   createdAt: string;
   createdByName: string | null;
   contractorOrganizationName: string | null;
@@ -51,6 +54,15 @@ export type OccurrenceDetailsEnriched = OccurrenceSummaryEnriched &
 export type ContractorOrganizationOption = {
   id: string;
   name: string;
+};
+
+/** Contrato ativo do Ambiente (picker do create — Gate 13X.3). */
+export type WorkspaceContractOption = {
+  id: string;
+  name: string;
+  contractNumber: string | null;
+  contractorOrganizationId: string;
+  contractorOrganizationName: string;
 };
 
 export type OccurrenceStatusHistoryItem = {

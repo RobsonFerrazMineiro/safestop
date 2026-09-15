@@ -6,7 +6,7 @@ import { failOccurrenceAttachmentUpload } from "./fail-attachment-upload";
 import { prepareOccurrenceAttachmentUpload } from "./prepare-attachment-upload";
 import { uploadToStorageWithProgress } from "./upload-to-storage";
 import type { EvidenceUploadPhase } from "../types";
-import { compressImageForUpload } from "../utils/compress-image";
+import { prepareEvidenceFileForUpload } from "../utils/prepare-evidence-file";
 
 export type UploadEvidenceFileInput = {
   occurrenceId: string;
@@ -17,6 +17,11 @@ export type UploadEvidenceFileInput = {
   onProgress?: (percent: number) => void;
 };
 
+/**
+ * Upload de evidência de ocorrência.
+ * PDF e imagens usam o mesmo RPC; PDF não passa por compressão de imagem.
+ * attachmentType permanece INITIAL_EVIDENCE (uploader não escolhe tipo).
+ */
 export async function uploadEvidenceFile({
   occurrenceId,
   file,
@@ -28,15 +33,15 @@ export async function uploadEvidenceFile({
   onPhaseChange?.("preparing");
   onProgress?.(5);
 
-  const compressed = await compressImageForUpload(file);
+  const preparedFile = await prepareEvidenceFileForUpload(file);
   onProgress?.(15);
 
   const payload = prepareAttachmentUploadSchema.parse({
     occurrenceId,
     attachmentType,
-    originalFileName: compressed.fileName,
-    mimeType: compressed.mimeType,
-    fileSize: compressed.fileSize,
+    originalFileName: preparedFile.fileName,
+    mimeType: preparedFile.mimeType,
+    fileSize: preparedFile.fileSize,
     caption,
   });
 
@@ -49,8 +54,8 @@ export async function uploadEvidenceFile({
     await uploadToStorageWithProgress({
       bucket: prepared.bucket,
       storagePath: prepared.storagePath,
-      body: compressed.blob,
-      mimeType: compressed.mimeType,
+      body: preparedFile.blob,
+      mimeType: preparedFile.mimeType,
       onProgress: (storagePercent) => {
         const mapped = 20 + Math.round(storagePercent * 0.65);
         onProgress?.(mapped);

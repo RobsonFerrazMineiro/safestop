@@ -50,10 +50,11 @@ export function ActionPlanSection({
   const {
     items,
     isLoading: isItemsLoading,
+    isError: isItemsError,
     refetch: refetchItems,
   } = useActionPlanItems(organizationId, plan?.id, shouldFetch && hasPlan);
 
-  const fullContext = useActionPlanContext(occurrence, plan, items);
+  const fullContext = useActionPlanContext(occurrence, plan, isItemsError ? [] : items);
   const completeMutation = useCompleteActionPlan(organizationId, occurrence.id);
 
   const [showConflict, setShowConflict] = useState(false);
@@ -99,13 +100,18 @@ export function ActionPlanSection({
 
   const isLoading = isPlanLoading || (hasPlan && isItemsLoading);
   const planCompleted = plan?.status === "COMPLETED";
+  const showPlanBody = !showConflict && !isLoading && !isPlanError && hasPlan && plan !== null;
+  const showItemsError = showPlanBody && isItemsError;
+  const showItemsSuccess = showPlanBody && !isItemsError;
 
   return (
     <section
       aria-label="Plano de Ação"
-      className="flex flex-col gap-4 rounded-lg border border-gray-700/60 bg-gray-900/40 p-4"
+      className="flex flex-col gap-4 rounded-lg border border-border bg-card/60 p-4"
     >
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-300">Plano de Ação</h2>
+      <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
+        Plano de Ação
+      </h2>
 
       {showConflict ? (
         <ActionPlanConflictCard
@@ -120,9 +126,9 @@ export function ActionPlanSection({
 
       {!showConflict && !isLoading && isPlanError ? (
         <div className="flex flex-col items-start gap-2" role="alert">
-          <p className="text-sm text-red-400">Não foi possível carregar o Plano de Ação.</p>
+          <p className="text-sm text-destructive">Não foi possível carregar o Plano de Ação.</p>
           <button
-            className="text-sm text-orange-400 hover:text-orange-300"
+            className="text-sm text-primary hover:text-primary/80"
             type="button"
             onClick={() => {
               void refetchPlan();
@@ -148,7 +154,22 @@ export function ActionPlanSection({
         <ActionPlanWaitingBanner />
       ) : null}
 
-      {!showConflict && !isLoading && !isPlanError && hasPlan && plan ? (
+      {showItemsError ? (
+        <div className="flex flex-col items-start gap-2" role="alert">
+          <p className="text-sm text-destructive">Não foi possível carregar as ações do plano.</p>
+          <button
+            className="text-sm text-primary hover:text-primary/80"
+            type="button"
+            onClick={() => {
+              void refetchItems();
+            }}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      ) : null}
+
+      {showItemsSuccess && plan ? (
         <>
           <ActionPlanHeader
             canComplete={fullContext.canComplete}
@@ -168,7 +189,7 @@ export function ActionPlanSection({
           {planCompleted ? <ActionPlanCompletedBanner /> : null}
 
           {actionError ? (
-            <p className="text-sm text-red-400" role="alert">
+            <p className="text-sm text-destructive" role="alert">
               {actionError}
             </p>
           ) : null}

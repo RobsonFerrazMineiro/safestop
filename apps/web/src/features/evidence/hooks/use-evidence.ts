@@ -4,7 +4,7 @@ import { useCallback, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   OCCURRENCE_ATTACHMENT_MAX_COUNT_PER_OCCURRENCE,
-  OCCURRENCE_ATTACHMENT_MIME_TYPES,
+  OCCURRENCE_ATTACHMENT_MAX_FILE_SIZE_BYTES,
 } from "@safestop/types";
 
 import { useAuthorization } from "@/features/authorization";
@@ -21,13 +21,14 @@ import {
   evidenceQueryKeys,
   type EvidenceUploadQueueItem,
 } from "../types";
+import { isAcceptedEvidenceFile } from "../utils/is-evidence-mime";
+import {
+  EVIDENCE_MAX_SIZE_MESSAGE,
+  EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE,
+} from "../utils/prepare-evidence-file";
 
 function createLocalId(): string {
   return crypto.randomUUID();
-}
-
-function isAcceptedFile(file: File): boolean {
-  return (OCCURRENCE_ATTACHMENT_MIME_TYPES as readonly string[]).includes(file.type);
 }
 
 export function useOccurrenceEvidence(occurrenceId: string | undefined) {
@@ -183,10 +184,15 @@ export function useUploadEvidence(occurrenceId: string) {
         throw new Error("Sem conexão. Conecte-se para enviar evidências ao servidor.");
       }
 
-      const accepted = Array.from(files).filter(isAcceptedFile);
+      const candidates = Array.from(files);
+      const accepted = candidates.filter(isAcceptedEvidenceFile);
 
       if (accepted.length === 0) {
-        throw new Error("Use apenas imagens JPG, PNG ou WebP.");
+        throw new Error(EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE);
+      }
+
+      if (accepted.some((file) => file.size > OCCURRENCE_ATTACHMENT_MAX_FILE_SIZE_BYTES)) {
+        throw new Error(EVIDENCE_MAX_SIZE_MESSAGE);
       }
 
       const remaining = OCCURRENCE_ATTACHMENT_MAX_COUNT_PER_OCCURRENCE - countActiveEvidence();

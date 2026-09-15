@@ -301,6 +301,139 @@ PLATFORM_ADMIN
 
 ---
 
+## 5.4 `workspaces` (Gate 12 — fundação)
+
+Espaço operacional que pode ser compartilhado por várias Organizations (ex.: Hydro + TÜV + Arcadis no mesmo Workspace).
+
+**Não** é `unit` nem `contract`. Gate 12 criou apenas a fundação. O Gate 13A adiciona `occurrences.workspace_id` nullable (raiz operacional Workspace-scoped); filhos continuam **sem** `workspace_id` próprio.
+
+### Campos
+
+```text
+id
+name
+code
+owner_organization_id
+is_active
+created_at
+updated_at
+```
+
+### Regras
+
+- `owner_organization_id` é **opcional neste schema** (Gates 12–13X.1) para não quebrar rows existentes com owner NULL;
+- **modelo final (ADR-006 / 13X.0):** `owner_organization_id` será obrigatório (empresa contratante administradora). Sem `NOT NULL` / CHECK neste Gate;
+- `code` é opcional e unique parcial quando informado;
+- soft deactivate via `is_active` (sem DELETE físico obrigatório);
+- Organization Membership ≠ Workspace Membership.
+
+---
+
+## 5.5 `organization_workspace_links` (Gate 12 — fundação)
+
+Participação N:N Organization ↔ Workspace.
+
+### Campos
+
+```text
+id
+organization_id
+workspace_id
+is_active
+participation_role  -- Gate 13X.5.1; NULL permitido
+created_at
+updated_at
+```
+
+### Regras
+
+- `UNIQUE (organization_id, workspace_id)` — impede link duplicado;
+- `UNIQUE (id, organization_id, workspace_id)` — prepara FKs compostas filhas;
+- várias Organizations podem participar do mesmo Workspace;
+- `link_role` **omitido** no Gate 12: ownership opcional já existe em `workspaces.owner_organization_id`.
+- `participation_role` (Gate 13X.5.1): papel da **EMPRESA no AMBIENTE**, no vínculo Organization × Workspace. CHECK `GERENCIADORA` | `CONTRATADA`. NULL = não classificado; **não** inferir GERENCIADORA nem CONTRATADA. Owner **não** é valor do CHECK (`workspaces.owner_organization_id`). A mesma Organization pode ser GERENCIADORA num Workspace e CONTRATADA noutro. Não é RBAC, não é `assignment_role`, não deriva de `organization.type` nem de `contractor_organization_id` / `client_organization_id`. Sem NOT NULL e sem backfill obrigatório.
+
+---
+
+## 5.6 `workspace_memberships` (Gate 12 — fundação)
+
+Grant explícito de acesso a um Workspace por `organization_member_id` (não por `user_id` solto).
+
+### Campos
+
+```text
+id
+organization_member_id
+organization_id
+workspace_id
+is_active
+granted_at
+revoked_at
+created_at
+updated_at
+```
+
+### Integridade estrutural
+
+- `UNIQUE (organization_member_id, workspace_id)` — impede grant duplicado;
+- FK `(organization_member_id, organization_id) → organization_members (id, organization_id)`;
+- FK `(organization_id, workspace_id) → organization_workspace_links (organization_id, workspace_id)`;
+- impossível conceder membership se a Organization do member não participa do Workspace.
+
+### RLS (somente foundation)
+
+- SELECT: platform admin ou organização em `current_organization_ids()`;
+### RLS foundation (Gate 13B)
+
+- `workspaces` SELECT: `is_platform_admin()` **OU** `can_access_workspace(id)` (não basta link da Organization).
+- `organization_workspace_links` SELECT: platform admin **OU** (`is_active` **E** `can_access_workspace`).
+- `workspace_memberships` SELECT: platform admin **OU** apenas grants **próprios** ativos (`organization_member.profile_id = auth.uid()`).
+- INSERT/UPDATE foundation: somente `is_platform_admin()`; sem wildcard `organization.manage`.
+- `create_occurrence`: `workspace_id` **opcional** no payload (Strategy B). Ausente → NULL (legado). Presente → caminho Workspace (Gate 13X.2): `occurrence.create` na org **atuante** + `can_access_workspace` + link ativo org↔ws; `origin` = org atuante; tenant legado = `owner_organization_id` (fallback = atuante).
+- Trigger `validate_occurrence_workspace_assignment`: impede Organization × Workspace sem link ativo quando `workspace_id IS NOT NULL`.
+
+SafeStop é **ONLINE**. Sem outbox, sync, drafts offline ou fila de mutações.
+
+Scoping operacional de dados = iniciado no Gate 13A; endurecimento RLS/RPC = **Gate 13B**; cutover UI = Gates 13C+.
+
+---
+
+## 5.7 Autorização efetiva de Workspace (Gate 13A/13B)
+
+### Modelo
+
+```text
+RBAC (has_permission)     = O QUE o usuário pode fazer
+Workspace Membership      = ONDE ele pode fazer
+Contract Assignment       = em QUAL contrato (papel de assignment; Gate 13X.1)
+```
+
+Os eixos são independentes. `occurrence.create` não autoriza qualquer Workspace. `organization.manage` não concede automaticamente acesso operacional a todos os Workspaces da Organization. Assignment **não** substitui RBAC.
+
+Organization Membership ≠ Workspace Membership.
+
+### `can_access_workspace(p_workspace_id)`
+
+Acesso efetivo somente quando (usuário comum):
+
+1. Workspace existe e `is_active`;
+2. `organization_workspace_links` ativo;
+3. `workspace_memberships` ativo;
+4. `organization_members` ativo com `profile_id = auth.uid()`;
+5. Organization da membership = Organization do link.
+
+Platform Admin: bypass **somente** via `is_platform_admin()` dentro deste helper (e no topo de `can_access_occurrence`).
+
+### `current_workspace_ids()`
+
+Espelha `current_organization_ids()`. Retorna apenas Workspaces com acesso efetivo (mesmas regras). Não lista Workspaces só porque a Organization tem link. Platform Admin não recebe set universal nesta função.
+
+### SafeStop ONLINE
+
+O SafeStop é uma aplicação **ONLINE**. Não há arquitetura de modo offline, outbox, sync, drafts offline ou fila de sincronização no banco. Preferência de UI (ex.: Workspace ativo) não caracteriza offline.
+
+---
+
 # 6. Papéis e Permissões
 
 ## 6.1 `roles`
@@ -470,6 +603,7 @@ Representa uma unidade, planta, site ou complexo industrial.
 ```text
 id
 organization_id
+workspace_id
 name
 code
 address
@@ -479,6 +613,17 @@ is_active
 created_at
 updated_at
 ```
+
+### `workspace_id` (Gate 13X.2)
+
+```text
+workspace_id uuid NULL references workspaces(id) on delete restrict
+```
+
+- Destino = Workspace-scoped (AndCheck: `OperationalArea.workspaceId`).
+- `NULL` = ainda Organization-scoped (legado). Sem backfill.
+- `organization_id` **permanece** (dual-read / tenant legado).
+- Unique parcial `(workspace_id, code)` onde ambos NOT NULL. Unique legado `(organization_id, code)` permanece.
 
 ---
 
@@ -501,6 +646,7 @@ Oficina Central
 ```text
 id
 organization_id
+workspace_id
 unit_id
 name
 code
@@ -516,6 +662,17 @@ updated_at
 - áreas antigas podem ser inativadas;
 - ocorrências antigas continuam vinculadas à área original.
 
+### `workspace_id` (Gate 13X.2)
+
+Mesmo espírito de `units.workspace_id`. Se `area.workspace_id` e `unit.workspace_id` forem ambos NOT NULL, devem ser iguais (trigger). Sem tabela de mapping extra.
+
+**Dual-read no `create_occurrence` (caminho Workspace):**
+
+- se `area.workspace_id IS NOT NULL` → igualdade estrita com `payload.workspace_id`;
+- se `area.workspace_id IS NULL` → `area.organization_id` = tenant legado da occurrence (`occurrences.organization_id`).
+
+O FK composto `occurrences (area_id, organization_id)` foi **substituído** no Gate 13X.2.1 por trigger de dual-read. Área com `workspace_id` = WS **não** precisa ter `organization_id` = tenant.
+
 ---
 
 ## 7.3 `management_departments`
@@ -527,6 +684,7 @@ Representa gerências, coordenações ou estruturas responsáveis.
 ```text
 id
 organization_id
+workspace_id
 unit_id
 name
 code
@@ -534,6 +692,10 @@ is_active
 created_at
 updated_at
 ```
+
+### `workspace_id` (Gate 13X.2)
+
+Mesmo dual-read de `areas` × unit. Unique parcial `(workspace_id, code)`. Unique legado `(organization_id, code)` permanece.
 
 ---
 
@@ -547,6 +709,7 @@ Representa o relacionamento contratual entre contratante e contratada.
 id
 client_organization_id
 contractor_organization_id
+workspace_id
 unit_id
 contract_number
 name
@@ -563,6 +726,98 @@ updated_at
 - uma ocorrência poderá estar vinculada a um contrato;
 - contratos encerrados permanecem disponíveis no histórico;
 - o uso do contrato poderá ser opcional no primeiro MVP.
+
+### `workspace_id` (Gate 13X.1)
+
+```text
+workspace_id uuid NULL references workspaces(id) on delete restrict
+```
+
+- Modelo final (ADR-006): Contract = vínculo de **uma** Organization titular **dentro** de um Workspace (0..N).
+- **NULLABLE** neste Gate (contratos legado sem Workspace).
+- Nos Gates 13X.2/13X.6 tornará `NOT NULL`; titular = Organization da contratada no Workspace.
+- `client_organization_id` e `contractor_organization_id` **permanecem** (não drop neste Gate).
+- Índice parcial `(workspace_id)` onde `workspace_id IS NOT NULL`.
+- Unique parcial `(workspace_id, contractor_organization_id, contract_number)` onde ambos `workspace_id` e `contract_number` são NOT NULL. Coexiste com o unique legado `(client_organization_id, contract_number)`.
+
+### RLS SELECT (Gate 13X.5.2)
+
+Eixo existente **preservado**: `client_organization_id` **OU** `contractor_organization_id` em `current_organization_ids()` **OU** platform admin.
+
+Eixo additive de governança no Workspace (não substitui client/contractor):
+
+- `workspace_id IS NOT NULL`
+- `can_access_workspace(workspace_id)`
+- `organization.manage` na org atuante **e** essa org é `workspaces.owner_organization_id` **ou** tem link ativo com `participation_role = GERENCIADORA`
+
+CONTRATADA operacional **não** ganha SELECT de todos os contratos do Workspace só pelo link CONTRATADA. Campo sem `organization.manage` permanece no eixo client/contractor.
+
+**INSERT/UPDATE de `contracts` inalterados** (`contract.manage` no client). Visibilidade do Contract ≠ autoridade para alterar `client_organization_id` / `contractor_organization_id` ≠ WRITE de assignment sobre members de outra Organization.
+
+---
+
+## 7.4.1 `contract_assignments` (Gate 13X.1)
+
+Assignment N:N entre `organization_member` × `contract` × `assignment_role`.
+
+**Não substitui RBAC.** Eixos independentes: RBAC = O QUE; Workspace Membership = ONDE; Assignment = em QUAL contrato.
+
+### Campos
+
+```text
+id
+organization_member_id
+organization_id
+contract_id
+assignment_role
+is_active
+granted_at
+revoked_at
+created_at
+updated_at
+```
+
+### Regras
+
+- `assignment_role` CHECK: `FISCAL` | `GERENTE` | `GESTOR` (catálogo inicial 13X.0);
+- `UNIQUE (organization_member_id, contract_id, assignment_role)`;
+- FK composta `(organization_member_id, organization_id) → organization_members`;
+- FK `contract_id → contracts` `ON DELETE RESTRICT`;
+- Integridade Workspace (trigger): assignment **somente** se `contracts.workspace_id IS NOT NULL` **e** a Organization do member possui `organization_workspace_links` ativo para esse Workspace. Gate 13X.5.2: o trigger é `SECURITY DEFINER` (`search_path` vazio) para **ler** `workspace_id` e o link sem depender do RLS de `contracts`; não INSERT/UPDATE próprios; **não** substitui `can_manage_contract_assignment`.
+- Contratos legado (`workspace_id IS NULL`) **não** aceitam assignment neste Gate (limitação documentada);
+- Soft deactivate via `is_active` / `revoked_at`.
+
+### RLS (Gate 13X.5 / 13X.5.1)
+
+Assignment **não** é RBAC, membership nem acesso a Workspace.
+
+`member.organization_id` **não** precisa ser `contract.contractor_organization_id` (ex.: Fiscal Hydro → Contract TÜV → FISCAL). Nomes Hydro/TÜV nas fixtures são apenas exemplos; as policies **não** usam nome, `organization.type` nem contractor/client.
+
+**WRITE** (helper `can_manage_contract_assignment`, Gate 13X.5 — semântica inalterada em 13X.5.1):
+
+- `organization.manage` na **Organization do member**;
+- `can_access_workspace` do contrato (`workspace_id IS NOT NULL`);
+- link ativo da Organization do member no Workspace.
+
+Assim o manager da org do member atribui apenas membros **da própria Organization**; `can_access_workspace` sozinho **não** autoriza escrita. GERENCIADORA **não** ganha WRITE sobre members de outra Organization.
+
+**READ** (helper `can_read_contract_assignment`, Gate 13X.5.1) — eixo independente do WRITE:
+
+- platform admin **OU** assignment próprio ativo **OU** `can_manage_contract_assignment` (visão da própria org) **OU** visão **Contract-scoped**: `can_access_workspace` + `workspace_id IS NOT NULL` + `organization.manage` na org atuante **e** essa org é `workspaces.owner_organization_id` **ou** tem link ativo com `participation_role = GERENCIADORA`.
+- CONTRATADA (não-owner) **não** entra na visão global: manager vê só a própria org + próprio assignment.
+- `participation_role` NULL em Organization **não-owner** **não** concede visão global e **não** é inferido como GERENCIADORA.
+- VISUALIZAR responsáveis ≠ GERENCIAR responsáveis.
+
+Policies:
+
+- SELECT: `can_read_contract_assignment`;
+- INSERT/UPDATE: `can_manage_contract_assignment` (inclui platform admin);
+- Sem DELETE policy (soft revoke).
+- Sem permission nova (`contract.assignment.manage` não criada).
+
+Contratos legado (`workspace_id IS NULL`) continuam sem assignment (policy + trigger 13X.1).
+
+Não participa do roteamento de notificações neste Gate (`organization_contacts` permanece).
 
 ---
 
@@ -627,6 +882,9 @@ management_department_id
 contract_id
 contractor_organization_id
 
+workspace_id
+origin_organization_id
+
 public_code
 title
 task_description
@@ -663,6 +921,39 @@ cancellation_reason
 created_at
 updated_at
 ```
+
+### `workspace_id` (Gate 13A)
+
+```text
+workspace_id uuid NULL references workspaces(id) on delete restrict
+```
+
+- Raiz operacional Workspace-scoped.
+- **NULLABLE** durante coexistência com occurrences legadas (criadas antes de Workspace).
+- `NULL` = autorização legado (sem filtro Workspace) via `can_access_occurrence`.
+- `NOT NULL` somente após backfill completo + homologação (Gate futuro — não neste 13A).
+- Entidades filhas (status history, participants, decisions, comments, attachments, action plans/items, MDHO, etc.) **herdam** o Workspace pela occurrence — **não** recebem coluna `workspace_id` própria neste Gate.
+
+Índices (parciais onde `workspace_id is not null`):
+
+- `occurrences_workspace_id_idx (workspace_id)` — filtro por Workspace;
+- `occurrences_organization_id_workspace_id_idx (organization_id, workspace_id)` — listas já org-scoped + futuro filtro Workspace.
+
+### `origin_organization_id` (Gate 13X.1)
+
+```text
+origin_organization_id uuid NULL references organizations(id) on delete restrict
+```
+
+- Empresa originadora/registradora (empregador do criador).
+- `NULL` = ainda não migrado.
+- **Não** usar como tenant no 13X.1.
+- `occurrences.organization_id` permanece **LEGADO** (cliente/tenant). Significado **não** muda neste Gate.
+- Índice parcial `(origin_organization_id)` onde NOT NULL.
+- Sem `NOT NULL`, sem backfill.
+- Preenchido automaticamente no **caminho Workspace** de `create_occurrence` (org atuante). Permanece `NULL` no caminho legado.
+
+Ver ADR-006.
 
 ---
 
@@ -1038,6 +1329,19 @@ RELEASE_EVIDENCE
 DOCUMENT
 OTHER
 ```
+
+### MIME allowlist (banco + RPC + bucket `occurrence-evidence`)
+
+```text
+image/jpeg
+image/png
+image/webp
+application/pdf
+```
+
+Limite por arquivo: **10 MiB** (`10485760`). Extensão do `storage_path` deriva do MIME (`jpg` / `png` / `webp` / `pdf`), não do filename. `attachment_type` é independente do MIME — `DOCUMENT` já existia e é o valor adequado para PDF quando o cliente o informar; a RPC não força nem bloqueia `DOCUMENT` por causa do MIME.
+
+A mesma allowlist aplica-se a `action_item_attachments` e `prepare_action_item_attachment_upload` (bucket compartilhado `occurrence-evidence`).
 
 ### Regras
 
@@ -1972,12 +2276,25 @@ Poderão existir funções PostgreSQL:
 ```text
 current_profile_id()
 current_organization_ids()
+current_workspace_ids()
 has_permission(permission_code, target_organization_id)
+can_access_workspace(workspace_id)
 can_access_occurrence(occurrence_id)
 is_platform_admin()
 ```
 
 `has_permission` exige o escopo organizacional como argumento obrigatório: verifica a permissão apenas dentro de `target_organization_id`, nunca em qualquer organização ativa do usuário. Isso evita que um usuário com papel elevado na Organização A satisfaça, indevidamente, uma verificação de permissão relativa à Organização B.
+
+`can_access_workspace` implementa o eixo **ONDE** (acesso efetivo a Workspace). Ver §5.7.
+
+`can_access_occurrence` (Gate 13A — coexistência):
+
+- `workspace_id IS NULL` → preserva regras legado (org / contratada / contrato / participante) + `is_platform_admin()`;
+- `workspace_id IS NOT NULL` → mesmas regras legado **AND** `can_access_workspace(workspace_id)`.
+
+RBAC (`has_permission`) permanece nas policies/RPCs (eixo **O QUE**).
+
+Estratégia de backfill legado: script local de homologação `supabase/scripts/homologate-workspace-legacy-local.sql` (não é migration; não executar em produção). Produção exige Gate/aprovação PO separada.
 
 ---
 
@@ -2006,6 +2323,13 @@ profile-images
 - acesso limitado à organização;
 - uploads devem registrar metadados;
 - arquivos órfãos devem ser evitados.
+
+### `occurrence-evidence` (evidências)
+
+- `public = false`
+- `file_size_limit = 10 MiB` (`10485760`)
+- `allowed_mime_types`: `image/jpeg`, `image/png`, `image/webp`, `application/pdf`
+- Paths: ocorrência `{org}/{occurrence}/{attachment}/{attachment}.{ext}`; ação `{org}/action-items/{itemId}/{attachment}.{ext}`
 
 ---
 
@@ -2038,6 +2362,8 @@ Esses dados devem ser carregados na tela de detalhes.
 ## 25.2 Dashboard
 
 **Implementado (Sprint 3.2):** agregações via RPC `get_dashboard_kpis` — migration `20260820182000_create_dashboard_kpis_rpc.sql`. Cliente **não** recalcula KPIs de estoque/fluxo.
+
+**Extensão:** `personal.myDueSoonActions` — migration `20260906180000_extend_dashboard_kpis_my_due_soon_actions.sql`. Mesma janela temporal de `managerial.dueSoonActionItems` (`p_due_soon_days`, default 3), restrita a `responsible_member_id` do membro autenticado.
 
 ### Índices (Sprint 3.2)
 
@@ -2083,7 +2409,9 @@ Migration `20260822180000_reports_indexes.sql`:
 
 ## 25.4 Lista operacional (PR-D1 / PO-UX-10)
 
-**Implementado:** RPC `list_operational_occurrences` — migration `20260825220000_list_operational_occurrences.sql`.
+**Implementado:** RPC `list_operational_occurrences` — migrations
+`20260825220000_list_operational_occurrences.sql` +
+`20260913190000_gate13c1_list_operational_occurrences_workspace.sql` (Gate 13C.1).
 
 Lista de cards operacionais (não relatório). **Não** substitui `list_occurrences_report`.
 
@@ -2092,6 +2420,7 @@ Lista de cards operacionais (não relatório). **Não** substitui `list_occurren
 | Modo | `SECURITY INVOKER`, `search_path = ''` |
 | Permissão gate | `occurrence.read` na org alvo (`is_platform_admin()` segue o mesmo padrão de membership das RPCs de reports). **Não** exige `report.read`. |
 | Escopo de linha | `organization_id = p_organization_id` + `can_access_occurrence` + RLS de `occurrences` |
+| Contexto Workspace (13C.1) | `p_workspace_id` opcional; filtro na CTE `base` **antes** do keyset/`LIMIT`/`hasNext`/`nextCursor` |
 | Ordenação | `created_at desc, id desc` (fixa neste ciclo; sem `p_sort_field`) |
 | Paginação | keyset `{ sortValue, id }` — **sem OFFSET**. `p_limit` clamp 1–100 (default 20). Busca `limit+1`; `hasNext` / `nextCursor` no último item da página. |
 | Retorno | `{ items, nextCursor, hasNext }`. Cada item: `id`, `publicCode`, `title`, `status`, `severity`, `areaName`, `contractorOrganizationName`, `createdAt`, `createdByName` (camelCase, compatível com `OccurrenceSummary`). Sem colunas 1:N. Sem `statusFamily`. |
@@ -2111,29 +2440,116 @@ p_severity text[]                     — LOW / MEDIUM / HIGH / CRITICAL
 p_ims_reference_code text             — contains, mesmo espírito de PO-IMS-10
 p_cursor jsonb                        — { sortValue, id }
 p_limit integer                       — default 20, clamp 1–100
+p_workspace_id uuid                   — DEFAULT NULL (Gate 13C.1; ao final da assinatura)
 ```
+
+**`p_workspace_id` — segurança × contexto**
+
+- `NULL` / omitido: comportamento legado Organization-scoped autorizado (pode incluir Workspaces A/B e ocorrências `workspace_id IS NULL`, conforme `can_access_occurrence`). Compatível com Web pré-13C.2, Mobile e callers ainda não convertidos.
+- `NOT NULL`: contexto estrito. Exige `can_access_workspace(p_workspace_id)` + link ativo `organization_workspace_links` entre `p_organization_id` e `p_workspace_id`. Aplica `o.workspace_id = p_workspace_id` na CTE `base` **antes** da paginação. **Não** inclui legado `NULL` nem outros Workspaces, mesmo que o usuário tenha acesso legítimo a eles.
+- Autorização continua em RLS / RBAC / `can_access_occurrence`. O parâmetro define o **contexto ativo**, não substitui a barreira de segurança.
+- Consumo pelo Web = **Gate 13C.2** (este Gate 13C.1 só prepara a RPC/types).
 
 Não existe `p_activity_id` (atividade não é FK).
 
 **Diferença vs `list_occurrences_report`:** gate `occurrence.read` (Campo lista) vs `report.read`; busca textual ampla vs só `public_code`; 9 campos de card vs 19 colunas de relatório; ordenação fixa `created_at` vs allowlist de sort.
 
-**Helpers reutilizados (não recriados):** `resolve_profile_display_name`, `resolve_organization_display_name`. Escopo estrito: nome apenas.
+**Helpers reutilizados (não recriados):** `resolve_profile_display_name`, `resolve_organization_display_name`, `can_access_workspace`. Escopo estrito: nome apenas nos resolve_*.
 
-**Índices novos:** nenhum nesta migration. `occurrences_organization_id_created_at_idx`, `occurrences_organization_id_status_idx`, `occurrences_organization_id_area_id_created_at_idx` e `occurrences_organization_id_contractor_created_at_idx` já cobrem org + ordenação/filtros. `pg_trgm` não criado (sem evidência de EXPLAIN nesta escala).
+**Índices novos:** nenhum nesta migration. Índices org/`workspace_id` (Gate 13A) cobrem o filtro de contexto.
 
 **Rollback:**
 
 ```text
 drop function public.list_operational_occurrences(
-  uuid, text, uuid, uuid, text[], text[], text, jsonb, integer
+  uuid, text, uuid, uuid, text[], text[], text, jsonb, integer, uuid
 );
+-- recriar assinatura anterior (9 args) a partir de 20260825220000 se necessário
 ```
 
 Não dropar os helpers `resolve_*_display_name`.
 
-**GRANT:** `EXECUTE` para `authenticated` apenas. Sem grant para `anon`.
+**GRANT:** `EXECUTE` para `authenticated` apenas. Sem grant para `anon`. `REVOKE ALL … FROM public`.
 
 ---
+
+## 25.5 Domínio final additive (Gate 13X.1)
+
+Migration: `20260913200000_gate13x1_contract_workspace_assignments_origin.sql`.
+
+Decisão: `docs/decisions/ADR-006-organization-workspace-contract-domain.md`.
+
+Schema additive apenas:
+
+- `contracts.workspace_id` nullable;
+- tabela `contract_assignments`;
+- `occurrences.origin_organization_id` nullable.
+
+**Não** altera `create_occurrence`, `can_access_occurrence`, `can_access_workspace`, `list_operational_occurrences`, areas/units, nem o significado de `occurrences.organization_id`.
+
+`organization_contacts` permanece vigente.
+
+---
+
+## 25.6 `create_occurrence` — dois caminhos (Gate 13X.2)
+
+Migration: `20260913210000_gate13x2_location_workspace_and_create_occurrence.sql`.
+
+Addendum ADR-006.
+
+### Caminho legado (`payload.workspace_id` ausente / NULL)
+
+Comportamento anterior intacto:
+
+- `contractor_organization_id` obrigatório;
+- contrato ativo com `client_organization_id` = org atuante;
+- `area.organization_id` = org atuante;
+- `origin_organization_id` permanece NULL;
+- `occurrences.organization_id` = org atuante.
+
+### Caminho Workspace (`payload.workspace_id` NOT NULL)
+
+- Org atuante (`payload.organization_id`) deve estar em `current_organization_ids()` e ter `occurrence.create`.
+- `can_access_workspace` + link ativo org atuante ↔ WS.
+- `origin_organization_id` = org atuante (servidor; origin do cliente é ignorado).
+- `occurrences.organization_id` (legado) = `workspaces.owner_organization_id` se NOT NULL; senão fallback = org atuante (dívida 13X.6).
+- Contrato: `contract_id` e `contractor_organization_id` juntos, ou ambos omitidos.
+  - Se informados: contrato ativo, `contract.workspace_id` = payload, titular = `contractor_organization_id`, link ativo da titular no WS. **Não** exige `client_organization_id` = org atuante.
+  - Ambos omitidos = equipe própria **somente** se a org atuante for o `owner_organization_id` do Workspace. Sem contrato Hydro-Hydro inventado. Owner NULL → equipe própria rejeitada.
+- Dual-read area/unit/md: WS estrito se a coluna estiver preenchida; fallback `organization_id` = tenant só se `workspace_id` da entidade for NULL.
+- JSON de sucesso inclui `origin_organization_id`.
+- Notificação: `lookup_organization_member_id` na org **atuante**.
+
+### Visibilidade da contratada (Gate 13X.2.1)
+
+Migration: `20260913220000_gate13x21_contractor_workspace_visibility.sql`.
+
+- `occurrences_select`: `can_access_occurrence` **e** `occurrence.read` no tenant **ou** origin **ou** contractor. Origin não é tenant.
+- `list_operational_occurrences` com `p_workspace_id NOT NULL`:
+
+```text
+o.organization_id = p_organization_id
+OR o.origin_organization_id = p_organization_id
+OR o.contractor_organization_id = p_organization_id
+```
+
+  Caminho `p_workspace_id IS NULL` permanece `organization_id = p_organization_id`.
+- SELECT de `areas` / `units` / `management_departments`: org própria, ou `can_access_workspace` se `workspace_id` preenchido, ou área/unit/md legado cujo `organization_id` é owner de um Workspace acessível. INSERT/UPDATE inalterados.
+- FKs `occurrences_*_org_consistency` dropados; trigger `validate_occurrence_location_org_workspace`.
+
+`can_access_occurrence` **não** muda o eixo de tenant.
+
+### Leitura de detalhe (Gate 13X.2.2)
+
+Migration: `20260913230000_gate13x22_occurrence_detail_read.sql`.
+
+Helper `can_read_occurrence_record(occurrence_id)`: predicado da ROW (admin **ou** `can_access_occurrence` **e** `occurrence.read` no tenant **ou** origin **ou** contractor). **Não** autoriza mutação.
+
+`can_read_occurrence_in_org(p_organization_id)` permanece: permission **nesta** Organization.
+
+SELECT de detalhe alinhado ao helper: status_history, participants, decisions, comments, attachments, action_plans/items/anexos, mdho_assessments/selections, storage `occurrence-evidence` SELECT, `get_occurrence_timeline`, signed URLs de evidência.
+
+INSERT/UPDATE/DELETE dos filhos e RPCs de mutação **não** mudam.
 
 ---
 

@@ -166,6 +166,7 @@ Mesmo padrão de validação de organização ativa já usado nas demais RPCs `S
   "personal": {
     "myPendingActions": 0,
     "myOverdueActions": 0,
+    "myDueSoonActions": 0,
     "myPendingAwareness": 0
   },
   "operational": {

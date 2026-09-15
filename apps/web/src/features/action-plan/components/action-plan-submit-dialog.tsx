@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { ACTION_ITEM_COMPLETION_DESCRIPTION_MAX_LENGTH } from "@safestop/types";
+import { FileText } from "lucide-react";
+import {
+  ACTION_ITEM_ATTACHMENT_MAX_FILE_SIZE_BYTES,
+  ACTION_ITEM_ATTACHMENT_MIME_TYPES,
+  ACTION_ITEM_COMPLETION_DESCRIPTION_MAX_LENGTH,
+} from "@safestop/types";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,8 +18,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SurfaceIcon } from "@/components/surface-icon";
 import { EvidenceUploader } from "@/features/evidence/components/evidence-uploader";
 import { EVIDENCE_TILE_SIZE_CLASS } from "@/features/evidence/types";
+import { isEvidencePdfMimeType } from "@/features/evidence/utils/is-evidence-mime";
+import {
+  EVIDENCE_MAX_SIZE_MESSAGE,
+  EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE,
+} from "@/features/evidence/utils/prepare-evidence-file";
+import { getActionItemAttachmentSignedUrl } from "../services/get-action-item-attachment-signed-url";
+import { openEvidenceSignedUrl } from "@/features/evidence/utils/open-evidence-signed-url";
 
 import { useActionItemAttachments } from "../hooks/use-action-item-attachments";
 import { useSubmitActionItem } from "../hooks/use-submit-action-item";
@@ -85,6 +98,16 @@ export function ActionPlanSubmitDialog({
     const fileList = Array.from(files).slice(0, MAX_ATTACHMENTS - attachmentCount);
 
     for (const file of fileList) {
+      if (!(ACTION_ITEM_ATTACHMENT_MIME_TYPES as readonly string[]).includes(file.type)) {
+        setFormError(EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE);
+        break;
+      }
+
+      if (file.size > ACTION_ITEM_ATTACHMENT_MAX_FILE_SIZE_BYTES) {
+        setFormError(EVIDENCE_MAX_SIZE_MESSAGE);
+        break;
+      }
+
       setUploadProgress(0);
       try {
         await uploadMutation.mutateAsync({
@@ -92,8 +115,10 @@ export function ActionPlanSubmitDialog({
           onProgress: setUploadProgress,
         });
         await refetchAttachments();
-      } catch {
-        setFormError("Não foi possível enviar a evidência.");
+      } catch (error) {
+        setFormError(
+          error instanceof Error ? error.message : "Não foi possível enviar a evidência.",
+        );
         break;
       } finally {
         setUploadProgress(null);
@@ -195,14 +220,39 @@ export function ActionPlanSubmitDialog({
             </p>
 
             <div className="flex flex-wrap gap-2">
-              {completedAttachments.map((attachment) => (
-                <div
-                  key={attachment.id}
-                  className={`${EVIDENCE_TILE_SIZE_CLASS} flex items-center justify-center rounded-xl border border-border bg-card/60 text-xs text-muted-foreground`}
-                >
-                  OK
-                </div>
-              ))}
+              {completedAttachments.map((attachment) => {
+                const isPdf = isEvidencePdfMimeType(attachment.mimeType);
+
+                return (
+                  <button
+                    key={attachment.id}
+                    aria-label={
+                      isPdf
+                        ? `Abrir PDF ${attachment.originalFileName}`
+                        : `Abrir evidência ${attachment.originalFileName}`
+                    }
+                    className={`${EVIDENCE_TILE_SIZE_CLASS} flex flex-col items-center justify-center gap-1 rounded-xl border border-border bg-card/60 px-1 text-center text-xs text-muted-foreground transition hover:border-primary/50`}
+                    type="button"
+                    onClick={() => {
+                      void getActionItemAttachmentSignedUrl(attachment.id).then((url) => {
+                        openEvidenceSignedUrl(url);
+                      });
+                    }}
+                  >
+                    {isPdf ? (
+                      <>
+                        <SurfaceIcon className="text-primary" icon={FileText} variant="action" />
+                        <span className="font-semibold tracking-wide uppercase">PDF</span>
+                        <span className="line-clamp-2 w-full text-[9px] leading-tight">
+                          {attachment.originalFileName}
+                        </span>
+                      </>
+                    ) : (
+                      <span>OK</span>
+                    )}
+                  </button>
+                );
+              })}
               {canAddMore ? (
                 <EvidenceUploader
                   disabled={isOffline || isPending}
@@ -210,6 +260,8 @@ export function ActionPlanSubmitDialog({
                 />
               ) : null}
             </div>
+
+            <p className="text-xs text-muted-foreground">JPG, PNG, WebP ou PDF · máx. 10 MiB</p>
 
             {uploadProgress !== null ? (
               <p className="text-xs text-muted-foreground">Enviando… {uploadProgress}%</p>

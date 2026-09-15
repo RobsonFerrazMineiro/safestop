@@ -6,4 +6,6 @@ export { useOccurrenceDraft } from "./use-occurrence-draft";
 export { useOccurrenceAreas } from "./use-occurrence-areas";
 export { useOccurrenceContractors } from "./use-occurrence-contractors";
 export { useOccurrenceContracts } from "./use-occurrence-contracts";
+export { useWorkspaceAreas } from "./use-workspace-areas";
+export { useWorkspaceContracts } from "./use-workspace-contracts";
 export { useOccurrenceListFilterOptions } from "./use-occurrence-list-filter-options";

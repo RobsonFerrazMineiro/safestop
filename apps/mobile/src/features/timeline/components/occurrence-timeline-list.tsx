@@ -1,6 +1,7 @@
 import { forwardRef, useCallback, useState, type ReactElement, type ReactNode } from "react";
 import { Alert, FlatList, RefreshControl, StyleSheet, View } from "react-native";
 import type { OccurrenceStatus, OccurrenceTimelineItem } from "@safestop/types";
+import { colors } from "@safestop/ui";
 
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { useAuth } from "@/hooks/use-auth";
@@ -168,9 +169,9 @@ export const OccurrenceTimelineList = forwardRef<
         ListHeaderComponent={listHeader}
         refreshControl={
           <RefreshControl
-            colors={["#F97316"]}
+            colors={[colors.primary]}
             refreshing={refreshing}
-            tintColor="#F97316"
+            tintColor={colors.primary}
             onRefresh={() => {
               void handleRefresh();
             }}

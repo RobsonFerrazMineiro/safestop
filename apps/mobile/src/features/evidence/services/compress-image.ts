@@ -2,10 +2,10 @@ import {
   OCCURRENCE_ATTACHMENT_MAX_FILE_SIZE_BYTES,
   type OccurrenceAttachmentMimeType,
 } from "@safestop/types";
-import * as FileSystem from "expo-file-system";
 import * as ImageManipulator from "expo-image-manipulator";
 
 import type { PickedEvidenceAsset } from "../types";
+import { resolveLocalFileSize } from "../utils/resolve-local-file-size";
 
 /**
  * PO-10 — compressão mobile (docs/engineering.md §32.4).
@@ -34,16 +34,6 @@ function buildFileName(mimeType: OccurrenceAttachmentMimeType): string {
   return `evidencia-${Date.now()}.${extension}`;
 }
 
-async function getFileSize(uri: string): Promise<number> {
-  const info = await FileSystem.getInfoAsync(uri);
-
-  if (!info.exists || typeof info.size !== "number") {
-    throw new Error("Não foi possível ler o tamanho da imagem.");
-  }
-
-  return info.size;
-}
-
 async function compressOnce(
   uri: string,
   quality: number,
@@ -67,12 +57,12 @@ async function compressOnce(
 export async function compressEvidenceImage(sourceUri: string): Promise<PickedEvidenceAsset> {
   let quality = EVIDENCE_COMPRESS_JPEG_QUALITY;
   let compressed = await compressOnce(sourceUri, quality);
-  let fileSize = await getFileSize(compressed.uri);
+  let fileSize = await resolveLocalFileSize(compressed.uri, null);
 
   while (fileSize > OCCURRENCE_ATTACHMENT_MAX_FILE_SIZE_BYTES && quality > 0.4) {
     quality -= 0.1;
     compressed = await compressOnce(compressed.uri, quality);
-    fileSize = await getFileSize(compressed.uri);
+    fileSize = await resolveLocalFileSize(compressed.uri, null);
   }
 
   if (fileSize > OCCURRENCE_ATTACHMENT_MAX_FILE_SIZE_BYTES) {

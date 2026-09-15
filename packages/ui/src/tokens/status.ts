@@ -23,14 +23,14 @@ export type StatusChipTone = {
 
 /**
  * Pares de chip (não são paleta de marca).
- * `primary` aqui é o chip laranja — distinto de `--primary` / `colors.primary`.
+ * `primary` aqui é o chip vermelho — distinto de `--primary` / `colors.primary`.
  */
 export const statusChip = {
   success: { foreground: "#BBF7D0", background: "#14532D", border: "#16A34A" },
   warning: { foreground: "#FDE68A", background: "#422006", border: "#FACC15" },
   destructive: { foreground: "#FECACA", background: "#7F1D1D", border: "#DC2626" },
   info: { foreground: "#BFDBFE", background: "#1E3A5F", border: "#2563EB" },
-  primary: { foreground: "#FFEDD5", background: "#7C2D12", border: "#F97316" },
+  primary: { foreground: "#FECACA", background: "#4A0D0D", border: "#D32F2F" },
   muted: { foreground: "#9CA3AF", background: "#20242D", border: "#2E3440" },
 } as const satisfies Record<StatusChipFamily, StatusChipTone>;
 

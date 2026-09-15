@@ -10,6 +10,7 @@ import { Button, ScreenBackLink, TextField } from "@/components/ui";
 import { useRequirePermission } from "@/features/authorization/hooks/use-require-permission";
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
+import { WorkspaceOperationalGate, WorkspaceSwitcher } from "@/features/workspace";
 import { authRoutes, stopWorkNewRoute } from "@/lib/auth/routes";
 
 import { ActionAttentionListView } from "./action-attention-list-view";
@@ -19,6 +20,7 @@ import { PreventiveStopOperationalFiltersModal } from "./preventive-stop-operati
 import { useStopWorkListView } from "../hooks/use-stop-work-list-view";
 import {
   parseDashboardAttention,
+  parseDashboardAttentionScope,
   stopWorkAttentionEmptyMessage,
   stopWorkAttentionSubtitle,
   stopWorkAttentionTitle,
@@ -37,6 +39,7 @@ const HEADER_ICON_SIZE = 22;
 
 type PreventiveStopListScreenProps = {
   dashboardAttention?: string;
+  dashboardAttentionScope?: string;
 };
 
 type SearchInputProps = {
@@ -71,11 +74,13 @@ function SearchInput({ accessibilityLabel, placeholder, value, onChangeText }: S
 
 export function PreventiveStopListScreen({
   dashboardAttention: dashboardAttentionParam,
+  dashboardAttentionScope: dashboardAttentionScopeParam,
 }: PreventiveStopListScreenProps = {}) {
   const router = useRouter();
   useRequirePermission("occurrence.read");
 
   const dashboardAttention = parseDashboardAttention(dashboardAttentionParam);
+  const dashboardAttentionScope = parseDashboardAttentionScope(dashboardAttentionScopeParam);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [funnel, setFunnel] = useState<OperationalListFunnelState>(EMPTY_OPERATIONAL_FUNNEL);
@@ -116,18 +121,19 @@ export function PreventiveStopListScreen({
     fetchNextPage,
   } = useStopWorkListView({
     dashboardAttention,
+    dashboardAttentionScope,
     operationalFilters,
   });
 
   const pageTitle =
     isAttentionView && dashboardAttention
-      ? stopWorkAttentionTitle(dashboardAttention)
+      ? stopWorkAttentionTitle(dashboardAttention, dashboardAttentionScope)
       : "Paralisações";
 
   const pageSubtitle =
     isAttentionView && dashboardAttention
-      ? stopWorkAttentionSubtitle(dashboardAttention)
-      : "Paralisações Preventivas da organização ativa.";
+      ? stopWorkAttentionSubtitle(dashboardAttention, dashboardAttentionScope)
+      : "Paralisações Preventivas do Ambiente ativo.";
 
   const errorMessage =
     error instanceof OperationalOccurrenceListRpcError
@@ -138,7 +144,7 @@ export function PreventiveStopListScreen({
 
   const emptyMessage = useMemo(() => {
     if (isAttentionView && dashboardAttention) {
-      return stopWorkAttentionEmptyMessage(dashboardAttention);
+      return stopWorkAttentionEmptyMessage(dashboardAttention, dashboardAttentionScope);
     }
 
     if (hasDiscovery) {
@@ -146,7 +152,7 @@ export function PreventiveStopListScreen({
     }
 
     return undefined;
-  }, [dashboardAttention, hasDiscovery, isAttentionView]);
+  }, [dashboardAttention, dashboardAttentionScope, hasDiscovery, isAttentionView]);
 
   function clearSearchAndFunnel() {
     setSearchInput("");
@@ -223,6 +229,8 @@ export function PreventiveStopListScreen({
 
       <Text style={styles.subtitle}>{pageSubtitle}</Text>
 
+      {!isAttentionView ? <WorkspaceSwitcher /> : null}
+
       {!isAttentionView ? (
         <View style={styles.searchRow}>
           <SearchInput
@@ -237,87 +245,96 @@ export function PreventiveStopListScreen({
     </View>
   );
 
-  return (
-    <SafeAreaView style={styles.container}>
-      {listHeader}
-
-      {isAttentionView ? (
+  if (isAttentionView) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {listHeader}
         <ActionAttentionListView
           emptyMessage={emptyMessage ?? ""}
           isFetching={isFetching}
           items={attentionItems}
           onRefresh={refetch}
         />
-      ) : isLoading && preventiveStops.length === 0 ? (
-        <View style={styles.listBody}>
-          <OccurrenceLoading />
-        </View>
-      ) : isError ? (
-        <View style={styles.listBody}>
-          <OccurrenceError
-            message={errorMessage}
-            onRetry={() => {
-              void refetch();
-            }}
-          />
-        </View>
-      ) : (
-        <FlatList
-          contentContainerStyle={styles.listContent}
-          data={preventiveStops}
-          keyExtractor={(item) => item.id}
-          ListEmptyComponent={
-            hasDiscovery ? (
-              <View style={styles.discoveryEmpty}>
-                <Text style={styles.discoveryEmptyText}>{emptyMessage}</Text>
-                <Button
-                  accessibilityLabel="Limpar busca e filtros"
-                  variant="secondary"
-                  onPress={clearSearchAndFunnel}
-                >
-                  Limpar busca e filtros
-                </Button>
-              </View>
-            ) : (
-              <PreventiveStopEmpty
-                actionLabel="Registrar Paralisação"
-                description={emptyMessage}
-                onAction={() => {
-                  router.push(stopWorkNewRoute);
-                }}
-              />
-            )
-          }
-          ListFooterComponent={
-            hasNext ? (
-              <View style={styles.loadMore}>
-                <Button
-                  accessibilityLabel="Carregar mais Paralisações Preventivas"
-                  loading={isFetchingNextPage}
-                  variant="secondary"
-                  onPress={() => {
-                    fetchNextPage();
-                  }}
-                >
-                  {isFetchingNextPage ? "Carregando…" : "Carregar mais"}
-                </Button>
-              </View>
-            ) : null
-          }
-          refreshControl={
-            <RefreshControl
-              colors={[colors.primary]}
-              refreshing={isFetching && !isFetchingNextPage}
-              tintColor={colors.primary}
-              onRefresh={() => {
-                refetch();
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <WorkspaceOperationalGate>
+        {listHeader}
+
+        {isLoading && preventiveStops.length === 0 ? (
+          <View style={styles.listBody}>
+            <OccurrenceLoading />
+          </View>
+        ) : isError ? (
+          <View style={styles.listBody}>
+            <OccurrenceError
+              message={errorMessage}
+              onRetry={() => {
+                void refetch();
               }}
             />
-          }
-          renderItem={({ item }) => <PreventiveStopCard preventiveStop={item} />}
-          style={styles.list}
-        />
-      )}
+          </View>
+        ) : (
+          <FlatList
+            contentContainerStyle={styles.listContent}
+            data={preventiveStops}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={
+              hasDiscovery ? (
+                <View style={styles.discoveryEmpty}>
+                  <Text style={styles.discoveryEmptyText}>{emptyMessage}</Text>
+                  <Button
+                    accessibilityLabel="Limpar busca e filtros"
+                    variant="secondary"
+                    onPress={clearSearchAndFunnel}
+                  >
+                    Limpar busca e filtros
+                  </Button>
+                </View>
+              ) : (
+                <PreventiveStopEmpty
+                  actionLabel="Registrar Paralisação"
+                  description={emptyMessage}
+                  onAction={() => {
+                    router.push(stopWorkNewRoute);
+                  }}
+                />
+              )
+            }
+            ListFooterComponent={
+              hasNext ? (
+                <View style={styles.loadMore}>
+                  <Button
+                    accessibilityLabel="Carregar mais Paralisações Preventivas"
+                    loading={isFetchingNextPage}
+                    variant="secondary"
+                    onPress={() => {
+                      fetchNextPage();
+                    }}
+                  >
+                    {isFetchingNextPage ? "Carregando…" : "Carregar mais"}
+                  </Button>
+                </View>
+              ) : null
+            }
+            refreshControl={
+              <RefreshControl
+                colors={[colors.primary]}
+                refreshing={isFetching && !isFetchingNextPage}
+                tintColor={colors.primary}
+                onRefresh={() => {
+                  refetch();
+                }}
+              />
+            }
+            renderItem={({ item }) => <PreventiveStopCard preventiveStop={item} />}
+            style={styles.list}
+          />
+        )}
+      </WorkspaceOperationalGate>
     </SafeAreaView>
   );
 }

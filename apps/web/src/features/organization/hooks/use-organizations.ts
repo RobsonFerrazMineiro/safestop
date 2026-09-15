@@ -13,7 +13,7 @@ export function useOrganizations() {
 
   const query = useQuery({
     queryKey: organizationListQueryKey(userId ?? "pending"),
-    queryFn: getUserOrganizations,
+    queryFn: () => getUserOrganizations(userId),
     enabled: isAuthenticated && userId !== undefined && !isAuthLoading,
   });
 

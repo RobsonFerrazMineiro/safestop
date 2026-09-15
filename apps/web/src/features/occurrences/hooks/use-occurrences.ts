@@ -8,17 +8,24 @@ import { occurrenceQueryKeys } from "@safestop/query-keys";
 
 import { useAuthorization } from "@/features/authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
+import { useActiveWorkspace } from "@/features/workspace";
 
 import { createOccurrence } from "../services/create-occurrence";
 import { getContractorOrganizations } from "../services/get-contractor-organizations";
 import { getOccurrence, getOccurrences } from "../services/get-occurrences";
 import { getOccurrenceStatusHistory } from "../services/get-occurrence-status-history";
 import { getOrganizationAreas } from "../services/get-organization-areas";
+import { getWorkspaceAreas } from "../services/get-workspace-areas";
+import {
+  formatWorkspaceContractLabel,
+  getWorkspaceContracts,
+} from "../services/get-workspace-contracts";
 import {
   OCCURRENCE_DETAIL_STALE_TIME_MS,
   OCCURRENCE_LIST_STALE_TIME_MS,
   OCCURRENCE_STATUS_HISTORY_STALE_TIME_MS,
 } from "../types";
+import { canSelectOwnTeam } from "../utils/workspace-create-rules";
 
 export function useOccurrences(
   filters: OccurrenceListFilters = {},
@@ -110,10 +117,96 @@ export function useOrganizationAreas() {
   };
 }
 
+/** Áreas dual-read do Ambiente ativo (create Stop Work — Gate 13X.3). */
+export function useWorkspaceAreas() {
+  const { can, isReady: isAuthzReady } = useAuthorization();
+  const { activeOrganization, isReady: isOrgReady } = useActiveOrganization();
+  const { activeWorkspace } = useActiveWorkspace();
+
+  const organizationId = activeOrganization?.id;
+  const workspaceId = activeWorkspace?.id;
+  const ownerOrganizationId = activeWorkspace?.ownerOrganizationId ?? null;
+  const canCreate = can("occurrence.create");
+  const enabled =
+    isOrgReady &&
+    isAuthzReady &&
+    organizationId !== undefined &&
+    workspaceId !== undefined &&
+    canCreate;
+
+  const query = useQuery({
+    queryKey: [
+      ...occurrenceQueryKeys.workspaceAll(organizationId ?? "", workspaceId ?? ""),
+      "areas",
+      "list",
+      ownerOrganizationId,
+    ] as const,
+    queryFn: () => getWorkspaceAreas(workspaceId!, ownerOrganizationId),
+    enabled,
+    staleTime: OCCURRENCE_LIST_STALE_TIME_MS,
+  });
+
+  return {
+    areas: query.data ?? [],
+    isLoading: enabled && query.isLoading,
+    isError: query.isError,
+    error: query.error,
+  };
+}
+
+/** Contratos ativos do Ambiente (create Stop Work — Gate 13X.3). */
+export function useWorkspaceContracts() {
+  const { can, isReady: isAuthzReady } = useAuthorization();
+  const { activeOrganization, isReady: isOrgReady } = useActiveOrganization();
+  const { activeWorkspace } = useActiveWorkspace();
+
+  const organizationId = activeOrganization?.id;
+  const workspaceId = activeWorkspace?.id;
+  const canCreate = can("occurrence.create");
+  const enabled =
+    isOrgReady &&
+    isAuthzReady &&
+    organizationId !== undefined &&
+    workspaceId !== undefined &&
+    canCreate;
+
+  const query = useQuery({
+    queryKey: [
+      ...occurrenceQueryKeys.workspaceAll(organizationId ?? "", workspaceId ?? ""),
+      "contracts",
+      "list",
+    ] as const,
+    queryFn: () => getWorkspaceContracts(workspaceId!),
+    enabled,
+    staleTime: OCCURRENCE_LIST_STALE_TIME_MS,
+  });
+
+  const allowsOwnTeam =
+    organizationId !== undefined &&
+    canSelectOwnTeam({
+      actingOrganizationId: organizationId,
+      ownerOrganizationId: activeWorkspace?.ownerOrganizationId ?? null,
+    });
+
+  return {
+    contracts: query.data ?? [],
+    contractOptions: (query.data ?? []).map((contract) => ({
+      id: contract.id,
+      name: formatWorkspaceContractLabel(contract),
+    })),
+    allowsOwnTeam,
+    isLoading: enabled && query.isLoading,
+    isError: query.isError,
+    error: query.error,
+  };
+}
+
 export function useCreateOccurrence() {
   const queryClient = useQueryClient();
   const { activeOrganization } = useActiveOrganization();
+  const { activeWorkspace } = useActiveWorkspace();
   const organizationId = activeOrganization?.id;
+  const workspaceId = activeWorkspace?.id;
 
   const mutation = useMutation({
     mutationFn: (input: CreateOccurrenceInput) => {
@@ -121,7 +214,11 @@ export function useCreateOccurrence() {
         throw new Error("Organização ativa não definida.");
       }
 
-      return createOccurrence(organizationId, input);
+      if (!workspaceId) {
+        throw new Error("Workspace ativo é obrigatório para registrar a ocorrência.");
+      }
+
+      return createOccurrence(organizationId, input, workspaceId);
     },
     onSuccess: async () => {
       if (!organizationId) {
@@ -131,6 +228,12 @@ export function useCreateOccurrence() {
       await queryClient.invalidateQueries({
         queryKey: occurrenceQueryKeys.lists(organizationId),
       });
+
+      if (workspaceId) {
+        await queryClient.invalidateQueries({
+          queryKey: occurrenceQueryKeys.workspaceLists(organizationId, workspaceId),
+        });
+      }
     },
   });
 
@@ -139,6 +242,7 @@ export function useCreateOccurrence() {
     isCreating: mutation.isPending,
     error: mutation.error,
     reset: mutation.reset,
+    hasActiveWorkspace: workspaceId !== undefined,
   };
 }
 

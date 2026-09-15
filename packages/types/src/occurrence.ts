@@ -35,6 +35,11 @@ export type OccurrenceDetails = OccurrenceSummary & {
   occurredAt: string;
   stoppedAt: string | null;
   organizationId: string;
+  /** Gate 13A+ — null = legado sem Workspace. */
+  workspaceId: string | null;
+  /** Gate 13X.2 — EMPRESA originadora; preenchido no servidor. */
+  originOrganizationId: string | null;
+  originOrganizationName: string | null;
   areaId: string;
   unitId: string | null;
   contractId: string | null;
@@ -89,6 +94,12 @@ export type OccurrenceListFilters = {
   search?: string;
   areaId?: string;
   contractorOrganizationId?: string;
+  /**
+   * Gate 13C.1 — contexto Workspace opcional (`p_workspace_id`).
+   * Omitido/undefined ⇒ NULL na RPC (legado Organization-scoped).
+   * Consumo Web obrigatório = Gate 13C.2.
+   */
+  workspaceId?: string;
   pagination?: {
     cursor?: { sortValue: string; id: string } | null;
     limit?: number;

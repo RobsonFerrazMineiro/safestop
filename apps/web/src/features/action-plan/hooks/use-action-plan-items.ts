@@ -26,7 +26,8 @@ export function useActionPlanItems(
   });
 
   return {
-    items: query.data ?? [],
+    // Em erro, não inventar lista vazia como sucesso — a UI deve checar `isError`.
+    items: query.isError ? [] : (query.data ?? []),
     isLoading: queryEnabled && query.isLoading,
     isError: query.isError,
     error: query.error,

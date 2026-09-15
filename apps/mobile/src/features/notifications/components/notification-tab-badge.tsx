@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { colors } from "@safestop/ui";
 
 import type { NotificationBadgeCounts } from "../types";
 import { NOTIFICATION_COPY } from "../utils/notification-copy";
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
   },
   unreadBadge: {
     alignItems: "center",
-    backgroundColor: "#F97316",
+    backgroundColor: colors.primary,
     borderRadius: 999,
     justifyContent: "center",
     minHeight: 18,

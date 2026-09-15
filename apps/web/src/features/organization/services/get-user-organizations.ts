@@ -3,16 +3,30 @@ import { createClient } from "@/lib/auth/client";
 import { mapOrganizationRows } from "./map-organization";
 import type { UserOrganization } from "../types";
 
-export async function getUserOrganizations(): Promise<UserOrganization[]> {
+export async function getUserOrganizations(providedUserId?: string): Promise<UserOrganization[]> {
   const supabase = createClient();
+  let userId = providedUserId;
 
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+  if (!userId) {
+    try {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
-  if (authError || !user) {
-    throw new Error("Não autenticado.");
+      if (authError || !user) {
+        throw new Error("Não autenticado.");
+      }
+
+      userId = user.id;
+    } catch (err) {
+      if (err instanceof Error && err.message === "Não autenticado.") {
+        throw err;
+      }
+      throw new Error(
+        "Não foi possível verificar a autenticação com o servidor. Verifique a conexão com o backend.",
+      );
+    }
   }
 
   const { data, error } = await supabase
@@ -31,7 +45,7 @@ export async function getUserOrganizations(): Promise<UserOrganization[]> {
         )
       `,
     )
-    .eq("profile_id", user.id)
+    .eq("profile_id", userId)
     .eq("is_active", true);
 
   if (error) {

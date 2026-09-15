@@ -12,6 +12,7 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "test": "node ../../node_modules/vitest/vitest.mjs run",
     "clean": "node -e \"const fs=require('fs');['dist','tsconfig.tsbuildinfo'].forEach((p)=>fs.rmSync(p,{recursive:true,force:true}))\""
   },
   "dependencies": {

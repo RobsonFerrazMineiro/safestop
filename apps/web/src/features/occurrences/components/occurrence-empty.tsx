@@ -8,7 +8,7 @@ export function OccurrenceEmpty() {
       <p className="text-base text-gray-300">Nenhuma ocorrência registrada nesta organização.</p>
       <Can permission="occurrence.create">
         <Link
-          className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-400"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
           href="/stop-work/new"
         >
           Registrar paralisação

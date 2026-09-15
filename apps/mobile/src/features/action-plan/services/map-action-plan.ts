@@ -4,11 +4,14 @@ import {
   isActionItemStatus,
   isActionPlanStatus,
   type ActionItem,
-  type ActionItemAttachment,
   type ActionItemAttachmentMimeType,
 } from "@safestop/types";
 
-import type { ActionItemEnriched, ActionPlanEnriched } from "../types";
+import type {
+  ActionItemEnriched,
+  ActionItemAttachmentEnriched,
+  ActionPlanEnriched,
+} from "../types";
 
 type ProfileJoin = { full_name: string | null };
 
@@ -55,12 +58,14 @@ type AttachmentRow = {
   organization_id: string;
   storage_bucket: string;
   storage_path: string;
+  original_file_name: string;
   upload_status: string;
   mime_type: string;
   file_size: number;
   caption: string | null;
   created_at: string;
-  created_by: string;
+  /** Coluna persistida — NOT NULL no schema. */
+  uploaded_by: string;
 };
 
 function normalizeJoin<T>(value: T | T[] | null | undefined): T | null {
@@ -132,7 +137,9 @@ function isAttachmentMimeType(value: string): value is ActionItemAttachmentMimeT
   return (ACTION_ITEM_ATTACHMENT_MIME_TYPES as readonly string[]).includes(value);
 }
 
-export function mapActionItemAttachmentRow(row: AttachmentRow): ActionItemAttachment | null {
+export function mapActionItemAttachmentRow(
+  row: AttachmentRow,
+): ActionItemAttachmentEnriched | null {
   if (
     row.upload_status !== "PENDING" &&
     row.upload_status !== "COMPLETED" &&
@@ -156,6 +163,7 @@ export function mapActionItemAttachmentRow(row: AttachmentRow): ActionItemAttach
     fileSize: row.file_size,
     caption: row.caption,
     createdAt: row.created_at,
-    createdBy: row.created_by,
+    createdBy: row.uploaded_by,
+    originalFileName: row.original_file_name,
   };
 }

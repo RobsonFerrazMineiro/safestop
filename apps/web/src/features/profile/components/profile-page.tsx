@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { User } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,8 +30,8 @@ function formatDate(value: string | null): string {
 function ReadOnlyField({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1 text-left">
-      <span className="text-sm font-medium text-gray-400">{label}</span>
-      <span className="text-base text-gray-200">{value}</span>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className="text-base text-foreground">{value}</span>
     </div>
   );
 }
@@ -47,7 +48,7 @@ type ProfileFormProps = {
 function ProfileInactiveBanner() {
   return (
     <p
-      className="rounded-lg border border-amber-700/60 bg-amber-950/40 px-3 py-2 text-sm text-amber-100"
+      className="rounded-lg border border-status-warning-border bg-status-warning-bg/40 px-3 py-2 text-sm text-status-warning-fg"
       role="alert"
     >
       {PROFILE_INACTIVE_MESSAGE} A edição do perfil está desabilitada.
@@ -108,25 +109,30 @@ function ProfileForm({
   }
 
   return (
-    <form className="flex flex-col gap-6" onSubmit={handleSubmit(onSubmit)}>
+    <form
+      className="flex flex-col gap-6 rounded-lg border border-border bg-card/60 p-4 shadow-sm sm:p-6"
+      onSubmit={handleSubmit(onSubmit)}
+    >
       {isProfileInactive ? <ProfileInactiveBanner /> : null}
 
       <ReadOnlyField label="E-mail" value={email ?? "—"} />
 
       <div className="flex flex-col gap-2 text-left">
-        <label className="text-sm font-medium text-gray-200" htmlFor="fullName">
+        <label className="text-sm font-medium text-foreground" htmlFor="fullName">
           Nome completo
         </label>
         <Input disabled={isFormDisabled} id="fullName" {...register("fullName")} />
-        {errors.fullName ? <p className="text-sm text-red-300">{errors.fullName.message}</p> : null}
+        {errors.fullName ? (
+          <p className="text-sm text-destructive">{errors.fullName.message}</p>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-2 text-left">
-        <label className="text-sm font-medium text-gray-200" htmlFor="phone">
+        <label className="text-sm font-medium text-foreground" htmlFor="phone">
           Telefone
         </label>
         <Input disabled={isFormDisabled} id="phone" type="tel" {...register("phone")} />
-        {errors.phone ? <p className="text-sm text-red-300">{errors.phone.message}</p> : null}
+        {errors.phone ? <p className="text-sm text-destructive">{errors.phone.message}</p> : null}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -139,13 +145,13 @@ function ProfileForm({
       </div>
 
       {formError ? (
-        <p className="rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2 text-sm text-red-200">
+        <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {formError}
         </p>
       ) : null}
 
       {isUpdateSuccess ? (
-        <p className="rounded-lg border border-green-900/60 bg-green-950/30 px-3 py-2 text-sm text-green-200">
+        <p className="rounded-lg border border-status-success-border bg-status-success-bg/40 px-3 py-2 text-sm text-status-success-fg">
           Perfil atualizado com sucesso.
         </p>
       ) : null}
@@ -184,9 +190,11 @@ export function ProfilePage() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-6 py-10">
+    <PageShell className="gap-6" width="default">
       <PageHeader
         backHref="/"
+        backLabel="Dashboard"
+        eyebrow="CONTA DO USUÁRIO"
         icon={User}
         subtitle="Atualize seus dados de contato."
         title="Meu perfil"
@@ -202,6 +210,6 @@ export function ProfilePage() {
         }}
         profile={profile}
       />
-    </section>
+    </PageShell>
   );
 }

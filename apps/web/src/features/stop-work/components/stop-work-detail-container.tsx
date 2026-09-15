@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useParams } from "next/navigation";
 
+import { PageHeader } from "@/components/page-header";
+import { PageShell } from "@/components/page-shell";
+import { FileText } from "lucide-react";
 import { CollapsibleSection } from "@/components/collapsible-section";
 import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +20,7 @@ import { NotificationAwarenessBanner } from "@/features/notifications";
 import { ImsReferenceSection } from "@/features/ims-reference";
 import { ActionPlanSection, shouldShowActionPlanSection } from "@/features/action-plan";
 import { MdhoSection } from "@/features/mdho";
+import { useWorkspaceOccurrenceDeepLink } from "@/features/workspace/hooks/use-workspace-occurrence-deep-link";
 
 import { usePreventiveStop } from "../hooks/use-stop-work";
 import { OperationalDeadEndBanner } from "./operational-dead-end-banner";
@@ -57,8 +60,15 @@ export function StopWorkDetailContainer() {
   const { activeOrganization } = useActiveOrganization();
   const { stopWork, isLoading, isError, error, isNotFound, refetch, isFetching } =
     usePreventiveStop(stopWorkId);
+  const { isForbiddenWorkspace, isLegacyWithoutWorkspace, isAligningWorkspace } =
+    useWorkspaceOccurrenceDeepLink({
+      occurrenceId: stopWorkId,
+      occurrenceWorkspaceId: stopWork?.workspaceId,
+      isOccurrenceReady: Boolean(stopWork) && !isLoading && !isError && !isNotFound,
+      isOccurrenceMissing: isNotFound,
+    });
 
-  if (isLoading) {
+  if (isLoading || isAligningWorkspace) {
     return <StopWorkLoading message="Carregando paralisação..." />;
   }
 
@@ -73,14 +83,18 @@ export function StopWorkDetailContainer() {
     );
   }
 
-  if (isNotFound || !stopWork) {
+  if (isNotFound || !stopWork || isForbiddenWorkspace) {
     return (
-      <main className="flex min-h-screen w-full flex-col gap-6 px-6 py-10">
-        <Link className="text-sm text-primary hover:text-primary/80" href="/stop-work">
-          ← Voltar para paralisações
-        </Link>
-        <p className="text-base text-muted-foreground">Paralisação não encontrada.</p>
-      </main>
+      <PageShell width="default">
+        <PageHeader
+          backHref="/stop-work"
+          backLabel="Paralisações"
+          eyebrow="FICHA TÉCNICA DA OCORRÊNCIA"
+          icon={FileText}
+          subtitle="A ocorrência solicitada não foi localizada ou você não possui permissão para acessá-la."
+          title="Paralisação não encontrada"
+        />
+      </PageShell>
     );
   }
 
@@ -92,34 +106,42 @@ export function StopWorkDetailContainer() {
       : null;
 
   return (
-    <main className="flex min-h-screen w-full flex-col gap-6 px-6 py-10">
-      <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
-        <Link className="text-primary hover:text-primary/80" href="/stop-work">
-          Paralisações
-        </Link>
-        <span className="mx-2">/</span>
-        <span>{stopWork.publicCode}</span>
-      </nav>
-
-      <header className="flex flex-col gap-2">
-        <span className="font-mono text-sm text-primary">{stopWork.publicCode}</span>
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status={stopWork.status} />
-          <StatusBadge severity={stopWork.severity} />
-          {stopWork.status === "INTERDICAO_CONFIRMADA" ? (
-            <Badge
-              className="border-status-destructive-border bg-status-destructive-bg font-medium text-status-destructive-fg"
-              variant="outline"
-            >
-              Interdição Oficial
-            </Badge>
-          ) : null}
-        </div>
-        <h1 className="text-3xl font-bold text-foreground">{stopWork.title}</h1>
-      </header>
+    <PageShell width="default">
+      <PageHeader
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={stopWork.status} />
+            <StatusBadge severity={stopWork.severity} />
+            {stopWork.status === "INTERDICAO_CONFIRMADA" ? (
+              <Badge
+                className="border-status-destructive-border bg-status-destructive-bg font-medium text-status-destructive-fg"
+                variant="outline"
+              >
+                Interdição Oficial
+              </Badge>
+            ) : null}
+          </div>
+        }
+        backHref="/stop-work"
+        backLabel="Paralisações"
+        bordered
+        eyebrow="FICHA TÉCNICA DA OCORRÊNCIA"
+        icon={FileText}
+        subtitle={
+          <span className="font-mono font-bold tracking-wide text-primary">
+            {stopWork.publicCode}
+          </span>
+        }
+        title={stopWork.title}
+      />
 
       {organizationId ? (
         <NotificationAwarenessBanner occurrenceId={stopWork.id} organizationId={organizationId} />
+      ) : null}
+      {isLegacyWithoutWorkspace ? (
+        <div className="rounded-md border border-[var(--border)] bg-[var(--surface-muted)]/70 px-3 py-2 text-sm text-[var(--foreground-muted)]">
+          Legado sem Workspace
+        </div>
       ) : null}
       {stopWork.status === "INTERDICAO_CONFIRMADA" ? <InterdicaoBanner /> : null}
       {!(shouldShowActionPlanSection(stopWork) && stopWork.status === "EM_TRATATIVA") ? (
@@ -128,21 +150,25 @@ export function StopWorkDetailContainer() {
 
       <Card className="gap-4 py-4">
         <CardHeader className="px-4">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
             Localização
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 px-4 sm:grid-cols-2">
           <DetailField label="Área" value={stopWork.areaName ?? "—"} />
           <DetailField label="Local" value={stopWork.locationDescription} />
-          <DetailField label="Empresa" value={stopWork.contractorOrganizationName ?? "—"} />
+          <DetailField label="Originadora" value={stopWork.originOrganizationName ?? "—"} />
+          <DetailField
+            label="Contratada"
+            value={stopWork.contractorOrganizationName ?? "Equipe própria"}
+          />
           {coordinates ? <DetailField label="Coordenadas" value={coordinates} /> : null}
         </CardContent>
       </Card>
 
       <Card className="gap-4 py-4">
         <CardHeader className="px-4">
-          <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
             Descrição
           </CardTitle>
         </CardHeader>
@@ -163,7 +189,7 @@ export function StopWorkDetailContainer() {
         <CardContent className="px-4">
           <CollapsibleSection
             summary={
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
                 Registro
               </h2>
             }
@@ -224,6 +250,6 @@ export function StopWorkDetailContainer() {
           organizationId={organizationId}
         />
       ) : null}
-    </main>
+    </PageShell>
   );
 }

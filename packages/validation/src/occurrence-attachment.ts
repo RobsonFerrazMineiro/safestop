@@ -12,7 +12,7 @@ const attachmentTypeSchema = z.enum(OCCURRENCE_ATTACHMENT_TYPES, {
 });
 
 const attachmentMimeTypeSchema = z.enum(OCCURRENCE_ATTACHMENT_MIME_TYPES, {
-  errorMap: () => ({ message: "Formato de imagem não suportado." }),
+  errorMap: () => ({ message: "Formato de arquivo não suportado." }),
 });
 
 const latitudeSchema = z

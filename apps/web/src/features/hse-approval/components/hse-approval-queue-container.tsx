@@ -6,14 +6,13 @@ import { useRouter } from "next/navigation";
 import { ClipboardCheck } from "lucide-react";
 
 import { PageHeader } from "@/components/page-header";
+import { PageShell } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 
 import { useHseApprovalContext } from "../hooks/use-hse-approval-context";
 import { useHseApprovalQueue } from "../hooks/use-hse-approval-queue";
 import { HseApprovalQueue } from "./hse-approval-queue";
 import { HseApprovalQueueForbidden, HseApprovalQueueLoading } from "./hse-approval-queue-item";
-
-const QUEUE_SHELL_CLASS = "flex w-full flex-1 flex-col gap-6 px-6 py-10";
 
 export function HseApprovalQueueContainer() {
   const router = useRouter();
@@ -46,18 +45,18 @@ export function HseApprovalQueueContainer() {
 
   if (isLoading) {
     return (
-      <section className={QUEUE_SHELL_CLASS}>
+      <PageShell className="gap-6" width="wide">
         <HseApprovalQueueHeader />
         <HseApprovalQueueLoading />
-      </section>
+      </PageShell>
     );
   }
 
   if (isError) {
     return (
-      <section className={QUEUE_SHELL_CLASS}>
+      <PageShell className="gap-6" width="wide">
         <HseApprovalQueueHeader />
-        <div className="flex flex-col items-start gap-3">
+        <div className="flex flex-col items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/5 p-4">
           <p className="text-sm text-destructive" role="alert">
             {error instanceof Error
               ? error.message
@@ -73,12 +72,12 @@ export function HseApprovalQueueContainer() {
             Tentar novamente
           </Button>
         </div>
-      </section>
+      </PageShell>
     );
   }
 
   return (
-    <section className={QUEUE_SHELL_CLASS}>
+    <PageShell className="gap-6" width="wide">
       <HseApprovalQueueHeader />
       {enabled ? (
         <HseApprovalQueue
@@ -90,7 +89,7 @@ export function HseApprovalQueueContainer() {
           }}
         />
       ) : null}
-    </section>
+    </PageShell>
   );
 }
 
@@ -98,7 +97,8 @@ function HseApprovalQueueHeader() {
   return (
     <PageHeader
       backHref="/"
-      backLabel="Voltar"
+      backLabel="Dashboard"
+      eyebrow="GOVERNANÇA E SEGURANÇA"
       icon={ClipboardCheck}
       subtitle="Aguardando sua aprovação"
       title="Aprovação HSE"

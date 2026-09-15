@@ -1,6 +1,8 @@
 import type { DashboardAccessContext, MyActionItemsSummary } from "@safestop/types";
 import {
   DASHBOARD_CLOSED_ACTION_ITEM_STATUSES,
+  DASHBOARD_DUE_SOON_DAYS_DEFAULT,
+  isDueSoonActionItem,
   isMyPendingActionItem,
   isOverdueActionItem,
 } from "@safestop/types";
@@ -15,8 +17,10 @@ type ActionItemRow = {
 export async function getMyActionItemsSummary(
   organizationId: string,
   access: DashboardAccessContext,
+  options: { dueSoonDays?: number } = {},
 ): Promise<MyActionItemsSummary> {
   const supabase = createClient();
+  const dueSoonDays = options.dueSoonDays ?? DASHBOARD_DUE_SOON_DAYS_DEFAULT;
 
   const { data, error } = await supabase
     .from("action_items")
@@ -34,6 +38,7 @@ export async function getMyActionItemsSummary(
 
   let myPendingActions = 0;
   let myOverdueActions = 0;
+  let myDueSoonActions = 0;
 
   for (const row of rows) {
     const status = row.status as Parameters<typeof isMyPendingActionItem>[0];
@@ -51,7 +56,20 @@ export async function getMyActionItemsSummary(
     ) {
       myOverdueActions += 1;
     }
+
+    if (
+      isDueSoonActionItem(
+        {
+          status,
+          dueAt: row.due_at,
+          now,
+        },
+        dueSoonDays,
+      )
+    ) {
+      myDueSoonActions += 1;
+    }
   }
 
-  return { myPendingActions, myOverdueActions };
+  return { myPendingActions, myOverdueActions, myDueSoonActions };
 }

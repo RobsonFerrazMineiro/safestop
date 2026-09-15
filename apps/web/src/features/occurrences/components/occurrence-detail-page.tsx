@@ -45,7 +45,7 @@ export function OccurrenceDetailPage() {
   if (isNotFound || !occurrence) {
     return (
       <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-4 px-6 py-10">
-        <Link className="text-sm text-orange-400 hover:text-orange-300" href="/stop-work">
+        <Link className="text-sm text-primary hover:text-primary/80" href="/stop-work">
           ← Voltar para ocorrências
         </Link>
         <p className="text-base text-gray-300">Ocorrência não encontrada ou sem acesso.</p>
@@ -56,10 +56,10 @@ export function OccurrenceDetailPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-3xl flex-col gap-6 px-6 py-10">
       <header className="flex flex-col gap-2">
-        <Link className="text-sm text-orange-400 hover:text-orange-300" href="/stop-work">
+        <Link className="text-sm text-primary hover:text-primary/80" href="/stop-work">
           ← Voltar para ocorrências
         </Link>
-        <span className="font-mono text-sm text-orange-400">{occurrence.publicCode}</span>
+        <span className="font-mono text-sm text-primary">{occurrence.publicCode}</span>
         <h1 className="text-3xl font-bold text-gray-100">{occurrence.title}</h1>
         <p className="text-sm text-gray-400">
           {formatOccurrenceStatus(occurrence.status)} ·{" "}

@@ -12,10 +12,10 @@ type DashboardPeriodFilterProps = {
 
 export function DashboardPeriodFilter({ activePreset, onChange }: DashboardPeriodFilterProps) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5 sm:items-end">
       <div
         aria-label="Período dos indicadores de fluxo"
-        className="flex flex-wrap gap-2"
+        className="flex flex-wrap gap-1.5"
         role="radiogroup"
       >
         {DASHBOARD_PERIOD_PRESETS.map((preset) => {
@@ -25,7 +25,11 @@ export function DashboardPeriodFilter({ activePreset, onChange }: DashboardPerio
             <Button
               key={preset.id}
               aria-checked={selected}
-              className={selected ? "border-primary bg-primary/10 text-primary" : undefined}
+              className={
+                selected
+                  ? "border-primary bg-primary/10 font-medium text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }
               role="radio"
               size="sm"
               type="button"
@@ -39,7 +43,9 @@ export function DashboardPeriodFilter({ activePreset, onChange }: DashboardPerio
           );
         })}
       </div>
-      <p className="text-xs text-muted-foreground">O período afeta apenas indicadores de fluxo</p>
+      <p className="text-[11px] text-muted-foreground/75">
+        O período afeta apenas indicadores de fluxo
+      </p>
     </div>
   );
 }

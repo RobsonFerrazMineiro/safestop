@@ -1,15 +1,25 @@
 import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text } from "react-native";
+import { FileText } from "lucide-react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import type { ActionItemPriority } from "@safestop/types";
 import { submitActionItemSchema } from "@safestop/validation";
 import { colors, overlay, radius, spacing, statusChip, typography } from "@safestop/ui";
 
 import { Button, TextField } from "@/components/ui";
 import { EvidenceAddSheet } from "@/features/evidence/components/evidence-add-sheet";
+import { isEvidencePdfMimeType } from "@/features/evidence/utils/is-evidence-mime";
+import { openEvidenceSignedUrl } from "@/features/evidence/utils/open-evidence-signed-url";
 
 import { useActionItemAttachments, useUploadActionItemEvidence } from "../hooks";
+import { getActionItemAttachmentSignedUrl } from "../services/get-action-item-attachment-signed-url";
 import { ACTION_ITEM_ATTACHMENT_MAX_COUNT } from "../types";
 import { ACTION_PLAN_COPY } from "../utils/action-plan-copy";
+import {
+  formatEvidenceCounter,
+  getActionItemEvidenceSubmitError,
+  getAttachmentListRefreshError,
+  requiresActionItemEvidence,
+} from "../utils/action-plan-evidence-rules";
 
 type ActionPlanSubmitSheetProps = {
   visible: boolean;
@@ -21,10 +31,6 @@ type ActionPlanSubmitSheetProps = {
   onClose: () => void;
   onSubmit: (completionDescription: string) => Promise<void>;
 };
-
-function requiresEvidence(priority: ActionItemPriority): boolean {
-  return priority === "HIGH" || priority === "CRITICAL";
-}
 
 export function ActionPlanSubmitSheet({
   visible,
@@ -40,18 +46,22 @@ export function ActionPlanSubmitSheet({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showAddSheet, setShowAddSheet] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [openError, setOpenError] = useState<string | null>(null);
 
   const { attachments, completedCount, refetch } = useActionItemAttachments(
     visible ? itemId : null,
   );
 
-  const { pickFromCamera, pickFromLibrary, isUploading } = useUploadActionItemEvidence({
-    occurrenceId,
-    itemId,
-    completedCount,
-  });
+  const { pickFromCamera, pickFromLibrary, pickFromPdf, isUploading } = useUploadActionItemEvidence(
+    {
+      occurrenceId,
+      itemId,
+      completedCount,
+    },
+  );
 
-  const evidenceRequired = requiresEvidence(priority);
+  const evidenceRequired = requiresActionItemEvidence(priority);
+  const completedAttachments = attachments.filter((item) => item.uploadStatus === "COMPLETED");
 
   async function handleSend() {
     const parsed = submitActionItemSchema.safeParse({
@@ -64,8 +74,10 @@ export function ActionPlanSubmitSheet({
       return;
     }
 
-    if (evidenceRequired && completedCount < 1) {
-      setValidationError(ACTION_PLAN_COPY.evidenceRequiredError);
+    const evidenceError = getActionItemEvidenceSubmitError(priority, completedCount);
+
+    if (evidenceError) {
+      setValidationError(evidenceError);
       return;
     }
 
@@ -75,22 +87,56 @@ export function ActionPlanSubmitSheet({
     onClose();
   }
 
-  async function handlePick(from: "camera" | "library") {
+  async function handlePick(from: "camera" | "library" | "pdf") {
     if (!isOnline) {
       setUploadError(ACTION_PLAN_COPY.offline);
+      setShowAddSheet(false);
       return;
     }
 
     try {
       setUploadError(null);
-      if (from === "camera") {
-        await pickFromCamera();
-      } else {
-        await pickFromLibrary();
+      setValidationError(null);
+
+      const result =
+        from === "camera"
+          ? await pickFromCamera()
+          : from === "library"
+            ? await pickFromLibrary()
+            : await pickFromPdf();
+
+      setShowAddSheet(false);
+
+      if (result === "canceled") {
+        return;
       }
-      await refetch();
+
+      const refreshed = await refetch();
+      const listError = getAttachmentListRefreshError({
+        error: refreshed.error
+          ? refreshed.error instanceof Error
+            ? refreshed.error
+            : new Error("refresh_failed")
+          : null,
+      });
+
+      if (listError) {
+        setUploadError(listError);
+      }
     } catch (error) {
+      setShowAddSheet(false);
       setUploadError(error instanceof Error ? error.message : "Falha no upload.");
+    }
+  }
+
+  async function handleOpenAttachment(attachmentId: string) {
+    setOpenError(null);
+
+    try {
+      const url = await getActionItemAttachmentSignedUrl(attachmentId);
+      await openEvidenceSignedUrl(url);
+    } catch (error) {
+      setOpenError(error instanceof Error ? error.message : "Não foi possível abrir a evidência.");
     }
   }
 
@@ -118,14 +164,49 @@ export function ActionPlanSubmitSheet({
                   : ACTION_PLAN_COPY.evidenceOptional}
               </Text>
               <Text style={styles.counter}>
-                {ACTION_PLAN_COPY.evidenceLimit(completedCount, ACTION_ITEM_ATTACHMENT_MAX_COUNT)}
+                {formatEvidenceCounter(completedCount, ACTION_ITEM_ATTACHMENT_MAX_COUNT)}
               </Text>
+              <Text style={styles.hint}>{ACTION_PLAN_COPY.evidenceFormats}</Text>
 
-              {attachments.length > 0 ? (
-                <Text style={styles.attachments}>
-                  {attachments.filter((a) => a.uploadStatus === "COMPLETED").length} evidência(s)
-                  anexada(s)
-                </Text>
+              {completedAttachments.length > 0 ? (
+                <View style={styles.attachmentList}>
+                  {completedAttachments.map((attachment) => {
+                    const isPdf = isEvidencePdfMimeType(attachment.mimeType);
+
+                    return (
+                      <Pressable
+                        key={attachment.id}
+                        accessibilityLabel={
+                          isPdf
+                            ? `${ACTION_PLAN_COPY.openPdf} ${attachment.originalFileName}`
+                            : `${ACTION_PLAN_COPY.openEvidence} ${attachment.originalFileName}`
+                        }
+                        accessibilityRole="button"
+                        style={({ pressed }) => [
+                          styles.attachmentRow,
+                          pressed && styles.attachmentPressed,
+                        ]}
+                        onPress={() => {
+                          void handleOpenAttachment(attachment.id);
+                        }}
+                      >
+                        {isPdf ? (
+                          <FileText accessible={false} color={colors.foregroundMuted} size={20} />
+                        ) : (
+                          <View style={styles.imageDot} />
+                        )}
+                        <View style={styles.attachmentMeta}>
+                          <Text numberOfLines={1} style={styles.attachmentName}>
+                            {attachment.originalFileName}
+                          </Text>
+                          <Text style={styles.attachmentKind}>
+                            {isPdf ? "PDF · toque para abrir" : "Imagem · toque para abrir"}
+                          </Text>
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               ) : null}
 
               <Button
@@ -141,6 +222,7 @@ export function ActionPlanSubmitSheet({
               </Button>
 
               {uploadError ? <Text style={styles.error}>{uploadError}</Text> : null}
+              {openError ? <Text style={styles.error}>{openError}</Text> : null}
               {validationError ? <Text style={styles.error}>{validationError}</Text> : null}
 
               <Button
@@ -169,12 +251,13 @@ export function ActionPlanSubmitSheet({
           setShowAddSheet(false);
         }}
         onPickCamera={() => {
-          setShowAddSheet(false);
           void handlePick("camera");
         }}
         onPickLibrary={() => {
-          setShowAddSheet(false);
           void handlePick("library");
+        }}
+        onPickPdf={() => {
+          void handlePick("pdf");
         }}
       />
     </>
@@ -182,9 +265,34 @@ export function ActionPlanSubmitSheet({
 }
 
 const styles = StyleSheet.create({
-  attachments: {
-    color: statusChip.success.foreground,
+  attachmentKind: {
+    color: colors.foregroundMuted,
     fontSize: typography.caption.fontSize,
+  },
+  attachmentList: {
+    gap: spacing[2],
+  },
+  attachmentMeta: {
+    flex: 1,
+    gap: 2,
+  },
+  attachmentName: {
+    color: colors.foreground,
+    fontSize: typography.body.fontSize,
+    fontWeight: "600",
+  },
+  attachmentPressed: {
+    opacity: 0.85,
+  },
+  attachmentRow: {
+    alignItems: "center",
+    borderColor: colors.border,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing[3],
+    paddingHorizontal: spacing[3],
+    paddingVertical: spacing[2],
   },
   backdrop: {
     backgroundColor: overlay.scrim,
@@ -206,6 +314,12 @@ const styles = StyleSheet.create({
   hint: {
     color: colors.foregroundMuted,
     fontSize: typography.caption.fontSize,
+  },
+  imageDot: {
+    backgroundColor: colors.foregroundMuted,
+    borderRadius: 999,
+    height: 10,
+    width: 10,
   },
   label: {
     color: statusChip.info.foreground,

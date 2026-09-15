@@ -1,6 +1,9 @@
 "use client";
 
+import { FileText } from "lucide-react";
+
 import { Can } from "@/features/authorization";
+import { SurfaceIcon } from "@/components/surface-icon";
 
 import { useEvidenceSignedUrl } from "../hooks/use-evidence";
 import {
@@ -8,6 +11,7 @@ import {
   type EvidenceListItem,
   type EvidenceUploadQueueItem,
 } from "../types";
+import { isEvidencePdfMimeType } from "../utils/is-evidence-mime";
 import { EvidenceUploader } from "./evidence-uploader";
 
 type EvidenceGalleryProps = {
@@ -37,6 +41,16 @@ function phaseLabel(item: EvidenceUploadQueueItem): string {
   }
 }
 
+function PdfTileContent({ fileName }: { fileName: string }) {
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-1 bg-gray-900 px-1 text-center">
+      <SurfaceIcon className="text-primary" icon={FileText} variant="kpi" />
+      <span className="text-[10px] font-semibold tracking-wide text-gray-200">PDF</span>
+      <span className="line-clamp-2 w-full text-[9px] leading-tight text-gray-400">{fileName}</span>
+    </div>
+  );
+}
+
 function EvidenceSyncedTile({
   occurrenceId,
   index,
@@ -49,13 +63,18 @@ function EvidenceSyncedTile({
   onPreview: (item: EvidenceListItem) => void;
 }) {
   const { signedUrl, isLoading, isError, refetch } = useEvidenceSignedUrl(occurrenceId, item.id);
+  const isPdf = isEvidencePdfMimeType(item.mimeType);
 
   return (
     <article
       className={`${EVIDENCE_TILE_SIZE_CLASS} group relative overflow-hidden rounded-xl border border-gray-800 bg-gray-950`}
     >
       <button
-        aria-label={`Evidência ${index + 1}, sincronizada`}
+        aria-label={
+          isPdf
+            ? `Evidência PDF ${item.originalFileName}, sincronizada`
+            : `Evidência ${index + 1}, sincronizada`
+        }
         className="block h-full w-full overflow-hidden"
         type="button"
         onClick={() => onPreview(item)}
@@ -67,10 +86,10 @@ function EvidenceSyncedTile({
         ) : isError || !signedUrl ? (
           <div className="flex h-full flex-col items-center justify-center gap-1 bg-gray-900 px-1 text-center">
             <span className="text-[10px] leading-tight text-gray-400">
-              Não foi possível carregar a imagem
+              Não foi possível carregar a evidência
             </span>
             <button
-              className="text-[10px] text-orange-400 underline"
+              className="text-[10px] text-primary underline hover:text-primary/80"
               type="button"
               onClick={(event) => {
                 event.stopPropagation();
@@ -80,6 +99,8 @@ function EvidenceSyncedTile({
               Tentar novamente
             </button>
           </div>
+        ) : isPdf ? (
+          <PdfTileContent fileName={item.originalFileName} />
         ) : (
           <img
             alt={item.caption ?? item.originalFileName}
@@ -106,17 +127,24 @@ function EvidenceQueueTile({
   const isFailed = item.phase === "failed";
   const isBusy =
     item.phase === "preparing" || item.phase === "uploading" || item.phase === "registering";
+  const isPdf = isEvidencePdfMimeType(item.file.type);
 
   return (
     <article
       aria-label={`Evidência ${index + 1}, ${isFailed ? "falha no envio" : "enviando"}`}
       className={`${EVIDENCE_TILE_SIZE_CLASS} relative overflow-hidden rounded-xl border border-gray-800 bg-gray-950`}
     >
-      <img
-        alt={item.fileName}
-        className={`h-full w-full object-cover ${isBusy ? "opacity-60" : ""}`}
-        src={item.previewUrl}
-      />
+      {isPdf ? (
+        <div className={isBusy ? "h-full opacity-60" : "h-full"}>
+          <PdfTileContent fileName={item.fileName} />
+        </div>
+      ) : (
+        <img
+          alt={item.fileName}
+          className={`h-full w-full object-cover ${isBusy ? "opacity-60" : ""}`}
+          src={item.previewUrl}
+        />
+      )}
 
       {isBusy ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/55 px-1 text-center">
@@ -124,7 +152,7 @@ function EvidenceQueueTile({
           {item.phase === "uploading" ? (
             <div className="mt-1 h-1 w-12 overflow-hidden rounded-full bg-gray-700">
               <div
-                className="h-full bg-orange-400 transition-all"
+                className="h-full bg-primary transition-all"
                 style={{ width: `${item.progress}%` }}
               />
             </div>
@@ -136,7 +164,7 @@ function EvidenceQueueTile({
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/60 px-1 text-center">
           <span className="text-[10px] font-medium text-red-300">Falha no envio</span>
           <button
-            className="text-[10px] text-orange-300 underline"
+            className="text-[10px] text-primary underline hover:text-primary/80"
             type="button"
             onClick={() => onRetry(item.localId)}
           >

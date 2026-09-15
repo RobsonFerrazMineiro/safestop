@@ -113,8 +113,8 @@ function DashboardKpiGridSection({
   }
 
   return (
-    <section aria-label={label} className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+    <section aria-label={label} className="flex flex-col gap-2.5 sm:gap-3">
+      <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/80">
         {label}
       </h2>
       <div className={gridClassName}>
@@ -151,7 +151,7 @@ export function DashboardKpiLevel1Grid({
 
   return (
     <DashboardKpiGridSection
-      gridClassName="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-4"
+      gridClassName="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4"
       isError={isError}
       isLoading={isLoading}
       keys={level1Keys}
@@ -192,7 +192,7 @@ export function DashboardKpiLevel2Grid({
 
   return (
     <DashboardKpiGridSection
-      gridClassName="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-3 lg:gap-4"
+      gridClassName="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-3"
       isError={isError}
       isLoading={isLoading}
       keys={level2Order}
@@ -212,7 +212,7 @@ export function DashboardKpiLevel3Grid({
 }: DashboardKpiGridProps) {
   if (!periodActive) {
     return (
-      <p className="text-sm text-gray-500" role="status">
+      <p className="text-xs text-muted-foreground" role="status">
         O período afeta apenas indicadores de fluxo
       </p>
     );
@@ -227,7 +227,7 @@ export function DashboardKpiLevel3Grid({
 
   return (
     <DashboardKpiGridSection
-      gridClassName="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 lg:gap-4"
+      gridClassName="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4"
       isError={isError}
       isLoading={isLoading}
       keys={flowKeys}

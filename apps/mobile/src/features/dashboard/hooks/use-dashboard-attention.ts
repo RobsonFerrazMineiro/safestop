@@ -8,16 +8,27 @@ import {
 
 import { useAuthorization } from "@/features/authorization/hooks/use-authorization";
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
-import { dashboardKeys } from "@/features/dashboard/queries/dashboard-keys";
+import { dashboardAttentionQueryKey } from "@/features/dashboard/queries/dashboard-attention-query-key";
 import { getActionItemsAttention } from "@/features/dashboard/services/get-action-items-attention";
 import { resolveDashboardAccessContext } from "@/features/dashboard/services/resolve-dashboard-access-context";
+import {
+  DASHBOARD_ATTENTION_SCOPE,
+  type DashboardAttentionScope,
+} from "@/features/stop-work/utils/dashboard-list-params";
 
-export function useDashboardAttention(options: { enabled?: boolean } = {}) {
+type UseDashboardAttentionOptions = {
+  enabled?: boolean;
+  scope?: DashboardAttentionScope;
+};
+
+export function useDashboardAttention(options: UseDashboardAttentionOptions = {}) {
   const { permissions, canAny, isReady: isAuthReady } = useAuthorization();
   const { activeOrganization, isReady: isOrgReady } = useActiveOrganization();
 
   const organizationId = activeOrganization?.id ?? "";
   const recipientMemberId = activeOrganization?.organizationMemberId ?? "";
+  const scope = options.scope ?? DASHBOARD_ATTENTION_SCOPE.organization;
+  const dueSoonDays = DASHBOARD_DUE_SOON_DAYS_DEFAULT;
   const canFetchAttention = canAny([
     "action_plan.create",
     "action_plan.manage",
@@ -33,7 +44,7 @@ export function useDashboardAttention(options: { enabled?: boolean } = {}) {
     canFetchAttention;
 
   const query = useQuery({
-    queryKey: dashboardKeys.attention(organizationId),
+    queryKey: dashboardAttentionQueryKey(organizationId, scope, dueSoonDays),
     queryFn: async () => {
       const access = await resolveDashboardAccessContext(
         organizationId,
@@ -46,7 +57,8 @@ export function useDashboardAttention(options: { enabled?: boolean } = {}) {
       }
 
       return getActionItemsAttention(organizationId, access, {
-        dueSoonDays: DASHBOARD_DUE_SOON_DAYS_DEFAULT,
+        dueSoonDays,
+        scope,
       });
     },
     enabled,
