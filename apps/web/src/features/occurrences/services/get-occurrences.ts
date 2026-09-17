@@ -24,7 +24,7 @@ const LIST_SELECT = `
   origin_organizations:organizations!occurrences_origin_organization_id_fkey ( name )
 `;
 
-const DETAIL_SELECT = `
+export const OCCURRENCE_DETAIL_SELECT = `
   id,
   public_code,
   title,
@@ -72,7 +72,7 @@ const DETAIL_SELECT = `
     created_at,
     profiles!occurrence_decisions_decided_by_fkey ( full_name )
   ),
-  areas ( name ),
+  areas!occurrences_area_id_fkey ( name ),
   profiles!occurrences_created_by_fkey ( full_name ),
   contractor_organizations:organizations!occurrences_contractor_organization_id_fkey ( name ),
   origin_organizations:organizations!occurrences_origin_organization_id_fkey ( name )
@@ -139,7 +139,7 @@ export async function getOccurrence(_organizationId: string, occurrenceId: strin
 
   const { data, error } = await supabase
     .from("occurrences")
-    .select(DETAIL_SELECT)
+    .select(OCCURRENCE_DETAIL_SELECT)
     .eq("id", lookup.occurrenceId)
     .maybeSingle();
 

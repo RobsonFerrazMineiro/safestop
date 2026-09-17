@@ -207,3 +207,42 @@ Isso **não** amplia INSERT/UPDATE de `contracts`, **não** transforma GERENCIAD
 
 O trigger `validate_contract_assignment_workspace` passa a `SECURITY DEFINER` somente para validar invariantes 13X.1 (workspace preenchido + link da org do member), sem autorizar INSERT/UPDATE de assignment.
 
+# Addendum Gate 13X.5.4 (SELECT de colegas no Workspace)
+
+As 8 decisões de domínio **não mudam**. Os três eixos permanecem independentes:
+
+- `participation_role` = EMPRESA × Ambiente (GERENCIADORA | CONTRATADA | NULL).
+- `workspace_memberships` = PESSOA × Ambiente.
+- `contract_assignment` = PESSOA × Contract.
+
+`workspace_memberships_select` passa a permitir que quem tem `organization.manage` na Organization atuante leia memberships **ativos** dos colegas **dessa mesma Organization** no Workspace com `can_access_workspace`.
+
+Isso **não** é diretório cross-Organization: owner e GERENCIADORA **não** ganham wildcard sobre memberships de outras empresas. INSERT/UPDATE de memberships permanecem 13B (platform admin). VISUALIZAR colegas da própria org ≠ GERENCIAR memberships ≠ VISUALIZAR estrutura do Contract.
+
+# Addendum Gate 13X.2.3 (visibilidade OPERACIONAL de contracts)
+
+As 8 decisões de domínio **não mudam**.
+
+VISIBILIDADE OPERACIONAL ≠ GOVERNANÇA DO CONTRATO.
+
+- 13X.5.2: `organization.manage` + owner/GERENCIADORA → administração de responsáveis (contracts + assignments READ).
+- 13X.2.3: `occurrence.create` + owner/GERENCIADORA → ver a executora (`contractor_organization_id`) e os contracts dela naquele Ambiente, para registrar PP.
+
+Não exige `organization.manage` no Create. Não amplia `organizations_select`. Não concede SELECT de `workspace_memberships` de outra Organization. Não concede WRITE de assignments nem INSERT/UPDATE de contracts. CONTRATADA não ganha SELECT global do Workspace só com `occurrence.create`. Equipe própria (atuante == owner) permanece a regra 13X.2.
+
+# Addendum Gate 13X.2.6 (origin lê a PP)
+
+As 8 decisões de domínio **não mudam**. Origin não é tenant.
+
+Quem cria a PP com `origin_organization_id` = sua Organization (ex.: GERENCIADORA no Ambiente) passa a satisfazer `can_access_occurrence` pelo eixo origin, no mesmo estilo contractor, ainda sujeito a `can_access_workspace` quando a occurrence tem Workspace.
+
+GERENCIADORA **não** ganha wildcard sobre occurrences originadas por outra Organization. `organization.manage` não entra neste predicado. `can_read_occurrence_record` permanece `can_access` ∧ `occurrence.read` em tenant | origin | contractor.
+
+FK `occurrences.area_id → areas(id)` (RESTRICT) restaura o relacionamento PostgREST. Consistência dual-read continua no trigger 13X.2.1; o FK composto area×tenant **não** retorna.
+
+# Addendum Gate 13X.2.8 (WRITE evidência tenant|origin|contractor)
+
+As 8 decisões de domínio **não mudam**. VISIBILIDADE ≠ WRITE.
+
+Quem tem `occurrence.create` na **própria** Organization que é tenant, origin ou contractor da ROW, e `can_access_occurrence`, pode anexar evidência. O path Storage e `occurrence_attachments.organization_id` continuam o **tenant**. GERENCIADORA não vira wildcard de PPs de outro origin. Sem `organization.manage`. Sem permission `attachment.*`.
+

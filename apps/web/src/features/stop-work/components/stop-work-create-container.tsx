@@ -49,6 +49,7 @@ import { hasPreventiveStopDraftContent } from "../stores/preventive-stop-draft-s
 import {
   EMPTY_ACTIVE_CONTRACTORS_MESSAGE,
   getPreventiveStopCreateControlState,
+  resolveDraftSelectValue,
 } from "../utils/preventive-stop-create-controls";
 import {
   isInternalPreventiveStopCreateExit,
@@ -56,8 +57,19 @@ import {
   resolveCreatePopStateAction,
   shouldPromptPreventiveStopCreateLeave,
 } from "../utils/preventive-stop-create-leave";
-import { OWN_TEAM_CONTRACT_OPTION_ID } from "@/features/occurrences/utils/workspace-create-rules";
+import { formatWorkspaceContractLabel } from "@/features/occurrences/services/get-workspace-contracts";
 import type { WorkspaceContractOption } from "@/features/occurrences/types";
+import {
+  ACTIVITY_COMPANY_FIELD_HELP,
+  ACTIVITY_COMPANY_FIELD_LABEL,
+  ACTIVITY_CONTRACT_FIELD_HELP,
+  contractsForExecutor,
+  deriveCreatePayloadFromContract,
+  resolveExecutorIdFromDraft,
+  resolveOperationalCreateContractFields,
+  type OperationalExecutorOption,
+} from "@/features/occurrences/utils/operational-contract-cascade";
+import { OWN_TEAM_CONTRACT_OPTION_ID } from "@/features/occurrences/utils/workspace-create-rules";
 import { StopWorkError, StopWorkLoading } from "./stop-work-states";
 
 const DRAFT_DEBOUNCE_MS = 400;
@@ -100,7 +112,11 @@ function DraftSelectControl({
   onValueChange,
 }: DraftSelectControlProps) {
   return (
-    <Select disabled={disabled} onValueChange={onValueChange} value={value || undefined}>
+    <Select
+      disabled={disabled}
+      onValueChange={onValueChange}
+      value={resolveDraftSelectValue(value)}
+    >
       <SelectTrigger
         aria-describedby={describedBy}
         aria-invalid={invalid}
@@ -144,7 +160,7 @@ export function StopWorkCreateContainer() {
     error: areasError,
   } = usePreventiveStopAreas();
   const {
-    contractors,
+    executors,
     contracts,
     allowsOwnTeam,
     isLoading: isContractorsLoading,
@@ -180,8 +196,8 @@ export function StopWorkCreateContainer() {
       allowsOwnTeam={allowsOwnTeam}
       areas={areas}
       clearDraft={clearDraft}
-      contractors={contractors}
       contracts={contracts}
+      executors={executors}
       flushDraft={flushDraft}
       hasLocalDraft={hasLocalDraft}
       initialValues={toFormValues(draft)}
@@ -191,7 +207,7 @@ export function StopWorkCreateContainer() {
 
 type StopWorkCreateFormProps = {
   areas: SelectOption[];
-  contractors: SelectOption[];
+  executors: OperationalExecutorOption[];
   contracts: WorkspaceContractOption[];
   allowsOwnTeam: boolean;
   initialValues: CreatePreventiveStopInput;
@@ -202,7 +218,7 @@ type StopWorkCreateFormProps = {
 
 function StopWorkCreateForm({
   areas,
-  contractors,
+  executors,
   contracts,
   allowsOwnTeam,
   initialValues,
@@ -215,6 +231,14 @@ function StopWorkCreateForm({
   const { createPreventiveStop, isCreating, error: createError, reset } = useCreatePreventiveStop();
   const [formError, setFormError] = useState<string | null>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [selectedExecutorId, setSelectedExecutorId] = useState(() =>
+    resolveExecutorIdFromDraft({
+      allowsOwnTeam,
+      contractId: initialValues.contractId,
+      contractorOrganizationId: initialValues.contractorOrganizationId,
+      contracts,
+    }),
+  );
   const pendingHrefRef = useRef<string | null>(null);
   const pendingHistoryLeaveRef = useRef(false);
   const allowLeaveRef = useRef(false);
@@ -234,37 +258,36 @@ function StopWorkCreateForm({
     defaultValues: initialValues,
   });
 
-  const contractPickerOptions: SelectOption[] = [
+  const executorPickerOptions: SelectOption[] = [
     ...(allowsOwnTeam ? [{ id: OWN_TEAM_CONTRACT_OPTION_ID, name: "Equipe própria" }] : []),
-    ...contractors,
+    ...executors,
   ];
+  const isOwnTeamSelected = selectedExecutorId === OWN_TEAM_CONTRACT_OPTION_ID;
+  const contractsForSelectedExecutor = contractsForExecutor(contracts, selectedExecutorId);
+  const contractPickerOptions: SelectOption[] = contractsForSelectedExecutor.map((contract) => ({
+    id: contract.id,
+    name: formatWorkspaceContractLabel(contract),
+  }));
 
   const watchedContractId = watch("contractId");
-  const watchedContractorId = watch("contractorOrganizationId");
   const contractPickerValue =
-    typeof watchedContractId === "string" && watchedContractId.length > 0
-      ? watchedContractId
-      : allowsOwnTeam &&
-          (watchedContractorId === undefined ||
-            watchedContractorId === null ||
-            watchedContractorId === "")
-        ? OWN_TEAM_CONTRACT_OPTION_ID
-        : "";
+    typeof watchedContractId === "string" && watchedContractId.length > 0 ? watchedContractId : "";
+
+  function handleExecutorChange(value: string) {
+    setSelectedExecutorId(value);
+    setValue("contractId", undefined, { shouldDirty: true });
+    setValue("contractorOrganizationId", undefined, { shouldDirty: true });
+  }
 
   function handleContractPickerChange(value: string) {
-    if (value === OWN_TEAM_CONTRACT_OPTION_ID) {
-      setValue("contractId", undefined, { shouldDirty: true });
-      setValue("contractorOrganizationId", undefined, { shouldDirty: true });
-      return;
-    }
-
-    const selected = contracts.find((contract) => contract.id === value);
+    const selected = contractsForSelectedExecutor.find((contract) => contract.id === value);
     if (!selected) {
       return;
     }
 
-    setValue("contractId", selected.id, { shouldDirty: true });
-    setValue("contractorOrganizationId", selected.contractorOrganizationId, { shouldDirty: true });
+    const payload = deriveCreatePayloadFromContract(selected);
+    setValue("contractId", payload.contractId, { shouldDirty: true });
+    setValue("contractorOrganizationId", payload.contractorOrganizationId, { shouldDirty: true });
   }
 
   useEffect(() => {
@@ -409,13 +432,28 @@ function StopWorkCreateForm({
       return;
     }
 
-    if (!allowsOwnTeam && (!values.contractId || !values.contractorOrganizationId)) {
-      setFormError("Contrato é obrigatório neste Ambiente.");
+    const resolvedContractFields = resolveOperationalCreateContractFields({
+      executorId: selectedExecutorId,
+      allowsOwnTeam,
+      contracts,
+      contractId: values.contractId,
+    });
+
+    if (!resolvedContractFields) {
+      setFormError(
+        allowsOwnTeam
+          ? "Selecione a Empresa da atividade e, se não for equipe própria, o Contrato."
+          : "Selecione a Empresa da atividade e o Contrato.",
+      );
       return;
     }
 
     try {
-      const created = await createPreventiveStop(values);
+      const created = await createPreventiveStop({
+        ...values,
+        contractId: resolvedContractFields.contractId,
+        contractorOrganizationId: resolvedContractFields.contractorOrganizationId,
+      });
       allowLeaveRef.current = true;
       clearDraft();
       router.replace(`/stop-work/${created.id}`);
@@ -460,7 +498,6 @@ function StopWorkCreateForm({
   const mutationMessage = createError instanceof Error ? createError.message : null;
   const {
     isAreaDisabled,
-    isContractorDisabled,
     areIndependentFieldsDisabled,
     isSubmitDisabled,
     showEmptyContractorsMessage,
@@ -471,6 +508,14 @@ function StopWorkCreateForm({
     hasActiveWorkspace: Boolean(activeWorkspace?.id),
     allowsOwnTeam,
   });
+  const isExecutorDisabled =
+    isCreating || !activeWorkspace?.id || (contracts.length === 0 && !allowsOwnTeam);
+  const isContractSelectDisabled =
+    isCreating ||
+    !activeWorkspace?.id ||
+    isOwnTeamSelected ||
+    selectedExecutorId.length === 0 ||
+    contractsForSelectedExecutor.length === 0;
   const severityErrorId = errors.severity?.message ? "severity-error" : undefined;
   const showDraftBanner = hasLocalDraft || hasPreventiveStopDraftContent(watch());
 
@@ -536,18 +581,46 @@ function StopWorkCreateForm({
             </div>
 
             <FormField
-              error={errors.contractId?.message ?? errors.contractorOrganizationId?.message}
+              describedBy="activity-company-help"
+              error={errors.contractorOrganizationId?.message}
+              id="activityCompanyId"
+              label={ACTIVITY_COMPANY_FIELD_LABEL}
+            >
+              <DraftSelectControl
+                disabled={isExecutorDisabled}
+                options={executorPickerOptions}
+                placeholder="Selecione a executora"
+                value={selectedExecutorId}
+                onValueChange={handleExecutorChange}
+              />
+            </FormField>
+            <p className="text-sm text-muted-foreground" id="activity-company-help">
+              {ACTIVITY_COMPANY_FIELD_HELP}
+            </p>
+
+            <FormField
+              describedBy="activity-contract-help"
+              error={errors.contractId?.message}
               id="contractId"
               label="Contrato"
             >
               <DraftSelectControl
-                disabled={isContractorDisabled}
+                disabled={isContractSelectDisabled}
                 options={contractPickerOptions}
-                placeholder={allowsOwnTeam ? "Contrato ou equipe própria" : "Selecione o contrato"}
+                placeholder={
+                  isOwnTeamSelected
+                    ? "Equipe própria — sem contrato"
+                    : selectedExecutorId
+                      ? "Selecione o contrato"
+                      : "Selecione a Empresa da atividade primeiro"
+                }
                 value={contractPickerValue}
                 onValueChange={handleContractPickerChange}
               />
             </FormField>
+            <p className="text-sm text-muted-foreground" id="activity-contract-help">
+              {ACTIVITY_CONTRACT_FIELD_HELP}
+            </p>
             {showEmptyContractorsMessage ? (
               <p className="text-sm text-status-warning-fg">{EMPTY_ACTIVE_CONTRACTORS_MESSAGE}</p>
             ) : null}

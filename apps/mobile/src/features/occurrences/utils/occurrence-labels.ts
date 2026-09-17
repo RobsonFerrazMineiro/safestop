@@ -44,3 +44,32 @@ export function getOccurrenceSyncStatusLabel(status: OccurrenceSyncStatus): stri
 export function formatOccurrenceDate(value: string): string {
   return new Date(value).toLocaleString("pt-BR");
 }
+
+/**
+ * Gate 13X.2.11 — "Equipe própria" só sem contratada e sem contrato.
+ * Nome do embed nulo não vira equipe própria: usa o ID.
+ */
+export function formatOccurrenceContractorDisplay(input: {
+  contractorOrganizationId: string | null;
+  contractId: string | null;
+  contractorOrganizationName: string | null;
+}): string {
+  const hasContractor =
+    input.contractorOrganizationId !== null && input.contractorOrganizationId.length > 0;
+  const hasContract = input.contractId !== null && input.contractId.length > 0;
+
+  if (!hasContractor && !hasContract) {
+    return "Equipe própria";
+  }
+
+  const name = input.contractorOrganizationName?.trim();
+  if (name) {
+    return name;
+  }
+
+  if (hasContractor && input.contractorOrganizationId) {
+    return input.contractorOrganizationId;
+  }
+
+  return "Contratada";
+}

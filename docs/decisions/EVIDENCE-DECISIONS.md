@@ -28,6 +28,8 @@ Registrar as decisões de produto **PO-1 a PO-15** da Sprint 2.2 **sem inventar 
 
 **RBAC:** somente `occurrence.create` (upload/remoção) e `occurrence.read` (listagem/preview/signed URL). **Não** inventar `attachment.*`.
 
+**Gate 13X.2.8:** a Organization da permission `occurrence.create` é o **eixo da ROW** (tenant **ou** origin **ou** contractor da occurrence), não apenas o tenant legado (`occurrences.organization_id`). Origin com `occurrence.create` na própria org pode anexar na PP que já pode LER. Path Storage permanece o tenant.
+
 ---
 
 ## Gate G0
@@ -118,7 +120,7 @@ Documento retroativo quando a implementação já existir: decisões abaixo são
 
 | Item | Decisão |
 |---|---|
-| **Regra base** | Autor do upload (`uploaded_by = auth.uid()`) **e** permissão **`occurrence.create`** na org |
+| **Regra base** | Autor do upload (`uploaded_by = auth.uid()`) **e** permissão **`occurrence.create`** na org do **eixo da ROW** (tenant \| origin \| contractor) — Gate 13X.2.8; não só tenant |
 | **Leitura / preview** | **`occurrence.read`** + `can_access_occurrence` |
 | **Permissão nova** | **Proibida** — não criar `attachment.delete` / `attachment.upload` |
 | **Supervisor HSE / cancel** | **Fora da 2.2** — sem fluxo `occurrence.cancel` nesta sprint |
@@ -229,7 +231,7 @@ Buckets e path: **`docs/database.md` §24**.
 | **Path** | `{organization_id}/{occurrence_id}/{attachment_id}/{file_name}` — `file_name` gerado na RPC (ex. `{attachment_id}.jpg`) |
 | **Fluxo upload** | `prepare` → Storage INSERT → `complete` / `fail` (`docs/engineering.md` §18.8) |
 | **Mutations DB** | Somente RPC `SECURITY DEFINER`; SELECT via RLS |
-| **RBAC** | Upload/remoção: `occurrence.create`; leitura/signed URL: `occurrence.read` |
+| **RBAC** | Upload/remoção: `occurrence.create` no eixo da ROW (tenant\|origin\|contractor, 13X.2.8); leitura/signed URL: `occurrence.read` |
 | **Signed URL TTL** | **3600s** |
 | **Offline queue persistente** | **Não** na 2.2 — sessão em memória / bloquear novo upload offline |
 | **service_role no cliente** | **Proibido** |

@@ -18,6 +18,7 @@ type FormSelectFieldProps = {
   placeholder?: string;
   disabled?: boolean;
   emptyMessage?: string;
+  helperText?: string;
   noneOptionLabel?: string;
 };
 
@@ -33,6 +34,7 @@ export function FormSelectField({
   placeholder = "Selecione",
   disabled = false,
   emptyMessage,
+  helperText,
   noneOptionLabel,
 }: FormSelectFieldProps) {
   const insets = useSafeAreaInsets();
@@ -57,12 +59,33 @@ export function FormSelectField({
   }, [options, selectedId]);
 
   if (items.length === 0 && !noneOptionLabel) {
-    return emptyMessage ? (
+    if (emptyMessage) {
+      return (
+        <View style={styles.field}>
+          <Text style={styles.label}>{label}</Text>
+          <Text style={styles.empty}>{emptyMessage}</Text>
+          {helperText ? <Text style={styles.helper}>{helperText}</Text> : null}
+        </View>
+      );
+    }
+
+    return (
       <View style={styles.field}>
         <Text style={styles.label}>{label}</Text>
-        <Text style={styles.empty}>{emptyMessage}</Text>
+        <Pressable
+          accessibilityLabel={`${label}: ${placeholder}`}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: true }}
+          disabled
+          style={[styles.trigger, styles.triggerDisabled]}
+        >
+          <Text numberOfLines={1} style={[styles.triggerText, styles.triggerPlaceholder]}>
+            {placeholder}
+          </Text>
+        </Pressable>
+        {helperText ? <Text style={styles.helper}>{helperText}</Text> : null}
       </View>
-    ) : null;
+    );
   }
 
   return (
@@ -157,6 +180,7 @@ export function FormSelectField({
           </View>
         </View>
       </Modal>
+      {helperText ? <Text style={styles.helper}>{helperText}</Text> : null}
     </View>
   );
 }
@@ -171,6 +195,10 @@ const styles = StyleSheet.create({
   },
   field: {
     gap: spacing[1],
+  },
+  helper: {
+    color: colors.foregroundMuted,
+    fontSize: typography.helper.fontSize,
   },
   label: {
     color: colors.foreground,

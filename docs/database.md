@@ -387,7 +387,7 @@ updated_at
 
 - `workspaces` SELECT: `is_platform_admin()` **OU** `can_access_workspace(id)` (não basta link da Organization).
 - `organization_workspace_links` SELECT: platform admin **OU** (`is_active` **E** `can_access_workspace`).
-- `workspace_memberships` SELECT: platform admin **OU** apenas grants **próprios** ativos (`organization_member.profile_id = auth.uid()`).
+- `workspace_memberships` SELECT (Gate 13X.5.4): platform admin **OU** grant **próprio** ativo **OU** grants **ativos de colegas da mesma Organization** quando o usuário tem `organization.manage` nessa org **e** `can_access_workspace`. Sem wildcard por `owner_organization_id` nem `participation_role` (GERENCIADORA não lista Hydro/CONTRATADA). INSERT/UPDATE: somente `is_platform_admin()` (13B). Sem `workspace.manage`.
 - INSERT/UPDATE foundation: somente `is_platform_admin()`; sem wildcard `organization.manage`.
 - `create_occurrence`: `workspace_id` **opcional** no payload (Strategy B). Ausente → NULL (legado). Presente → caminho Workspace (Gate 13X.2): `occurrence.create` na org **atuante** + `can_access_workspace` + link ativo org↔ws; `origin` = org atuante; tenant legado = `owner_organization_id` (fallback = atuante).
 - Trigger `validate_occurrence_workspace_assignment`: impede Organization × Workspace sem link ativo quando `workspace_id IS NOT NULL`.
@@ -673,6 +673,8 @@ Mesmo espírito de `units.workspace_id`. Se `area.workspace_id` e `unit.workspac
 
 O FK composto `occurrences (area_id, organization_id)` foi **substituído** no Gate 13X.2.1 por trigger de dual-read. Área com `workspace_id` = WS **não** precisa ter `organization_id` = tenant.
 
+Gate 13X.2.6: FK simples `occurrences.area_id → areas(id)` `ON DELETE RESTRICT` (embed PostgREST). O composto tenant **não** volta. Consistência dual-read permanece no trigger `validate_occurrence_location_org_workspace`.
+
 ---
 
 ## 7.3 `management_departments`
@@ -750,9 +752,25 @@ Eixo additive de governança no Workspace (não substitui client/contractor):
 - `can_access_workspace(workspace_id)`
 - `organization.manage` na org atuante **e** essa org é `workspaces.owner_organization_id` **ou** tem link ativo com `participation_role = GERENCIADORA`
 
-CONTRATADA operacional **não** ganha SELECT de todos os contratos do Workspace só pelo link CONTRATADA. Campo sem `organization.manage` permanece no eixo client/contractor.
+CONTRATADA operacional **não** ganha SELECT de todos os contratos do Workspace só pelo link CONTRATADA.
 
 **INSERT/UPDATE de `contracts` inalterados** (`contract.manage` no client). Visibilidade do Contract ≠ autoridade para alterar `client_organization_id` / `contractor_organization_id` ≠ WRITE de assignment sobre members de outra Organization.
+
+### RLS SELECT operacional (Gate 13X.2.3)
+
+Eixo **independente** da governança 13X.5.2. Destinado ao Create de PP.
+
+Helper `can_read_workspace_contracts_operational(workspace_id)`:
+
+- `workspace_id IS NOT NULL`
+- `can_access_workspace`
+- `occurrence.create` na org atuante **e** essa org é owner do Ambiente **ou** `participation_role = GERENCIADORA` no vínculo
+
+**Não** exige `organization.manage`. CONTRATADA com `occurrence.create` **não** ganha SELECT global do Workspace (permanece client/contractor).
+
+RPC `list_operational_workspace_contracts(p_workspace_id)` (SECURITY DEFINER, `search_path` vazio): devolve contracts **ativos** daquele Workspace (`id`, `contract_number`, `name`, `contractor_organization_id`, `contractor_organization_name`). Lê `organizations.name` só das executoras das rows devolvidas. **Não** amplia `organizations_select`. Sem INSERT/UPDATE.
+
+VISIBILIDADE OPERACIONAL ≠ GOVERNANÇA DO CONTRATO ≠ diretório de pessoas.
 
 ---
 
@@ -1351,6 +1369,14 @@ A mesma allowlist aplica-se a `action_item_attachments` e `prepare_action_item_a
 - tipos e tamanhos devem ser validados;
 - exclusão deve ser lógica;
 - evidências críticas não devem ser apagadas após o encerramento.
+
+### WRITE (Gate 13X.2.8)
+
+Helper `can_write_occurrence_evidence(occurrence_id)`: `can_access_occurrence` **e** `occurrence.create` na org atuante que é **tenant** (`occurrences.organization_id`), **origin** (se NOT NULL) ou **contractor** (se NOT NULL).
+
+RPCs `prepare` / `complete` / `fail` / `delete` de evidência da PP usam o helper. `organization_id` do attachment e o prefixo do path Storage **permanecem o tenant** (não migrar bucket). `uploaded_by = auth.uid()`.
+
+VISIBILIDADE (13X.2.6) ≠ WRITE até este Gate. GERENCIADORA **não** anexa em PP de outro origin só pelo papel no Workspace. Sem `organization.manage`. Sem `attachment.*`.
 
 ---
 
@@ -2287,10 +2313,11 @@ is_platform_admin()
 
 `can_access_workspace` implementa o eixo **ONDE** (acesso efetivo a Workspace). Ver §5.7.
 
-`can_access_occurrence` (Gate 13A — coexistência):
+`can_access_occurrence` (Gate 13A / 13X.2.6 — coexistência):
 
-- `workspace_id IS NULL` → preserva regras legado (org / contratada / contrato / participante) + `is_platform_admin()`;
-- `workspace_id IS NOT NULL` → mesmas regras legado **AND** `can_access_workspace(workspace_id)`.
+- `workspace_id IS NULL` → regras legado (org / origin / contratada / contrato / participante) + `is_platform_admin()`;
+- `workspace_id IS NOT NULL` → mesmas regras **AND** `can_access_workspace(workspace_id)`.
+- Gate 13X.2.6: eixo **origin** additive — `origin_organization_id IS NOT NULL` **e** está em `current_organization_ids()` (mesmo estilo contractor). Sem `organization.manage`. Sem wildcard GERENCIADORA sobre PPs de outro origin.
 
 RBAC (`has_permission`) permanece nas policies/RPCs (eixo **O QUE**).
 
@@ -2537,7 +2564,7 @@ OR o.contractor_organization_id = p_organization_id
 - SELECT de `areas` / `units` / `management_departments`: org própria, ou `can_access_workspace` se `workspace_id` preenchido, ou área/unit/md legado cujo `organization_id` é owner de um Workspace acessível. INSERT/UPDATE inalterados.
 - FKs `occurrences_*_org_consistency` dropados; trigger `validate_occurrence_location_org_workspace`.
 
-`can_access_occurrence` **não** muda o eixo de tenant.
+`can_access_occurrence` **não** muda o eixo de tenant. Gate 13X.2.6 acrescenta o eixo origin (org atuante = `origin_organization_id`), sem wildcard GERENCIADORA.
 
 ### Leitura de detalhe (Gate 13X.2.2)
 
@@ -2550,6 +2577,26 @@ Helper `can_read_occurrence_record(occurrence_id)`: predicado da ROW (admin **ou
 SELECT de detalhe alinhado ao helper: status_history, participants, decisions, comments, attachments, action_plans/items/anexos, mdho_assessments/selections, storage `occurrence-evidence` SELECT, `get_occurrence_timeline`, signed URLs de evidência.
 
 INSERT/UPDATE/DELETE dos filhos e RPCs de mutação **não** mudam.
+
+### Visibilidade operacional de contracts (Gate 13X.2.3)
+
+Migration: `20260915010000_gate13x23_operational_contract_visibility.sql`.
+
+Create de PP no Workspace: técnico com `occurrence.create` (sem `organization.manage`) na org owner ou GERENCIADORA lê os contracts daquele Ambiente via RLS additive e via RPC `list_operational_workspace_contracts`. Nome da executora = `organizations.name` da `contractor_organization_id` **só** nas rows da RPC. `create_occurrence` e regra de equipe própria **não** mudam neste Gate.
+
+### Origin lê a PP (Gate 13X.2.6)
+
+Migration: `20260915020000_gate13x26_origin_access_area_fk.sql`.
+
+`can_access_occurrence` ganha eixo additive `origin_organization_id` ∈ `current_organization_ids()` (mesmo estilo contractor), ainda **AND** `can_access_workspace` quando `workspace_id` está preenchido. `can_read_occurrence_record` permanece: `can_access` **e** `occurrence.read` no tenant | origin | contractor.
+
+FK simples `occurrences.area_id → areas(id)` restaura o embed PostgREST `areas(name)`. Trigger 13X.2.1 permanece autoridade de consistência; composto area×tenant **não** retorna.
+
+### WRITE evidência origin/contractor (Gate 13X.2.8)
+
+Migration: `20260916010000_gate13x28_occurrence_evidence_write.sql`.
+
+`can_write_occurrence_evidence`: `can_access_occurrence` + `occurrence.create` na org atuante ∈ {tenant, origin, contractor}. `prepare`/`complete`/`fail`/`delete` da PP usam o helper. Storage INSERT do branch occurrence exige o helper; `folder[1]` continua o tenant do attachment. SELECT 13X.2.2 e branch action-items **inalterados**.
 
 ---
 

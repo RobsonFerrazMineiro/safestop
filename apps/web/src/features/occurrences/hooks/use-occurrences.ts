@@ -16,10 +16,9 @@ import { getOccurrence, getOccurrences } from "../services/get-occurrences";
 import { getOccurrenceStatusHistory } from "../services/get-occurrence-status-history";
 import { getOrganizationAreas } from "../services/get-organization-areas";
 import { getWorkspaceAreas } from "../services/get-workspace-areas";
-import {
-  formatWorkspaceContractLabel,
-  getWorkspaceContracts,
-} from "../services/get-workspace-contracts";
+import { formatWorkspaceContractLabel } from "../services/get-workspace-contracts";
+import { listOperationalWorkspaceContracts } from "../services/list-operational-workspace-contracts";
+import { distinctOperationalExecutors } from "../utils/operational-contract-cascade";
 import {
   OCCURRENCE_DETAIL_STALE_TIME_MS,
   OCCURRENCE_LIST_STALE_TIME_MS,
@@ -154,7 +153,7 @@ export function useWorkspaceAreas() {
   };
 }
 
-/** Contratos ativos do Ambiente (create Stop Work — Gate 13X.3). */
+/** Contratos operacionais do Ambiente (create Stop Work — Gate 13X.2.4). */
 export function useWorkspaceContracts() {
   const { can, isReady: isAuthzReady } = useAuthorization();
   const { activeOrganization, isReady: isOrgReady } = useActiveOrganization();
@@ -174,13 +173,19 @@ export function useWorkspaceContracts() {
     queryKey: [
       ...occurrenceQueryKeys.workspaceAll(organizationId ?? "", workspaceId ?? ""),
       "contracts",
-      "list",
+      "operational",
     ] as const,
-    queryFn: () => getWorkspaceContracts(workspaceId!),
+    queryFn: () =>
+      listOperationalWorkspaceContracts({
+        workspaceId: workspaceId!,
+        actingOrganizationId: organizationId!,
+        actingOrganizationName: activeOrganization?.name ?? null,
+      }),
     enabled,
     staleTime: OCCURRENCE_LIST_STALE_TIME_MS,
   });
 
+  const contracts = query.data ?? [];
   const allowsOwnTeam =
     organizationId !== undefined &&
     canSelectOwnTeam({
@@ -189,8 +194,9 @@ export function useWorkspaceContracts() {
     });
 
   return {
-    contracts: query.data ?? [],
-    contractOptions: (query.data ?? []).map((contract) => ({
+    contracts,
+    executors: distinctOperationalExecutors(contracts),
+    contractOptions: contracts.map((contract) => ({
       id: contract.id,
       name: formatWorkspaceContractLabel(contract),
     })),

@@ -20,6 +20,7 @@ import { NotificationAwarenessBanner } from "@/features/notifications";
 import { ImsReferenceSection } from "@/features/ims-reference";
 import { ActionPlanSection, shouldShowActionPlanSection } from "@/features/action-plan";
 import { MdhoSection } from "@/features/mdho";
+import { formatOccurrenceContractorDisplay } from "@/features/occurrences/utils/format-labels";
 import { useWorkspaceOccurrenceDeepLink } from "@/features/workspace/hooks/use-workspace-occurrence-deep-link";
 
 import { usePreventiveStop } from "../hooks/use-stop-work";
@@ -160,7 +161,11 @@ export function StopWorkDetailContainer() {
           <DetailField label="Originadora" value={stopWork.originOrganizationName ?? "—"} />
           <DetailField
             label="Contratada"
-            value={stopWork.contractorOrganizationName ?? "Equipe própria"}
+            value={formatOccurrenceContractorDisplay({
+              contractorOrganizationId: stopWork.contractorOrganizationId,
+              contractId: stopWork.contractId,
+              contractorOrganizationName: stopWork.contractorOrganizationName,
+            })}
           />
           {coordinates ? <DetailField label="Coordenadas" value={coordinates} /> : null}
         </CardContent>

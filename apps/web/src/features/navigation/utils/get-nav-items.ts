@@ -3,6 +3,7 @@ import type { ComponentType } from "react";
 import {
   BellIconOutline,
   ContactsIcon,
+  ContractAssignmentsIcon,
   DashboardIcon,
   MdhoApprovalIcon,
   PlusCircleIcon,
@@ -35,6 +36,7 @@ export function isStopWorkListNavActive(pathname: string): boolean {
 export type NavItemsParams = {
   canApproveMdho: boolean;
   canManageContacts: boolean;
+  canManageOrganization: boolean;
   canReadReports: boolean;
   canCreateOccurrence: boolean;
 };
@@ -48,6 +50,7 @@ export type NavItemsParams = {
 export function getNavSections({
   canApproveMdho,
   canManageContacts,
+  canManageOrganization,
   canReadReports,
   canCreateOccurrence,
 }: NavItemsParams): NavSection[] {
@@ -97,6 +100,16 @@ export function getNavSections({
       href: "/organization-contacts",
       icon: ContactsIcon,
       isActive: (pathname) => pathname.startsWith("/organization-contacts"),
+    });
+  }
+
+  if (canManageOrganization) {
+    managementItems.push({
+      key: "contract-assignments",
+      label: "Responsáveis do contrato",
+      href: "/contract-assignments",
+      icon: ContractAssignmentsIcon,
+      isActive: (pathname) => pathname.startsWith("/contract-assignments"),
     });
   }
 

@@ -21,7 +21,10 @@ import { EvidencePreviewModal, EvidenceSection, type EvidenceListItem } from "@/
 import { HseActionsFooter, type HseActionsFooterState } from "@/features/hse-approval";
 import { OccurrenceError } from "@/features/occurrences/components/occurrence-error";
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
-import { formatOccurrenceDate } from "@/features/occurrences/utils/occurrence-labels";
+import {
+  formatOccurrenceContractorDisplay,
+  formatOccurrenceDate,
+} from "@/features/occurrences/utils/occurrence-labels";
 import { CommentComposerBar, OccurrenceTimelineList, useCreateComment } from "@/features/timeline";
 import { EvaluationSection } from "@/features/ver-e-agir";
 import {
@@ -304,7 +307,11 @@ export function PreventiveStopDetailScreen({
           <DetailField label="Originadora" value={preventiveStop.originOrganizationName ?? "—"} />
           <DetailField
             label="Contratada"
-            value={preventiveStop.contractorOrganizationName ?? "Equipe própria"}
+            value={formatOccurrenceContractorDisplay({
+              contractorOrganizationId: preventiveStop.contractorOrganizationId,
+              contractId: preventiveStop.contractId,
+              contractorOrganizationName: preventiveStop.contractorOrganizationName,
+            })}
           />
           <DetailField label="Local" value={preventiveStop.locationDescription} />
           {coordinates ? (

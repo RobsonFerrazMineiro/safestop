@@ -5,6 +5,7 @@ import { getNavSections, getPrimaryNavItems, isStopWorkListNavActive } from "./g
 const navParams = {
   canApproveMdho: false,
   canManageContacts: false,
+  canManageOrganization: false,
   canReadReports: false,
   canCreateOccurrence: true,
 } as const;
@@ -40,6 +41,7 @@ describe("getNavSections semântico e RBAC", () => {
     const sections = getNavSections({
       canApproveMdho: false,
       canManageContacts: false,
+      canManageOrganization: false,
       canReadReports: false,
       canCreateOccurrence: true,
     });
@@ -62,6 +64,7 @@ describe("getNavSections semântico e RBAC", () => {
     const sections = getNavSections({
       canApproveMdho: true,
       canManageContacts: false,
+      canManageOrganization: false,
       canReadReports: false,
       canCreateOccurrence: false,
     });
@@ -81,6 +84,7 @@ describe("getNavSections semântico e RBAC", () => {
     const sections = getNavSections({
       canApproveMdho: true,
       canManageContacts: true,
+      canManageOrganization: true,
       canReadReports: true,
       canCreateOccurrence: true,
     });
@@ -92,7 +96,11 @@ describe("getNavSections semântico e RBAC", () => {
     expect(managementSection?.items.map((item) => item.key)).toEqual([
       "mdho-approvals",
       "organization-contacts",
+      "contract-assignments",
       "reports",
     ]);
+    expect(
+      managementSection?.items.find((item) => item.key === "contract-assignments")?.label,
+    ).toBe("Responsáveis do contrato");
   });
 });

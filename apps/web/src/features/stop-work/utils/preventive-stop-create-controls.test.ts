@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  DRAFT_SELECT_EMPTY_VALUE,
   EMPTY_ACTIVE_CONTRACTORS_MESSAGE,
   getPreventiveStopCreateControlState,
+  resolveDraftSelectValue,
 } from "./preventive-stop-create-controls";
 import { hasPreventiveStopDraftContent } from "../stores/preventive-stop-draft-store";
 import { shouldPromptPreventiveStopCreateLeave } from "./preventive-stop-create-leave";
@@ -84,5 +86,12 @@ describe("getPreventiveStopCreateControlState — equipe própria e loading", ()
     expect(state.areIndependentFieldsDisabled).toBe(true);
     expect(state.isAreaDisabled).toBe(true);
     expect(state.isContractorDisabled).toBe(true);
+  });
+});
+
+describe("resolveDraftSelectValue — Select sempre controlado", () => {
+  it("nunca devolve undefined; vazio usa sentinel", () => {
+    expect(resolveDraftSelectValue("")).toBe(DRAFT_SELECT_EMPTY_VALUE);
+    expect(resolveDraftSelectValue("ctr-1")).toBe("ctr-1");
   });
 });

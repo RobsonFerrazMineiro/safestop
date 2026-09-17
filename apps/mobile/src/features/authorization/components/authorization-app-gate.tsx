@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { AuthorizationEmpty } from "./authorization-empty";
 import { AuthorizationLoading } from "./authorization-loading";
 import { useAuthorization } from "../hooks/use-authorization";
+import { shouldAuthorizationAppGateRenderLoading } from "../utils/should-authorization-app-gate-render-loading";
 
 type AuthorizationAppGateProps = {
   children: ReactNode;
@@ -17,9 +18,10 @@ export function AuthorizationAppGate({ children }: AuthorizationAppGateProps) {
   const currentSegment = segments[1] as string | undefined;
   const isExemptRoute = currentSegment !== undefined && EXEMPT_SEGMENTS.has(currentSegment);
 
-  const { isLoading, isReady, hasNoPermissions, isPlatformAdmin, error } = useAuthorization();
+  const { isLoading, isReady, hasNoPermissions, isPlatformAdmin, error, isSwitching } =
+    useAuthorization();
 
-  if (isLoading) {
+  if (shouldAuthorizationAppGateRenderLoading({ isLoading, isSwitching })) {
     return <AuthorizationLoading />;
   }
 

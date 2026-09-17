@@ -68,3 +68,34 @@ export function mapOccurrenceAttachmentRow(row: OccurrenceAttachmentRow): Eviden
     uploadedByName: resolveUploadedByName(row.profiles),
   };
 }
+
+/**
+ * Gate 13X.2.9 — lista por occurrence. RLS autoriza.
+ * Sem pré-filtro organization_id = EMPRESA atuante (tenant do attachment pode ser Hydro).
+ */
+export function buildOccurrenceEvidenceListQuery(occurrenceId: string): {
+  occurrenceId: string;
+  deletedAt: null;
+} {
+  return {
+    occurrenceId,
+    deletedAt: null,
+  };
+}
+
+export function matchesCompletedInitialEvidenceUiFilter(
+  item: Pick<EvidenceListItem, "uploadStatus" | "attachmentType">,
+): boolean {
+  return item.uploadStatus === "COMPLETED" && item.attachmentType === "INITIAL_EVIDENCE";
+}
+
+/**
+ * Gate 13X.2.9 — cliente não pré-filtra tenant.
+ * attachment.organizationId = Hydro e atuante = TÜV permanece na lista.
+ */
+export function isOccurrenceAttachmentListedForActingOrg(input: {
+  attachmentOrganizationId: string;
+  actingOrganizationId: string;
+}): boolean {
+  return input.attachmentOrganizationId.length > 0 && input.actingOrganizationId.length > 0;
+}

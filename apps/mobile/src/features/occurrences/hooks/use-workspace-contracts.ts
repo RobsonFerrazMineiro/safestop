@@ -4,11 +4,12 @@ import { useAuthorization } from "@/features/authorization/hooks/use-authorizati
 import { useActiveOrganization } from "@/features/organization/hooks/use-active-organization";
 import { useActiveWorkspace } from "@/features/workspace";
 
-import {
-  formatWorkspaceContractLabel,
-  getWorkspaceContracts,
-} from "../services/get-workspace-contracts";
+import { listOperationalWorkspaceContracts } from "../services/list-operational-workspace-contracts";
 import { occurrenceQueryKeys } from "../types";
+import {
+  distinctOperationalExecutors,
+  formatWorkspaceContractLabel,
+} from "../utils/operational-contract-cascade";
 import { canSelectOwnTeam } from "../utils/workspace-create-rules";
 
 export function useWorkspaceContracts() {
@@ -17,6 +18,7 @@ export function useWorkspaceContracts() {
   const { activeWorkspace } = useActiveWorkspace();
 
   const organizationId = activeOrganization?.id;
+  const organizationName = activeOrganization?.name ?? null;
   const workspaceId = activeWorkspace?.id;
   const canCreate = can("occurrence.create");
   const enabled =
@@ -30,13 +32,19 @@ export function useWorkspaceContracts() {
     queryKey: [
       ...occurrenceQueryKeys.workspaceAll(organizationId ?? "", workspaceId ?? ""),
       "contracts",
-      "list",
+      "operational",
     ] as const,
-    queryFn: () => getWorkspaceContracts(workspaceId!),
+    queryFn: () =>
+      listOperationalWorkspaceContracts({
+        workspaceId: workspaceId!,
+        actingOrganizationId: organizationId!,
+        actingOrganizationName: organizationName,
+      }),
     enabled,
     staleTime: 5 * 60 * 1000,
   });
 
+  const contracts = query.data ?? [];
   const allowsOwnTeam =
     organizationId !== undefined &&
     canSelectOwnTeam({
@@ -45,8 +53,9 @@ export function useWorkspaceContracts() {
     });
 
   return {
-    contracts: query.data ?? [],
-    contractOptions: (query.data ?? []).map((contract) => ({
+    contracts,
+    executors: distinctOperationalExecutors(contracts),
+    contractOptions: contracts.map((contract) => ({
       id: contract.id,
       name: formatWorkspaceContractLabel(contract),
     })),

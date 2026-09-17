@@ -44,4 +44,9 @@ describe("StopWorkDetailContainer - Estrutura e Convergência Enterprise (Gate 7
       "text-xs font-bold uppercase tracking-widest text-muted-foreground/80",
     );
   });
+
+  it("Contratada no Detail usa formatOccurrenceContractorDisplay", () => {
+    expect(containerSource).toContain("formatOccurrenceContractorDisplay");
+    expect(containerSource).not.toContain('contractorOrganizationName ?? "Equipe própria"');
+  });
 });

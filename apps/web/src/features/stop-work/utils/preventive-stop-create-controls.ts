@@ -1,5 +1,12 @@
 export const EMPTY_ACTIVE_CONTRACTORS_MESSAGE = "Nenhum contrato ativo neste Ambiente.";
 
+/** Sentinel do Select controlado — nunca `undefined`, nunca string vazia no Radix. */
+export const DRAFT_SELECT_EMPTY_VALUE = "__empty__";
+
+export function resolveDraftSelectValue(value: string): string {
+  return value.length > 0 ? value : DRAFT_SELECT_EMPTY_VALUE;
+}
+
 export type PreventiveStopCreateControlState = {
   isAreaDisabled: boolean;
   isContractorDisabled: boolean;

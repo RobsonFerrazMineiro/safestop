@@ -12,6 +12,7 @@ import {
 } from "../services/active-organization-storage";
 import { clearTenantCache } from "../services/clear-tenant-cache";
 import type { OrganizationContextValue } from "../types";
+import { isOrganizationSessionLoading } from "../utils/is-organization-session-loading";
 import { defaultOrganizationContextValue, OrganizationContext } from "./organization-context";
 
 type OrganizationProviderProps = {
@@ -173,7 +174,11 @@ function OrganizationProviderAuthenticated({
     await refetch();
   }, [refetch]);
 
-  const isLoading = isListLoading || isFetching || !hasResolvedActiveOrganization;
+  const isLoading = isOrganizationSessionLoading({
+    isListLoading,
+    isFetching,
+    hasResolvedActiveOrganization,
+  });
 
   const value = useMemo<OrganizationContextValue>(
     () => ({

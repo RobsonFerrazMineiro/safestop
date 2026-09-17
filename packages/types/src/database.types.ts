@@ -1507,6 +1507,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "occurrences_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: false
+            referencedRelation: "areas"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "occurrences_assigned_evaluator_id_fkey"
             columns: ["assigned_evaluator_id"]
             isOneToOne: false
@@ -2209,6 +2216,14 @@ export type Database = {
         Args: { p_occurrence_id: string }
         Returns: boolean
       }
+      can_read_workspace_contracts_operational: {
+        Args: { p_workspace_id: string }
+        Returns: boolean
+      }
+      can_write_occurrence_evidence: {
+        Args: { p_occurrence_id: string }
+        Returns: boolean
+      }
       cancel_action_item: { Args: { p_payload: Json }; Returns: Json }
       complete_action_item_attachment_upload: {
         Args: { target_attachment_id: string }
@@ -2378,6 +2393,16 @@ export type Database = {
           p_workspace_id?: string
         }
         Returns: Json
+      }
+      list_operational_workspace_contracts: {
+        Args: { p_workspace_id: string }
+        Returns: {
+          contract_number: string
+          contractor_organization_id: string
+          contractor_organization_name: string
+          id: string
+          name: string
+        }[]
       }
       list_organization_contractors: {
         Args: { target_organization_id: string }

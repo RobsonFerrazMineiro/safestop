@@ -22,6 +22,7 @@ import {
   type EvidenceUploadQueueItem,
 } from "../types";
 import { isAcceptedEvidenceFile } from "../utils/is-evidence-mime";
+import { matchesCompletedInitialEvidenceUiFilter } from "../utils/map-evidence";
 import {
   EVIDENCE_MAX_SIZE_MESSAGE,
   EVIDENCE_UNSUPPORTED_FORMAT_MESSAGE,
@@ -47,14 +48,12 @@ export function useOccurrenceEvidence(occurrenceId: string | undefined) {
 
   const query = useQuery({
     queryKey: evidenceQueryKeys(organizationId ?? "", occurrenceId ?? "").list(),
-    queryFn: () => getOccurrenceEvidence(organizationId!, occurrenceId!),
+    queryFn: () => getOccurrenceEvidence(occurrenceId!),
     enabled,
     staleTime: EVIDENCE_LIST_STALE_TIME_MS,
   });
 
-  const completedEvidence = (query.data ?? []).filter(
-    (item) => item.uploadStatus === "COMPLETED" && item.attachmentType === "INITIAL_EVIDENCE",
-  );
+  const completedEvidence = (query.data ?? []).filter(matchesCompletedInitialEvidenceUiFilter);
 
   return {
     evidence: completedEvidence,

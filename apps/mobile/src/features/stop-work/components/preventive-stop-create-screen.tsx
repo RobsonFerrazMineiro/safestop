@@ -24,6 +24,16 @@ import { OccurrenceError } from "@/features/occurrences/components/occurrence-er
 import { OccurrenceLoading } from "@/features/occurrences/components/occurrence-loading";
 import { useWorkspaceAreas } from "@/features/occurrences/hooks/use-workspace-areas";
 import { useWorkspaceContracts } from "@/features/occurrences/hooks/use-workspace-contracts";
+import {
+  ACTIVITY_COMPANY_FIELD_HELP,
+  ACTIVITY_COMPANY_FIELD_LABEL,
+  ACTIVITY_CONTRACT_FIELD_HELP,
+  contractsForExecutor,
+  deriveCreatePayloadFromContract,
+  formatWorkspaceContractLabel,
+  resolveExecutorIdFromDraft,
+  resolveOperationalCreateContractFields,
+} from "@/features/occurrences/utils/operational-contract-cascade";
 import { OWN_TEAM_CONTRACT_OPTION_ID } from "@/features/occurrences/utils/workspace-create-rules";
 import { WorkspaceOperationalGate, WorkspaceSwitcher } from "@/features/workspace";
 import { usePreventiveStopDraftNavigation } from "@/features/navigation/context/preventive-stop-draft-navigation-context";
@@ -107,7 +117,7 @@ export function PreventiveStopCreateScreen() {
   const { areas, isLoading: isAreasLoading, isError: isAreasError } = useWorkspaceAreas();
   const {
     contracts,
-    contractOptions,
+    executors,
     allowsOwnTeam,
     isLoading: isContractsLoading,
     isError: isContractsError,
@@ -136,6 +146,7 @@ export function PreventiveStopCreateScreen() {
 
   const selectedContractId = watch("contractId");
   const selectedContractorId = watch("contractorOrganizationId");
+  const [selectedExecutorId, setSelectedExecutorId] = useState<string | null>(null);
 
   const hasHydratedFormRef = useRef(false);
 
@@ -286,19 +297,34 @@ export function PreventiveStopCreateScreen() {
   }
 
   const hasAreas = areas.length > 0;
-  const contractPickerItems = [
+  const resolvedExecutorId =
+    selectedExecutorId ??
+    resolveExecutorIdFromDraft({
+      allowsOwnTeam,
+      contractId:
+        typeof selectedContractId === "string" && selectedContractId.length > 0
+          ? selectedContractId
+          : undefined,
+      contractorOrganizationId:
+        typeof selectedContractorId === "string" && selectedContractorId.length > 0
+          ? selectedContractorId
+          : undefined,
+      contracts,
+    });
+  const isOwnTeamSelected = resolvedExecutorId === OWN_TEAM_CONTRACT_OPTION_ID;
+  const contractsForSelectedExecutor = contractsForExecutor(contracts, resolvedExecutorId);
+  const executorPickerItems = [
     ...(allowsOwnTeam ? [{ id: OWN_TEAM_CONTRACT_OPTION_ID, label: "Equipe própria" }] : []),
-    ...contractOptions.map((option) => ({ id: option.id, label: option.name })),
+    ...executors.map((executor) => ({ id: executor.id, label: executor.name })),
   ];
+  const contractPickerItems = contractsForSelectedExecutor.map((contract) => ({
+    id: contract.id,
+    label: formatWorkspaceContractLabel(contract),
+  }));
   const contractPickerValue =
     typeof selectedContractId === "string" && selectedContractId.length > 0
       ? selectedContractId
-      : allowsOwnTeam &&
-          (selectedContractorId === undefined ||
-            selectedContractorId === null ||
-            selectedContractorId === "")
-        ? OWN_TEAM_CONTRACT_OPTION_ID
-        : "";
+      : "";
   const controlState = getPreventiveStopCreateControlState({
     isCreating,
     isOffline,
@@ -307,6 +333,13 @@ export function PreventiveStopCreateScreen() {
     hasActiveWorkspace,
     allowsOwnTeam,
   });
+  const isExecutorDisabled = controlState.isContractorDisabled;
+  const isContractSelectDisabled =
+    isCreating ||
+    !hasActiveWorkspace ||
+    isOwnTeamSelected ||
+    resolvedExecutorId.length === 0 ||
+    contractsForSelectedExecutor.length === 0;
   const canSubmit = !controlState.isSubmitDisabled;
   const setupBlockedMessage = !hasAreas
     ? "Cadastre ao menos uma área ativa neste Ambiente para registrar paralisações."
@@ -314,25 +347,23 @@ export function PreventiveStopCreateScreen() {
       ? EMPTY_ACTIVE_CONTRACTORS_MESSAGE
       : null;
 
-  function handleContractPickerChange(value: string) {
-    if (value === OWN_TEAM_CONTRACT_OPTION_ID) {
-      setValue("contractId", "");
-      setValue("contractorOrganizationId", "");
-      updateDraft({ contractId: undefined, contractorOrganizationId: undefined });
-      return;
-    }
+  function handleExecutorChange(value: string) {
+    setSelectedExecutorId(value);
+    setValue("contractId", "");
+    setValue("contractorOrganizationId", "");
+    updateDraft({ contractId: undefined, contractorOrganizationId: undefined });
+  }
 
+  function handleContractPickerChange(value: string) {
     const selected = contracts.find((contract) => contract.id === value);
     if (!selected) {
       return;
     }
 
-    setValue("contractId", selected.id);
-    setValue("contractorOrganizationId", selected.contractorOrganizationId);
-    updateDraft({
-      contractId: selected.id,
-      contractorOrganizationId: selected.contractorOrganizationId,
-    });
+    const derived = deriveCreatePayloadFromContract(selected);
+    setValue("contractId", derived.contractId);
+    setValue("contractorOrganizationId", derived.contractorOrganizationId);
+    updateDraft(derived);
   }
 
   async function onSubmit(values: CreatePreventiveStopInput) {
@@ -343,20 +374,26 @@ export function PreventiveStopCreateScreen() {
       return;
     }
 
-    if (
-      !allowsOwnTeam &&
-      (!values.contractId?.trim() || !values.contractorOrganizationId?.trim())
-    ) {
-      setFormError("Contrato é obrigatório neste Ambiente.");
+    const resolvedContractFields = resolveOperationalCreateContractFields({
+      executorId: resolvedExecutorId,
+      allowsOwnTeam,
+      contracts,
+      contractId: values.contractId,
+    });
+
+    if (!resolvedContractFields) {
+      setFormError(
+        allowsOwnTeam
+          ? "Selecione a Empresa da atividade e, se não for equipe própria, o Contrato."
+          : "Selecione a Empresa da atividade e o Contrato.",
+      );
       return;
     }
 
     const payload = {
       ...values,
-      contractId: values.contractId?.trim() ? values.contractId : undefined,
-      contractorOrganizationId: values.contractorOrganizationId?.trim()
-        ? values.contractorOrganizationId
-        : undefined,
+      contractId: resolvedContractFields.contractId,
+      contractorOrganizationId: resolvedContractFields.contractorOrganizationId,
       ...geo.coords,
     };
 
@@ -483,15 +520,32 @@ export function PreventiveStopCreateScreen() {
               />
 
               <FormSelectField
-                disabled={controlState.isContractorDisabled}
+                disabled={isExecutorDisabled}
                 emptyMessage={
                   controlState.showEmptyContractorsMessage
                     ? EMPTY_ACTIVE_CONTRACTORS_MESSAGE
                     : undefined
                 }
+                helperText={ACTIVITY_COMPANY_FIELD_HELP}
+                items={executorPickerItems}
+                label={ACTIVITY_COMPANY_FIELD_LABEL}
+                placeholder="Selecione a executora"
+                selectedId={resolvedExecutorId}
+                onSelect={handleExecutorChange}
+              />
+
+              <FormSelectField
+                disabled={isContractSelectDisabled}
+                helperText={ACTIVITY_CONTRACT_FIELD_HELP}
                 items={contractPickerItems}
                 label="Contrato"
-                placeholder="Selecione o contrato"
+                placeholder={
+                  isOwnTeamSelected
+                    ? "Equipe própria — sem contrato"
+                    : resolvedExecutorId
+                      ? "Selecione o contrato"
+                      : "Selecione a Empresa da atividade primeiro"
+                }
                 selectedId={contractPickerValue}
                 onSelect={handleContractPickerChange}
               />

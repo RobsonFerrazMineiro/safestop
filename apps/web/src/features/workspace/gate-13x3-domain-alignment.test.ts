@@ -134,7 +134,7 @@ describe("Gate 13X.3 — detalhe e create rules", () => {
     ).toBe("workspace_id.eq.ws-1");
   });
 
-  it("contratos do create filtram por workspace_id do Ambiente", async () => {
+  it("query PostgREST de contracts por workspace_id permanece para governança", async () => {
     const { buildWorkspaceContractsQuery } =
       await import("@/features/occurrences/services/get-workspace-contracts");
     expect(buildWorkspaceContractsQuery("ws-hydro")).toEqual({

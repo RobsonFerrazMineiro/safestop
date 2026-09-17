@@ -28,6 +28,7 @@ function useSidebarNavSections(): NavSection[] {
   return getNavSections({
     canApproveMdho: can("mdho.approve") || can("mdho.return"),
     canManageContacts,
+    canManageOrganization: can("organization.manage"),
     canReadReports: can("report.read"),
     canCreateOccurrence: can("occurrence.create"),
   });

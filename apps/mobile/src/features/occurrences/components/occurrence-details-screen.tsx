@@ -12,6 +12,7 @@ import { OccurrenceLoading } from "./occurrence-loading";
 import { OccurrenceSyncStatusBadge } from "./occurrence-sync-status-badge";
 import { useOccurrence } from "../hooks/use-occurrence";
 import {
+  formatOccurrenceContractorDisplay,
   formatOccurrenceDate,
   getOccurrenceSeverityLabel,
   getOccurrenceStatusLabel,
@@ -104,7 +105,11 @@ export function OccurrenceDetailsScreen({ occurrenceId }: OccurrenceDetailsScree
         <DetailField label="Originadora" value={occurrence.originOrganizationName ?? "—"} />
         <DetailField
           label="Contratada"
-          value={occurrence.contractorOrganizationName ?? "Equipe própria"}
+          value={formatOccurrenceContractorDisplay({
+            contractorOrganizationId: occurrence.contractorOrganizationId,
+            contractId: occurrence.contractId,
+            contractorOrganizationName: occurrence.contractorOrganizationName,
+          })}
         />
         <DetailField label="Registrado em" value={formatOccurrenceDate(occurrence.createdAt)} />
         <DetailField label="Ocorrido em" value={formatOccurrenceDate(occurrence.occurredAt)} />

@@ -2,6 +2,7 @@ import {
   BarChart3,
   Bell,
   ClipboardCheck,
+  ClipboardList,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -19,6 +20,7 @@ export const StopWorkIcon = OctagonAlert;
 export const PlusCircleIcon = PlusCircle;
 export const MdhoApprovalIcon = ClipboardCheck;
 export const ContactsIcon = Users;
+export const ContractAssignmentsIcon = ClipboardList;
 export const ReportsIcon = BarChart3;
 export const BellIconOutline = Bell;
 export const ProfileIcon = User;

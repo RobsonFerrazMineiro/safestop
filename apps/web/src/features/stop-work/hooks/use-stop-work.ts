@@ -44,11 +44,11 @@ export function usePreventiveStopContracts() {
   return useWorkspaceContracts();
 }
 
-/** @deprecated Use usePreventiveStopContracts — mantido como alias tipado para o create. */
+/** Cascata operacional do Create (executoras + contratos da RPC). */
 export function usePreventiveStopContractors() {
   const result = useWorkspaceContracts();
   return {
-    contractors: result.contractOptions,
+    executors: result.executors,
     contracts: result.contracts,
     allowsOwnTeam: result.allowsOwnTeam,
     isLoading: result.isLoading,

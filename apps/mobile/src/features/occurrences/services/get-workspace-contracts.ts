@@ -1,7 +1,10 @@
 import { getSupabaseClient } from "@/lib/auth/client";
 
 import type { WorkspaceContractOption } from "../types";
+import { formatWorkspaceContractLabel } from "../utils/operational-contract-cascade";
 import { buildWorkspaceContractsQuery } from "../utils/workspace-create-rules";
+
+export { formatWorkspaceContractLabel };
 
 type ContractRow = {
   id: string;
@@ -86,13 +89,4 @@ export async function getWorkspaceContracts(
     const rightLabel = `${right.contractNumber ?? ""} ${right.contractorOrganizationName}`;
     return leftLabel.localeCompare(rightLabel, "pt-BR");
   });
-}
-
-export function formatWorkspaceContractLabel(contract: WorkspaceContractOption): string {
-  const numberPart = contract.contractNumber?.trim();
-  if (numberPart) {
-    return `${numberPart} — ${contract.contractorOrganizationName}`;
-  }
-
-  return `${contract.name} — ${contract.contractorOrganizationName}`;
 }

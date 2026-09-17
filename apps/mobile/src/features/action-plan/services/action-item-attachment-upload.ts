@@ -1,6 +1,7 @@
 import type { ActionItemAttachmentMimeType } from "@safestop/types";
 
 import { getSupabaseClient } from "@/lib/auth/client";
+import { readLocalFileBody } from "@/features/evidence/utils/read-local-file-body";
 
 import { assertActionPlanRpcDataOrThrow } from "../utils/action-plan-rpc";
 
@@ -54,13 +55,7 @@ export async function uploadActionItemAttachmentToStorage(params: {
   mimeType: string;
 }) {
   const supabase = getSupabaseClient();
-  const fileResponse = await fetch(params.uri);
-
-  if (!fileResponse.ok) {
-    throw new Error("Não foi possível ler o arquivo local.");
-  }
-
-  const body = await fileResponse.arrayBuffer();
+  const body = await readLocalFileBody(params.uri);
 
   const { error } = await supabase.storage.from(params.bucket).upload(params.storagePath, body, {
     contentType: params.mimeType,

@@ -286,8 +286,11 @@ end $$;
   const fieldContractIds = idsOf(fieldWsContracts.body);
   assert(fieldWsContracts.ok, `Campo SELECT contracts WS ${JSON.stringify(fieldWsContracts)}`);
   assert(fieldContractIds.includes(CONTRACT_A), "Campo pode ver Contract A como client (eixo existente)");
-  assert(!fieldContractIds.includes(CONTRACT_B), "Campo sem manage não lista todos os contratos do WS");
-  console.log("PASS Campo Hydro sem manage não lista todos os contratos do WS");
+  assert(
+    fieldContractIds.includes(CONTRACT_B),
+    "Campo Hydro owner + occurrence.create vê Contract B via eixo operacional 13X.2.3 (não exige organization.manage)",
+  );
+  console.log("PASS Campo Hydro: client (A) + operacional owner/create (B); sem organization.manage");
 
   const hydroAssign = await rest(apiUrl, anonKey, gestor.access_token, {
     method: "GET",
